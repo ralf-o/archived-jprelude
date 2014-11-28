@@ -3,35 +3,32 @@ package org.jprelude.common.csv;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import org.jprelude.common.function.UnaryFunction;
 import org.jprelude.common.util.Seq;
+import rx.Observable;
+import rx.functions.Func1;
 
-public final class TabularCsvBuilder<T> extends BaseCsvBuilder<T, TabularCsvBuilder<T>> {
+public final class CsvBuilder<T> extends CsvHandler<CsvBuilder<T>> {
     private final List<CsvColumn<T>> columns;
     private final List<CsvColumn<T>> unmodifiableColumns;
     private boolean headerIncluded;
     
-    private TabularCsvBuilder() {
+    public CsvBuilder() {
         this.columns = new ArrayList();
         this.unmodifiableColumns = Collections.unmodifiableList(this.columns);
         this.headerIncluded = true;
     }
 
-    public static <T> TabularCsvBuilder<T> ofSourceType(Class<T> type) {
-        return new TabularCsvBuilder();
-    }
-
-    @Override
-    public Seq<String> buildSeq(final Seq<T> source) {
+    public Seq<String> applyOn(final Seq<T> seq) {
         final Seq<String> ret;
         
-        final Seq<String> bodySeq = source.map((item, idx) -> {
+        final Seq<String> bodySeq = seq.map((item, idx) -> {
             final List<Object> cells = new ArrayList();
            
-            for (final CsvColumn<T> column : this.columns) {
-                cells.add(column.getSelector().apply(item));
-            }
-
-           return this.buildLine(Seq.from(cells));
+            this.columns.forEach(column ->
+                    cells.add(column.getSelector().apply(item)));
+        
+            return this.buildLine(Seq.from(cells));
         });
         
         if (!this.headerIncluded) {
@@ -43,8 +40,31 @@ public final class TabularCsvBuilder<T> extends BaseCsvBuilder<T, TabularCsvBuil
         return ret;
     }
     
+    public Observable<String> applyOn(final Observable<T> observable) {
+        final Observable<String> ret;
+        
+        if (observable == null) {
+            ret = Observable.empty();
+        } else {
+            final Func1<T, String> f = this.asMapper().toUnaryFunction();
+            ret = observable.map(f);
+        }
+        
+        return ret;
+    }
+
+    public UnaryFunction<T, String> asMapper() {
+        return item -> {
+            final StringBuilder strBuilder = new StringBuilder();
+        
+            this.columns.forEach(column ->
+                strBuilder.append(column.getSelector().apply(item)));
+            
+            return strBuilder.toString();
+        };
+    }
     
-    public TabularCsvBuilder<T> setColumns(final CsvColumn<T>... columns) {
+    public CsvBuilder<T> setColumns(final CsvColumn<T>... columns) {
         this.columns.clear();
         
         if (columns != null) {
@@ -56,7 +76,7 @@ public final class TabularCsvBuilder<T> extends BaseCsvBuilder<T, TabularCsvBuil
         return this;
     }
     
-    public TabularCsvBuilder<T> setColumns(final Iterable<CsvColumn<T>> columns) {
+    public CsvBuilder<T> setColumns(final Iterable<CsvColumn<T>> columns) {
         this.columns.clear();
         
         if (columns != null) {
@@ -72,7 +92,7 @@ public final class TabularCsvBuilder<T> extends BaseCsvBuilder<T, TabularCsvBuil
         return this.unmodifiableColumns;
     }
     
-    public TabularCsvBuilder<T> setHeaderIncluded(final boolean headerIncluded) {
+    public CsvBuilder<T> setHeaderIncluded(final boolean headerIncluded) {
         this.headerIncluded = headerIncluded;
         return this;
     }
@@ -82,8 +102,7 @@ public final class TabularCsvBuilder<T> extends BaseCsvBuilder<T, TabularCsvBuil
     }
     
     private String buildHeaderLine() {
-        final Seq<CsvColumn<T>> columns = Seq.from(this.columns);
-        final Seq<String> headerNames = columns.map(CsvColumn::getName);
+        final Seq<String> headerNames = Seq.from(this.columns).map(CsvColumn::getName);
         
         return this.buildLine(headerNames);
     }

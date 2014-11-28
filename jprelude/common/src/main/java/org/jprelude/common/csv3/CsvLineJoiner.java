@@ -1,90 +1,76 @@
-package org.jprelude.common.csv;
+package org.jprelude.common.csv3;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import org.jprelude.common.function.UnaryFunction;
 import org.jprelude.common.util.Seq;
 
-public abstract class BaseCsvBuilder<T, U extends BaseCsvBuilder<T, ?>> {
-    public String getSeparator() {
-        return separator;
-    }
-
-    public U setSeparator(String separator) {
-        this.separator = separator;
-        return (U) this;
-    }
-
-    public String getLineBreak() {
-        return lineBreak;
-    }
-
-    public U setLineBreak(String lineBreak) {
-        this.lineBreak = lineBreak;
-        return (U) this;
-    }
-
-    public String getAliasForNull() {
-        return aliasForNull;
-    }
-
-    public U setAliasForNull(String aliasForNull) {
-        this.aliasForNull = aliasForNull;
-        return (U) this;
-    }
-
-    public String getAliasForEmptyString() {
-        return aliasForEmptyString;
-    }
-
-    public U setAliasForEmptyString(String aliasForEmptyString) {
-        this.aliasForEmptyString = aliasForEmptyString;
-        return (U) this;
-    }
-
-    public boolean isQuotingForced() {
-        return quotingForced;
-    }
-
-    public U setQuotingForced(boolean quotingForced) {
-        this.quotingForced = quotingForced;
-        return (U) this;
-    }
-
-    public boolean isAutoTrimmed() {
-        return autoTrimmed;
-    }
-
-    public U setAutoTrimmed(boolean autoTrimmed) {
-        this.autoTrimmed = autoTrimmed;
-        return (U) this;
-    }
-    
+public class CsvLineJoiner implements UnaryFunction<List<?>, String> {
     private String separator;
-    private String lineBreak;
     private String aliasForNull;
     private String aliasForEmptyString;
-    private boolean quotingForced;
+    private boolean quotingForced ;
     private boolean autoTrimmed;
-
-    abstract Seq<String> buildSeq(Seq<T> source);
-
-    protected BaseCsvBuilder() {
+    
+    public CsvLineJoiner() {
         this.separator = ",";
-        this.lineBreak = "\n";
         this.aliasForNull = "";
         this.aliasForEmptyString = "";
         this.quotingForced = false;
         this.autoTrimmed = false;
     }
 
-    protected String buildLine(final Seq<?> cells) {
+    
+    public String getSeparator() {
+        return separator;
+    }
+
+    public CsvLineJoiner setSeparator(String separator) {
+        this.separator = separator;
+        return this;
+    }
+
+    public String getAliasForNull() {
+        return aliasForNull;
+    }
+
+    public CsvLineJoiner setAliasForNull(String aliasForNull) {
+        this.aliasForNull = aliasForNull;
+        return this;
+    }
+
+    public String getAliasForEmptyString() {
+        return aliasForEmptyString;
+    }
+
+    public CsvLineJoiner setAliasForEmptyString(String aliasForEmptyString) {
+        this.aliasForEmptyString = aliasForEmptyString;
+        return this;
+    }    
+    
+    public void setQuotingForced(final boolean quotingForced) {
+        this.quotingForced = quotingForced;
+    }
+    
+    public boolean getQuotingForced() {
+        return this.quotingForced;
+    }
+    
+    public void setAutoTrimmed(final boolean autoTrimmed) {
+        this.autoTrimmed = autoTrimmed;
+    }
+    
+    public boolean getAutoTrimmed() {
+        return this.autoTrimmed;
+    }
+   
+    @Override
+    public String apply(final List<?> cells) {
         final StringBuilder strBuilder = new StringBuilder();
 
         if (cells == null) {
             strBuilder.append("\n");
         } else {
-            cells.forEach((cellObject, idx) -> {
+            Seq.from(cells).forEach((cellObject, idx) -> {
                 String cell = (cellObject == null ? null : cellObject.toString());
 
                 if (idx > 0) {
@@ -111,7 +97,7 @@ public abstract class BaseCsvBuilder<T, U extends BaseCsvBuilder<T, ?>> {
                         || cell.contains("\"")
                         || cell.contains(this.separator)
                         || cell.contains("\n")
-                        || cell.contains(this.lineBreak)) {
+                        || cell.contains("\r")) {
                     strBuilder.append("\"").append(cell).append("\"");
                 } else {
                     strBuilder.append(cell);
@@ -120,5 +106,5 @@ public abstract class BaseCsvBuilder<T, U extends BaseCsvBuilder<T, ?>> {
         }
 
         return strBuilder.toString();
-    }
+    }    
 }

@@ -15,8 +15,9 @@ import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
+import org.jprelude.common.function.UnaryPredicate;
 
-public class FileSelector implements Predicate<File> {
+public class FileSelector implements UnaryPredicate<File> {
 
     public static final FileSelector SELECT_ALL = new FileSelector(file -> true);
 
@@ -25,7 +26,7 @@ public class FileSelector implements Predicate<File> {
     public static final FileSelector SELECT_FILES = new FileSelector(file -> (file != null && file.isFile()));
 
     public static final FileSelector SELECT_DIRECTORIES = new FileSelector(file -> file != null && file.isDirectory());
-    
+
     private final Predicate<File> innerFilter;
 
     private FileSelector() {
@@ -42,6 +43,7 @@ public class FileSelector implements Predicate<File> {
         }
     }
 
+    @Override
     public final boolean test(final File file) {
         return this.innerFilter.test(file);
     }
@@ -52,27 +54,18 @@ public class FileSelector implements Predicate<File> {
     }
 
     public FileSelector whereFile() {
-        return new FileSelector(this.innerFilter.and(new Predicate<File>() {
-            public boolean test(final File file) {
-                return (file != null && file.isFile());
-            }
-        }));
+        return new FileSelector(this.innerFilter.and(
+                file -> (file != null && file.isFile())));
     }
 
     public FileSelector whereDirectory() {
-        return new FileSelector(this.innerFilter.and(new Predicate<File>() {
-            public boolean test(final File file) {
-                return (file != null && file.isDirectory());
-            }
-        }));
+        return new FileSelector(this.innerFilter.and(
+                file -> (file != null && file.isDirectory())));
     }
 
     public FileSelector whereVisible() {
-        return new FileSelector(this.innerFilter.and(new Predicate<File>() {
-            public boolean test(final File file) {
-                return (file != null && !file.isHidden());
-            }
-        }));
+        return new FileSelector(this.innerFilter.and(
+                file -> (file != null && !file.isHidden())));
     }
 
     public FileSelector whereHidden() {
@@ -86,29 +79,23 @@ public class FileSelector implements Predicate<File> {
     public FileSelector whereFileName(final String... values) {
         final List<String> valueList = Arrays.asList(values);
 
-        return new FileSelector(this.innerFilter.and(new Predicate<File>() {
-            public boolean test(final File file) {
-                return (valueList.contains(file.getName()));
-            }
-        }));
+        return new FileSelector(this.innerFilter.and(
+                (final File file) -> (valueList.contains(file.getName()))));
     }
 
     public FileSelector whereFileName(final Predicate<? super String>... fs) {
         FileSelector ret = this;
 
         if (fs != null && fs.length > 0) {
-            ret = new FileSelector(this.innerFilter.and(new Predicate<File>() {
-                public boolean test(File file) {
-                    boolean ret = false;
+            ret = new FileSelector(this.innerFilter.and((final File file) -> {
+                boolean ret1 = false;
 
-                    for (int i = 0; i < fs.length; ++i) {
-                        if (fs[i] != null) {
-                            ret |= fs[i].test(file.getName());
-                        }
+                for (int i = 0; i < fs.length; ++i) {
+                    if (fs[i] != null) {
+                        ret1 |= fs[i].test(file.getName());
                     }
-
-                    return ret;
                 }
+                return ret1;
             }));
         }
 
@@ -116,29 +103,22 @@ public class FileSelector implements Predicate<File> {
     }
 
     public FileSelector wherePath(final String value) {
-        return new FileSelector(this.innerFilter.and(new Predicate<File>() {
-            public boolean test(final File file) {
-                return (value != null && value.equals(file.getPath()));
-            }
-        }));
+        return new FileSelector(this.innerFilter.and((final File file)
+                -> (value != null && value.equals(file.getPath()))));
     }
 
     public FileSelector wherePath(final Predicate<? super String>... fs) {
         FileSelector ret = this;
 
         if (fs != null && fs.length > 0) {
-            ret = new FileSelector(this.innerFilter.and(new Predicate<File>() {
-                public boolean test(File file) {
-                    boolean ret = false;
-
-                    for (int i = 0; i < fs.length; ++i) {
-                        if (fs[i] != null) {
-                            ret |= fs[i].test(file.getPath());
-                        }
+            ret = new FileSelector(this.innerFilter.and((File file) -> {
+                boolean ret1 = false;
+                for (int i = 0; i < fs.length; ++i) {
+                    if (fs[i] != null) {
+                        ret1 |= fs[i].test(file.getPath());
                     }
-
-                    return ret;
                 }
+                return ret1;
             }));
         }
 
@@ -149,18 +129,14 @@ public class FileSelector implements Predicate<File> {
         FileSelector ret = this;
 
         if (fs != null && fs.length > 0) {
-            ret = new FileSelector(this.innerFilter.and(new Predicate<File>() {
-                public boolean test(File file) {
-                    boolean ret = false;
-
-                    for (int i = 0; i < fs.length; ++i) {
-                        if (fs[i] != null) {
-                            ret |= fs[i].test(file.getAbsolutePath());
-                        }
+            ret = new FileSelector(this.innerFilter.and((File file) -> {
+                boolean ret1 = false;
+                for (int i = 0; i < fs.length; ++i) {
+                    if (fs[i] != null) {
+                        ret1 |= fs[i].test(file.getAbsolutePath());
                     }
-
-                    return ret;
                 }
+                return ret1;
             }));
         }
 
@@ -171,18 +147,14 @@ public class FileSelector implements Predicate<File> {
         FileSelector ret = this;
 
         if (fs != null && fs.length > 0) {
-            ret = new FileSelector(this.innerFilter.and(new Predicate<File>() {
-                public boolean test(File file) {
-                    boolean ret = false;
-
-                    for (int i = 0; i < fs.length; ++i) {
-                        if (fs[i] != null) {
-                            ret |= fs[i].test(file.length());
-                        }
+            ret = new FileSelector(this.innerFilter.and((File file) -> {
+                boolean ret1 = false;
+                for (int i = 0; i < fs.length; ++i) {
+                    if (fs[i] != null) {
+                        ret1 |= fs[i].test(file.length());
                     }
-
-                    return ret;
                 }
+                return ret1;
             }));
         }
 
@@ -193,21 +165,17 @@ public class FileSelector implements Predicate<File> {
         FileSelector ret = this;
 
         if (fs != null && fs.length > 0) {
-            ret = new FileSelector(this.innerFilter.and(new Predicate<File>() {
-                public boolean test(File file) {
-                    boolean ret = false;
-                    GregorianCalendar cal = new java.util.GregorianCalendar();
-                    cal.setTimeInMillis(file.lastModified());
-                    Date modificationDate = cal.getTime();
-
-                    for (int i = 0; i < fs.length; ++i) {
-                        if (fs[i] != null) {
-                            ret |= fs[i].test(modificationDate);
-                        }
+            ret = new FileSelector(this.innerFilter.and((File file) -> {
+                boolean ret1 = false;
+                GregorianCalendar cal = new java.util.GregorianCalendar();
+                cal.setTimeInMillis(file.lastModified());
+                Date modificationDate = cal.getTime();
+                for (int i = 0; i < fs.length; ++i) {
+                    if (fs[i] != null) {
+                        ret1 |= fs[i].test(modificationDate);
                     }
-
-                    return ret;
                 }
+                return ret1;
             }));
         }
 
@@ -218,18 +186,14 @@ public class FileSelector implements Predicate<File> {
         FileSelector ret = this;
 
         if (fs != null && fs.length > 0) {
-            ret = new FileSelector(this.innerFilter.and(new Predicate<File>() {
-                public boolean test(File file) {
-                    boolean ret = false;
-
-                    for (int i = 0; i < fs.length; ++i) {
-                        if (fs[i] != null) {
-                            ret |= fs[i].test(file.lastModified());
-                        }
+            ret = new FileSelector(this.innerFilter.and((File file) -> {
+                boolean ret1 = false;
+                for (int i = 0; i < fs.length; ++i) {
+                    if (fs[i] != null) {
+                        ret1 |= fs[i].test(file.lastModified());
                     }
-
-                    return ret;
                 }
+                return ret1;
             }));
         }
 
@@ -239,29 +203,22 @@ public class FileSelector implements Predicate<File> {
     public FileSelector whereSuffix(final String... values) {
         final List<String> valueList = Arrays.asList(values);
 
-        return new FileSelector(this.innerFilter.and(new Predicate<File>() {
-            public boolean test(final File file) {
-                return (valueList.contains(FileUtils.getSuffix(file)));
-            }
-        }));
+        return new FileSelector(this.innerFilter.and((final File file)
+                -> (valueList.contains(FileUtils.getSuffix(file)))));
     }
 
     public FileSelector whereSuffix(final Predicate<? super String>... fs) {
         FileSelector ret = this;
 
         if (fs != null && fs.length > 0) {
-            ret = new FileSelector(this.innerFilter.and(new Predicate<File>() {
-                public boolean test(File file) {
-                    boolean ret = false;
-
-                    for (int i = 0; i < fs.length; ++i) {
-                        if (fs[i] != null) {
-                            ret |= fs[i].test(FileUtils.getSuffix(file));
-                        }
+            ret = new FileSelector(this.innerFilter.and((File file) -> {
+                boolean ret1 = false;
+                for (int i = 0; i < fs.length; ++i) {
+                    if (fs[i] != null) {
+                        ret1 |= fs[i].test(FileUtils.getSuffix(file));
                     }
-
-                    return ret;
                 }
+                return ret1;
             }));
         }
 
@@ -301,33 +258,29 @@ public class FileSelector implements Predicate<File> {
     }
 
     /*
-    public FileSelector xor(final FileSelector... selectors) {
-        FileSelector ret = this;
+     public FileSelector xor(final FileSelector... selectors) {
+     FileSelector ret = this;
 
-        if (selectors != null && selectors.length > 0) {
-            Predicate<File> filter = this.innerFilter;
+     if (selectors != null && selectors.length > 0) {
+     Predicate<File> filter = this.innerFilter;
 
-            for (int i = 0; i < selectors.length; ++i) {
-                filter = filter.xor(selectors[i].innerFilter);
-            }
+     for (int i = 0; i < selectors.length; ++i) {
+     filter = filter.xor(selectors[i].innerFilter);
+     }
 
-            ret = new FileSelector(filter);
-        }
+     ret = new FileSelector(filter);
+     }
 
-        return ret;
-    }
-    */
-
+     return ret;
+     }
+     */
+    @Override
     public FileSelector negate() {
         return new FileSelector(file -> !this.innerFilter.test(file));
     }
 
     public FileFilter toFileFilter() {
-        return new FileFilter() {
-            public boolean accept(File file) {
-                return FileSelector.this.innerFilter.test(file);
-            }
-        };
+        return FileSelector.this.innerFilter::test;
     }
 
     public Seq<File> listDirectory(final File directory) {
@@ -349,22 +302,21 @@ public class FileSelector implements Predicate<File> {
             if (!recursive) {
                 ret = Seq.from(directory.listFiles(this.toFileFilter()));
             } else {
-                final Predicate<File> filter = new Predicate<File>() {
-                    public boolean test(File file) {
-                        return (file != null && (file.isDirectory() || dirPredicate.test(file)));
-                    }
-                };
+                final Predicate<File> filter = (File file)
+                        -> (file != null && (file.isDirectory() || dirPredicate.test(file)));
 
                 final File[] files = directory.listFiles(new FileSelector(filter).toFileFilter());
                 final int fileCount = (files == null ? 0 : files.length);
 
                 if (fileCount > 0) {
                     ret = Seq.from(new Iterable<File>() {
+                        @Override
                         public Iterator<File> iterator() {
                             return new Generator<File>() {
                                 private int idx = 0;
                                 private Iterator<File> itr = null;
 
+                                @Override
                                 public void generate() {
                                     if (this.idx < fileCount || this.itr != null) {
                                         if (this.itr != null) {
@@ -403,8 +355,13 @@ public class FileSelector implements Predicate<File> {
 
         return ret;
     }
-    
-    public static FileSelector of(final FileFilter fileFilter) {
+
+    public static FileSelector from(final FileFilter fileFilter) {
         return new FileSelector(file -> fileFilter.accept(file));
     }
+
+    public static FileSelector from(final Predicate<File> pred) {
+        return new FileSelector(file -> pred.test(file));
+    }
+
 }

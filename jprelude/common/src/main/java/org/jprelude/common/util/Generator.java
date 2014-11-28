@@ -15,6 +15,7 @@ public abstract class Generator<T> implements Iterator<T>, AutoCloseable {
   
   protected abstract void generate() throws Exception;
   
+  @Override
   public final boolean hasNext() {
     boolean ret = false;
     
