@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
+import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -22,8 +23,8 @@ import org.jprelude.common.function.TernaryFunction;
 import org.jprelude.common.function.UnaryPredicate;
 import org.jprelude.common.function.BinaryPredicate;
 
-public interface Seq<T> extends Streamable<T> {
-    @Override
+@FunctionalInterface
+public interface Seq<T> {
     Stream<T> stream();
     
     default <R> Seq<R> map(final UnaryFunction<? super T, ? extends R> f) {
@@ -178,15 +179,13 @@ public interface Seq<T> extends Streamable<T> {
             .forEach(pair -> action.accept((T) pair[0], (int) pair[1]));
     }
     
-    public static <T> Seq<T> from(final Streamable<T> streamable) {
+    public static <T> Seq<T> from(final Supplier<Stream<T>> supplier) {
         final Seq<T> ret;
         
-        if (streamable == null) {
+        if (supplier == null) {
             ret = Seq.empty();
-        } else if (streamable instanceof Seq) {
-            ret = (Seq) streamable;
         } else {
-            ret = () -> StreamUtils.stream(streamable.stream());
+            ret = () -> StreamUtils.stream(supplier.get());
         }
         
         return ret;

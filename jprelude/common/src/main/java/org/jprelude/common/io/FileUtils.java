@@ -22,7 +22,6 @@ import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.stream.Stream;
-import org.jprelude.common.util.Streamable;
 
 /**
  *
@@ -49,7 +48,7 @@ public final class FileUtils {
     }
 
     public static Seq<String> lines(final File file) {
-        final Streamable<String> streamable = () -> {
+        final Seq<String> seq = () -> {
             final Stream<String> ret;
 
             try {
@@ -61,7 +60,7 @@ public final class FileUtils {
             return ret;
         };
 
-        return Seq.from(streamable);
+        return seq;
     }
     
     public static long writeToFile(final Path path, final Seq<?> lines, Charset charset, final OpenOption... options) throws IOException {
