@@ -33,4 +33,14 @@ public class SeqTest {
         
         Assert.assertArrayEquals(seq.toArray(), new Integer[] {1, 4});
     }
+    
+    @Test
+    public void testMethodZip() {
+        final Seq<Integer> seq1 = Seq.of(1, 2, 3, 4, 5, 6);
+        final Seq<Character> seq2 = Seq.of('a', 'b', 'c');
+        final Seq<String> result = seq1.zip(seq2, (n, c, i) -> i + ": " + c + n);
+        final String[] expected = {"0: a1", "1: b2", "2: c3"};
+ 
+        Assert.assertArrayEquals(result.toArray(), expected);
+    }
 }

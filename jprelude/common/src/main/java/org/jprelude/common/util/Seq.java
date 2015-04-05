@@ -1,12 +1,13 @@
 package org.jprelude.common.util;
 
-import com.codepoetics.protonpack.Indexed;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.function.BinaryOperator;
-import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -37,20 +38,70 @@ public interface Seq<T> {
     }
     
     default <U, R> Seq<R> zip(final Seq<U> otherSeq, final BinaryFunction<? super T, ? super U, R> f) {
-        return Seq.from(() ->
-            com.codepoetics.protonpack.StreamUtils.zip(
-                this.stream(), otherSeq.stream(), (x, y) -> f.apply(x, y)));
+        return this.zip(otherSeq, (x, y, i) -> f.apply(x, y));
+//        return Seq.from(() ->
+//            com.codepoetics.protonpack.StreamUtils.zip(
+//                this.stream(), otherSeq.stream(), (x, y) -> f.apply(x, y)));
+
     }
     
     default <U, R> Seq<R> zip(final Seq<U> otherSeq, final TernaryFunction<? super T, ? super U, Integer, R> f) { 
-        return Seq.from(() -> {
-            final Stream<Indexed<T>> indexedStream = com.codepoetics.protonpack.StreamUtils.zipWithIndex(this.stream());
-            return com.codepoetics.protonpack.StreamUtils.zip(
-                indexedStream,
-                otherSeq.stream(),
-                (indexedValue, otherValue) -> f.apply(indexedValue.getValue(), otherValue, (int) indexedValue.getIndex())
-            );
-        });
+//        return Seq.from(() -> {
+//            final Stream<Indexed<T>> indexedStream = com.codepoetics.protonpack.StreamUtils.zipWithIndex(this.stream());
+//            return com.codepoetics.protonpack.StreamUtils.zip(
+//                indexedStream,
+//                otherSeq.stream(),
+//                (indexedValue, otherValue) -> f.apply(indexedValue.getValue(), otherValue, (int) indexedValue.getIndex())
+//            );
+//        });
+
+        return (otherSeq == null)
+            ? Seq.empty()
+            : Seq.from(() -> {
+                final Iterator generator = new Generator () {
+                    Stream<T> stream1 = null;
+                    Stream<U> stream2 = null;
+                    Iterator<T> iter1 = null;
+                    Iterator<U> iter2 = null;
+                    int index = -1;
+
+                    @Override
+                    protected void init() {
+                        this.stream1 = StreamUtils.sequential(Seq.this.stream());
+                        this.iter1 = stream1.iterator();
+                        this.stream2 = StreamUtils.sequential(otherSeq.stream());
+                        this.iter2 = this.stream2.iterator();
+                    }
+
+                    @Override
+                    protected void dispose() {
+                        if (this.stream1 != null) {
+                            this.stream1.close();
+                            this.stream1 = null;
+                            this.iter1 = null;
+                        }
+
+                        if (this.stream2 != null) {
+                            this.stream2.close();
+                            this.stream2 = null;
+                            this.iter2 = null;
+                        }
+
+                        this.index = -1;
+                    };
+
+                    @Override
+                    protected void generate() throws Exception {
+                        if (iter1.hasNext() && iter2.hasNext()) {
+                            this.yield(f.apply(iter1.next(), iter2.next(), ++this.index));
+                        }
+                    }
+                };
+
+                final Spliterator spliterator =  Spliterators.spliteratorUnknownSize(generator, Spliterator.ORDERED);
+                final Stream stream = StreamSupport.stream(spliterator, false);
+                return stream;
+            });
     }
     
     default <U, R> Seq<R> mapFiltered(final UnaryFunction<T, Optional<R>> f) {
@@ -104,9 +155,23 @@ public interface Seq<T> {
     }
     
     default <A, R> R collect(final Collector<? super T, A, R> collector) {
-        return StreamUtils.stream(this.stream()).collect(collector);
+        try (final Stream<T> stream = StreamUtils.stream(this.stream())) {
+            return stream.collect(collector);
+        }
     }
-            
+    
+    default Seq<T> force() {
+        return Seq.from(this.toList());
+    }
+    
+    default Seq<T> sequential() {
+        return Seq.from(() ->  StreamUtils.sequential(this.stream()));
+    }
+    
+    default Seq<T> parallel() {
+        return Seq.from(() ->  StreamUtils.parallel(this.stream()));
+    }
+    
     static <T> Seq<T> concat(final Seq<Seq<T>> seqs) {
         final Seq<T> ret;
         
@@ -179,18 +244,12 @@ public interface Seq<T> {
             .forEach(pair -> action.accept((T) pair[0], (int) pair[1]));
     }
     
-    public static <T> Seq<T> from(final Supplier<Stream<T>> supplier) {
-        final Seq<T> ret;
-        
-        if (supplier == null) {
-            ret = Seq.empty();
-        } else {
-            ret = () -> StreamUtils.stream(supplier.get());
-        }
-        
-        return ret;
+    public static <T> Seq<T> from(final Seq<T> seq) {
+        return seq == null
+                ? Seq.empty()
+                : seq;
     }
-
+    
     public static <T> Seq<T> from(final Iterable<T> iterable) {
         final Seq<T> ret;
         
@@ -223,6 +282,14 @@ public interface Seq<T> {
         return Seq.from(values);
     }
 
+    public static <T> Seq<T> paralell(final Seq<T> seq) {
+        return Seq.from(seq).parallel();
+    }
+    
+    public static <T> Seq<T> sequential(final Seq<T> seq) {
+        return Seq.from(seq).sequential();
+    }
+    
     public static <T> Seq<T> empty() {
         return Seq.from(() -> Stream.empty());
     }

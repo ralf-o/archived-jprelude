@@ -1,27 +1,24 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.jprelude.common.csv;
 
-import org.jprelude.common.function.UnaryFunction;
-
-public class CsvColumn<T> {
+public class CsvColumn {
     private final String name;
-    private final UnaryFunction<T, ?> selector;
+    private final String title;
     
-    public CsvColumn(final String name, UnaryFunction<T, ?> selector) {
+    public CsvColumn(final String name) {
+        this(name, name);
+    }
+    
+    public CsvColumn(final String name, final String title) {
         this.name = name;
-        this.selector = selector;
+        this.title = title;
     }
     
     public String getName() {
         return this.name;
     }
     
-    public UnaryFunction<T, ?> getSelector() {
-        return this.selector;
+    public String getTitle() {
+        return this.title;
     }
 }
+

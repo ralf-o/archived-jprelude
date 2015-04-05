@@ -3,6 +3,7 @@ package org.jprelude.common.util;
 import java.util.*;
 
 public abstract class Generator<T> implements Iterator<T>, AutoCloseable {
+  private boolean isInitialized = false;
   private boolean hasNextValue = false;
   private T nextValue = null;
   private boolean reachedEnd = false;
@@ -13,13 +14,32 @@ public abstract class Generator<T> implements Iterator<T>, AutoCloseable {
     this.nextValue = value;
   }
   
-  protected abstract void generate() throws Exception;
+  protected abstract void generate() throws Throwable;
+  
+  protected void init() throws Throwable {
+  };
   
   @Override
   public final boolean hasNext() {
     boolean ret = false;
     
     if (!this.reachedEnd) {
+      if (!this.isInitialized) {
+          try {
+              this.init();
+          } catch (final Throwable throwable) {
+              try {
+                  this.close();
+              } catch (final Throwable ignore) {
+                  // ignore
+              }
+              
+              throw new RuntimeException(throwable); 
+          }
+          
+          this.isInitialized = true;
+      }
+        
       if (this.hasNextValue) {
         ret = true;
       } else {
@@ -27,11 +47,11 @@ public abstract class Generator<T> implements Iterator<T>, AutoCloseable {
           this.generate();
           this.reachedEnd = !this.hasNextValue;
           ret = this.hasNextValue;
-        } catch (final Exception e) {
+        } catch (final Throwable throwable) {
             try {
                 this.close();
             } catch (final Exception ignore) {
-                throw new RuntimeException(e);
+                throw new RuntimeException(throwable);
             }
         }
       }

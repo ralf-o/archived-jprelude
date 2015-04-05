@@ -2,7 +2,6 @@ package org.jprelude.common.function;
 
 import java.util.Objects;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 @FunctionalInterface
 public interface BinaryConsumer<A1, A2> extends BiConsumer<A1, A2> {
