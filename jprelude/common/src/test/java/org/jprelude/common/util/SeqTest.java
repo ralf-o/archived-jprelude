@@ -15,9 +15,13 @@ public class SeqTest {
         final Seq<Integer> seq = Seq.of(1, 2, 3)
             .map((x, i) -> x * 2 + i);
 
+        Seq.from((start, blockSize) -> Seq.range(start.intValue(), blockSize.intValue() + start.intValue()).toList(), 100L).take(150)
+            .parallel()
+            .forEach(v ->  {synchronized (this) { System.out.println("[" + v + "]");}});
+        
         Assert.assertArrayEquals(seq.toArray(), new Integer[] {2, 5, 8});
     }
-    
+  
     @Test
     public void testMethodFlatMap() {
         final Seq<Integer> seq = Seq.of(1, 2, 3)

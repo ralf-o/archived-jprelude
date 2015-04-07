@@ -4,14 +4,27 @@ import java.util.*;
 
 public abstract class Generator<T> implements Iterator<T>, AutoCloseable {
   private boolean isInitialized = false;
-  private boolean hasNextValue = false;
-  private T nextValue = null;
+  private final Queue<T> nextValues = new LinkedList<>();
   private boolean reachedEnd = false;
   private boolean isDisposed = false;
   
-  protected final void yield(T value) {
-    this.hasNextValue = true;
-    this.nextValue = value;
+  
+  protected final void yield(final T value) {
+      this.nextValues.add(value);
+  }
+  
+  protected final void yieldMany(T... values) {
+      if (values != null) {
+          for (final T value : values) {
+              this.nextValues.add(value);
+          }
+      }
+  }
+  
+  protected final void yieldMany(final Collection<T> values) {
+      if (values != null) {
+          this.nextValues.addAll(values);
+      }
   }
   
   protected abstract void generate() throws Throwable;
@@ -40,13 +53,13 @@ public abstract class Generator<T> implements Iterator<T>, AutoCloseable {
           this.isInitialized = true;
       }
         
-      if (this.hasNextValue) {
+      if (!this.nextValues.isEmpty()) {
         ret = true;
       } else {
         try {
           this.generate();
-          this.reachedEnd = !this.hasNextValue;
-          ret = this.hasNextValue;
+          this.reachedEnd = this.nextValues.isEmpty();
+          ret = !this.reachedEnd;
         } catch (final Throwable throwable) {
             try {
                 this.close();
@@ -62,12 +75,11 @@ public abstract class Generator<T> implements Iterator<T>, AutoCloseable {
   
   @Override
   public final T next() {
-    if (!this.hasNextValue && !this.hasNext()) {
+    if (this.nextValues.isEmpty() && !this.hasNext()) {
       throw new NoSuchElementException();
     }
     
-    this.hasNextValue  = false;
-    return this.nextValue;
+    return this.nextValues.poll();
   }
 
   @Override

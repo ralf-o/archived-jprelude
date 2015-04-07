@@ -1,13 +1,15 @@
 package org.jprelude.common.util;
 
+import com.codepoetics.protonpack.Indexed;
 import java.util.Arrays;
-import java.util.Iterator;
+import java.util.Collection;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.Spliterator;
-import java.util.Spliterators;
+import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -18,17 +20,17 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import org.jprelude.common.function.UnaryConsumer;
 import org.jprelude.common.function.BinaryConsumer;
-import org.jprelude.common.function.UnaryFunction;
 import org.jprelude.common.function.BinaryFunction;
 import org.jprelude.common.function.TernaryFunction;
 import org.jprelude.common.function.UnaryPredicate;
 import org.jprelude.common.function.BinaryPredicate;
 
+
 @FunctionalInterface
 public interface Seq<T> {
     Stream<T> stream();
     
-    default <R> Seq<R> map(final UnaryFunction<? super T, ? extends R> f) {
+    default <R> Seq<R> map(final Function<? super T, ? extends R> f) {
         return Seq.from(() -> StreamUtils.stream(Seq.this.stream()).map(f));
     }
    
@@ -38,73 +40,24 @@ public interface Seq<T> {
     }
     
     default <U, R> Seq<R> zip(final Seq<U> otherSeq, final BinaryFunction<? super T, ? super U, R> f) {
-        return this.zip(otherSeq, (x, y, i) -> f.apply(x, y));
-//        return Seq.from(() ->
-//            com.codepoetics.protonpack.StreamUtils.zip(
-//                this.stream(), otherSeq.stream(), (x, y) -> f.apply(x, y)));
+        return Seq.from(() ->
+            com.codepoetics.protonpack.StreamUtils.zip(
+                this.stream(), otherSeq.stream(), (x, y) -> f.apply(x, y)));
 
     }
     
     default <U, R> Seq<R> zip(final Seq<U> otherSeq, final TernaryFunction<? super T, ? super U, Integer, R> f) { 
-//        return Seq.from(() -> {
-//            final Stream<Indexed<T>> indexedStream = com.codepoetics.protonpack.StreamUtils.zipWithIndex(this.stream());
-//            return com.codepoetics.protonpack.StreamUtils.zip(
-//                indexedStream,
-//                otherSeq.stream(),
-//                (indexedValue, otherValue) -> f.apply(indexedValue.getValue(), otherValue, (int) indexedValue.getIndex())
-//            );
-//        });
-
-        return (otherSeq == null)
-            ? Seq.empty()
-            : Seq.from(() -> {
-                final Iterator generator = new Generator () {
-                    Stream<T> stream1 = null;
-                    Stream<U> stream2 = null;
-                    Iterator<T> iter1 = null;
-                    Iterator<U> iter2 = null;
-                    int index = -1;
-
-                    @Override
-                    protected void init() {
-                        this.stream1 = StreamUtils.sequential(Seq.this.stream());
-                        this.iter1 = stream1.iterator();
-                        this.stream2 = StreamUtils.sequential(otherSeq.stream());
-                        this.iter2 = this.stream2.iterator();
-                    }
-
-                    @Override
-                    protected void dispose() {
-                        if (this.stream1 != null) {
-                            this.stream1.close();
-                            this.stream1 = null;
-                            this.iter1 = null;
-                        }
-
-                        if (this.stream2 != null) {
-                            this.stream2.close();
-                            this.stream2 = null;
-                            this.iter2 = null;
-                        }
-
-                        this.index = -1;
-                    };
-
-                    @Override
-                    protected void generate() throws Exception {
-                        if (iter1.hasNext() && iter2.hasNext()) {
-                            this.yield(f.apply(iter1.next(), iter2.next(), ++this.index));
-                        }
-                    }
-                };
-
-                final Spliterator spliterator =  Spliterators.spliteratorUnknownSize(generator, Spliterator.ORDERED);
-                final Stream stream = StreamSupport.stream(spliterator, false);
-                return stream;
-            });
+        return Seq.from(() -> {
+            final Stream<Indexed<T>> indexedStream = com.codepoetics.protonpack.StreamUtils.zipWithIndex(this.stream());
+            return com.codepoetics.protonpack.StreamUtils.zip(
+                indexedStream,
+                otherSeq.stream(),
+                (indexedValue, otherValue) -> f.apply(indexedValue.getValue(), otherValue, (int) indexedValue.getIndex())
+            );
+        });
     }
     
-    default <U, R> Seq<R> mapFiltered(final UnaryFunction<T, Optional<R>> f) {
+    default <U, R> Seq<R> mapFiltered(final Function<T, Optional<R>> f) {
         return this.map(f).filter(o -> o.isPresent()).map(o -> o.get());
     }
 
@@ -112,7 +65,7 @@ public interface Seq<T> {
         return this.map((v, i) -> f.apply(v, i)).filter(o -> o.isPresent()).map(o -> o.get());
     }
  
-    default <R> Seq<R> flatMap(final UnaryFunction<? super T, ? extends Seq<? extends R>> f) {
+    default <R> Seq<R> flatMap(final Function<? super T, ? extends Seq<? extends R>> f) {
         return Seq.from(() ->
             StreamUtils.stream(Seq.this.stream())
             .flatMap(v -> f.apply(v).stream()));
@@ -133,7 +86,7 @@ public interface Seq<T> {
     }
     
     default Seq<T> peek(final UnaryConsumer<? super T> action) {
-        final UnaryFunction<? super T, T> f = (v) -> {
+        final Function<? super T, T> f = (v) -> {
             action.accept(v);
             return v;
         };
@@ -150,9 +103,25 @@ public interface Seq<T> {
         return Seq.from(() -> StreamUtils.stream(this.stream()).limit(n));
     }
     
+    default Seq<T> takeWhile(final Predicate<T> pred) {
+        return Seq.from(() -> com.codepoetics.protonpack.StreamUtils.takeWhile(this.stream(), pred));
+    }
+    
+    default Seq<T> takeUntil(final Predicate<T> pred) {
+        return Seq.from(() -> com.codepoetics.protonpack.StreamUtils.takeUntil(this.stream(), pred));
+    }
+
     default Seq<T> skip(final int n) {
         return Seq.from(() -> StreamUtils.stream(this.stream()).skip(n));
     }
+
+    default Seq<T> skipWhile(final Predicate<T> pred) {
+        return Seq.from(() -> com.codepoetics.protonpack.StreamUtils.skipWhile(this.stream(), pred));
+    }
+    
+    default Seq<T> skipUntil(final Predicate<T> pred) {
+        return Seq.from(() -> com.codepoetics.protonpack.StreamUtils.skipUntil(this.stream(), pred));
+    }    
     
     default <A, R> R collect(final Collector<? super T, A, R> collector) {
         try (final Stream<T> stream = StreamUtils.stream(this.stream())) {
@@ -277,7 +246,29 @@ public interface Seq<T> {
     public static Seq<Double> from(final double[] values) {
         return Seq.from(() -> DoubleStream.of(values).boxed());
     }
-
+    
+    public static <T> Seq<T> from(final BiFunction<Long, Long, Collection<T>> blockReader, final long blockSize) {
+        return Seq.from(blockReader, blockSize, 0);
+    }
+       
+    
+    public static <T> Seq<T> from(final BiFunction<Long, Long, Collection<T>> blockReader, final long blockSize, long start) {
+        if (blockSize <= 0) {
+            throw new IllegalArgumentException("Second argument must be a positive integer number");
+        }
+        
+        return Seq.iterate(0L, n -> n + blockSize)
+                .map(n -> blockReader.apply(n, blockSize))
+                .flatMap(coll -> (coll  == null ? Seq.of((Collection<T>) null) : (coll.size() == blockSize ? Seq.of(coll) : Seq.of(coll, null))))                 
+                .takeWhile(coll -> coll != null)
+                .flatMap(coll -> Seq.from(coll));   
+    }
+    
+    public static <T> Seq<T> of(final T value) {
+        return Seq.from(Arrays.asList(value));
+    }
+    
+    // TODO: rename to ofItems?
     public static <T> Seq<T> of(final T... values) {
         return Seq.from(values);
     }
