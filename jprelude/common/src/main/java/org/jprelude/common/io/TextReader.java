@@ -62,6 +62,11 @@ public final class TextReader {
        Objects.requireNonNull(file);
        return TextReader.from(file.toPath());
     }
+    
+    public static TextReader from(final String text) {
+        return new TextReader(() -> new BufferedReader(new InputStreamReader(
+                new ByteArrayInputStream(text.getBytes()))), true);
+    }
 
     public String readAsString() throws IOException {
         final CharBuffer charBuffer = CharBuffer.allocate(8096);
@@ -115,5 +120,9 @@ public final class TextReader {
             
             return bufferedReader.lines();
         });
+    }
+    
+    public Reader readAsReader() throws IOException {
+        return this.bufferedReaderSupplier.get();
     }
 }

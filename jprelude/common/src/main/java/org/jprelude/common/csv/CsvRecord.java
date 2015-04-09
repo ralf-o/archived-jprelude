@@ -1,38 +1,26 @@
 package org.jprelude.common.csv;
 
-import java.util.List;
-import java.util.function.Function;
+import java.util.Objects;
+import org.apache.commons.csv.CSVRecord;
 
-public class CsvRecord {
-    final Long index;
-    final List<?> fields;
-    final Function<String, Integer> nameToIndex;
+public final class CsvRecord {
+    final CSVRecord apacheCommonsCsvRecord;
     
-    public CsvRecord(final Long index, final List<?> fields, Function<String, Integer> nameToIndex) {
-        this.fields = fields;
-        this.nameToIndex = nameToIndex;
-        this.index = index;
+    CsvRecord(final CSVRecord apacheCommonsCsvRecord) {
+        Objects.requireNonNull(apacheCommonsCsvRecord);
+        
+        this.apacheCommonsCsvRecord = apacheCommonsCsvRecord;
     }
     
     public String get(int columnIdx) {
-        final Object field = this.fields.get(columnIdx);
-        return (field == null ? null : field.toString());
+        return this.apacheCommonsCsvRecord.get(columnIdx);
     }
     
     public String get(String columnName) {
-        final String ret;
-        final Integer columnIdx = this.nameToIndex.apply(columnName);
-        
-        if (columnIdx == null) {
-            ret = null;
-        } else {
-            ret = this.get(columnIdx);
-        }
-        
-        return ret;
+        return this.apacheCommonsCsvRecord.get(columnName);
     }
         
     long index() {
-        return this.index;
+        return this.apacheCommonsCsvRecord.getRecordNumber() - 1;
     }
 }

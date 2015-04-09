@@ -1,16 +1,24 @@
 package org.jprelude.common.csv;
 
+import com.codepoetics.protonpack.StreamUtils;
+import java.io.IOException;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.csv.QuoteMode;
 import org.jprelude.common.io.function.IOFunction;
 import org.jprelude.common.io.TextReader;
 import org.jprelude.common.io.TextWriter;
+import org.jprelude.common.util.Generator;
 import org.jprelude.common.util.Seq;
 
 
@@ -135,13 +143,21 @@ public final class CsvFormat implements Function<List<?>, String> {
               apacheCommonsCsvQuoteMode = QuoteMode.MINIMAL;
         }
         
-        this.apacheCommonsCsvFormat = CSVFormat.DEFAULT
+        CSVFormat format = CSVFormat.DEFAULT
                 .withDelimiter(this.delimiter)
                 .withRecordSeparator(this.recordSeparator)
                 .withIgnoreSurroundingSpaces(this.autoTrim)
                 .withEscape(this.escapeCharacter)
                 .withQuote(this.quoteCharacter)
                 .withQuoteMode(apacheCommonsCsvQuoteMode);
+        
+        if (!this.columns.isEmpty()) {
+            final String[] columnNames = new String[this.columns.size()];
+            Seq.from(this.columns).forEach((col, idx) -> columnNames[idx] = col.getName());
+            format = format.withHeader(columnNames).withSkipHeaderRecord();
+        }
+        
+        this.apacheCommonsCsvFormat = format;
     }
 
     public char getDelimiter() {
@@ -170,7 +186,13 @@ public final class CsvFormat implements Function<List<?>, String> {
     
     @Override
     public String apply(final List<?> fields) {
-        return this.apacheCommonsCsvFormat.format(fields.toArray());
+        Stream stream = StreamUtils.stream(fields);
+        
+        if (this.autoTrim) {
+            stream = stream.map(field -> field == null ? null : field.toString().trim());
+        }
+        
+        return this.apacheCommonsCsvFormat.format(stream.toArray());
     }
     
     public Seq<String> apply(final Seq<List<?>> rows) {
@@ -204,7 +226,35 @@ public final class CsvFormat implements Function<List<?>, String> {
     }   
     
     public <T> Function<Function<CsvRecord, T>, Seq<T>> forInputFrom(final TextReader textReader) {
-        return null; // TODO
+        final Seq<CsvRecord> seq = Seq.from(() ->        
+            new Generator<CsvRecord>() {
+                private Reader reader;
+                private CSVParser parser;
+                private Iterator<CSVRecord> iterator;
+                
+                @Override
+                public void init() throws IOException {
+                    this.reader = textReader.readAsReader();
+                    this.parser = new CSVParser(this.reader, CsvFormat.this.apacheCommonsCsvFormat);
+                    this.iterator = this.parser.iterator();
+                }
+                
+                @Override
+                public void generate() {
+                    if (this.iterator.hasNext()) {
+                        this.yield(new CsvRecord(this.iterator.next()));
+                    }
+                }
+                
+                @Override
+                public void dispose() throws IOException {
+                    this.reader.close();
+                    this.parser.close();
+                }
+            }
+        );
+        
+        return f -> seq.map(f);
     }   
     
     public static Builder builder() {
