@@ -17,10 +17,11 @@ public class CsvFormatTest {
                 "COLUMN-2",
                 "COLUMN-3"
             )
-            .quoteMode(CsvQuoteMode.ALL)
+            .escape('\\')
+            .quoteMode(CsvQuoteMode.NONE)
             .build()
             .forOutputTo(TextWriter.from(System.out))
             .apply(records.map(n -> 
-                Arrays.asList("a" + n, "b" + n, "c" + n)));               
+                Arrays.asList("a" + n, "b\r\\\"" + n, "c" + n)));               
     }
 }

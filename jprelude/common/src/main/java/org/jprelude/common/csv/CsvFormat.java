@@ -101,6 +101,8 @@ public final class CsvFormat implements Function<List<?>, String> {
     private final char delimiter;
     private final String recordSeparator;
     private final boolean autoTrim;
+    private final Character escapeCharacter;
+    private final Character quoteCharacter;
     private final CsvQuoteMode quoteMode;
     private final CSVFormat apacheCommonsCsvFormat;
             
@@ -110,8 +112,9 @@ public final class CsvFormat implements Function<List<?>, String> {
         this.delimiter = builder.delimiter;
         this.recordSeparator = builder.recordSeparator;
         this.autoTrim = builder.autoTrim;
+        this.escapeCharacter = builder.escapeCharacter;
+        this.quoteCharacter = builder.quoteCharacter;
         this.quoteMode = builder.quoteMode;
-        
         
         final QuoteMode apacheCommonsCsvQuoteMode;
         
@@ -121,11 +124,11 @@ public final class CsvFormat implements Function<List<?>, String> {
                 break;
 
             case NONE:
-                apacheCommonsCsvQuoteMode = QuoteMode.ALL;
+                apacheCommonsCsvQuoteMode = QuoteMode.NONE;
                 break;
             
             case NON_NUMERIC:
-                apacheCommonsCsvQuoteMode = QuoteMode.ALL;
+                apacheCommonsCsvQuoteMode = QuoteMode.NON_NUMERIC;
                 break;
 
             default:
@@ -136,6 +139,8 @@ public final class CsvFormat implements Function<List<?>, String> {
                 .withDelimiter(this.delimiter)
                 .withRecordSeparator(this.recordSeparator)
                 .withIgnoreSurroundingSpaces(this.autoTrim)
+                .withEscape(this.escapeCharacter)
+                .withQuote(this.quoteCharacter)
                 .withQuoteMode(apacheCommonsCsvQuoteMode);
     }
 
@@ -149,6 +154,18 @@ public final class CsvFormat implements Function<List<?>, String> {
     
     public boolean isAutoTrim() {
         return this.autoTrim;
+    }
+    
+    public Character getEscapeCharacter() {
+        return this.escapeCharacter;
+    }
+    
+    public CsvQuoteMode getQuoteMode() {
+        return this.quoteMode;
+    }
+    
+    public Character getQuoteCharacter() {
+        return this.quoteCharacter;
     }
     
     @Override
@@ -199,6 +216,8 @@ public final class CsvFormat implements Function<List<?>, String> {
         private char delimiter;
         private String recordSeparator;
         private boolean autoTrim;
+        private Character escapeCharacter;
+        private Character quoteCharacter;
         private CsvQuoteMode quoteMode;
         
         private Builder() {
@@ -206,6 +225,8 @@ public final class CsvFormat implements Function<List<?>, String> {
             this.delimiter = ',';
             this.recordSeparator = "\r\n";
             this.autoTrim = false;
+            this.escapeCharacter = null;
+            this.quoteCharacter = '"';
             this.quoteMode = CsvQuoteMode.MINIMAL;
         }
         
@@ -215,6 +236,8 @@ public final class CsvFormat implements Function<List<?>, String> {
                 this.delimiter = prototype.delimiter;
                 this.recordSeparator = prototype.recordSeparator;
                 this.autoTrim = prototype.autoTrim;
+                this.escapeCharacter = prototype.escapeCharacter;
+                this.quoteCharacter = prototype.quoteCharacter;
                 this.quoteMode = prototype.quoteMode;
             }
         }
@@ -228,8 +251,18 @@ public final class CsvFormat implements Function<List<?>, String> {
             if (recordSeparator == null || recordSeparator.isEmpty()) {
                 throw new IllegalArgumentException("First parameter must not be null or empty string");
             }
-            
+ 
             this.recordSeparator = recordSeparator;
+            return this;
+        }
+       
+        public Builder escape(final Character escapeCharacter) {
+            this.escapeCharacter = escapeCharacter;
+            return this;
+        }
+        
+        public Builder quote(final Character quoteCharacter) {
+            this.quoteCharacter = quoteCharacter;
             return this;
         }
         
