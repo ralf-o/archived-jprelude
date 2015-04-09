@@ -3,12 +3,12 @@ package org.jprelude.common.csv;
 import java.util.List;
 import java.util.function.Function;
 
-public class CsvRow {
+public class CsvRecord {
     final Long index;
     final List<?> fields;
     final Function<String, Integer> nameToIndex;
     
-    public CsvRow(final Long index, final List<?> fields, Function<String, Integer> nameToIndex) {
+    public CsvRecord(final Long index, final List<?> fields, Function<String, Integer> nameToIndex) {
         this.fields = fields;
         this.nameToIndex = nameToIndex;
         this.index = index;

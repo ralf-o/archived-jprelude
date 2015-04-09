@@ -193,13 +193,17 @@ public final class CsvFormat implements Function<List<?>, String> {
             final Seq<String> lines = CsvFormat.this.apply(records).peek(
                 (rec, idx) -> lineCounter[0] = idx);
             
-            textWriter.writeLines(lines);
+            
+            textWriter.write(printStream -> lines.forEach(line -> {
+                printStream.print(line);
+                printStream.print(CsvFormat.this.recordSeparator);
+            }));
             
             return lineCounter[0];
         };
     }   
     
-    public <T> Function<Function<CsvRow, T>, Seq<T>> forInputFrom(final TextReader textReader) {
+    public <T> Function<Function<CsvRecord, T>, Seq<T>> forInputFrom(final TextReader textReader) {
         return null; // TODO
     }   
     
