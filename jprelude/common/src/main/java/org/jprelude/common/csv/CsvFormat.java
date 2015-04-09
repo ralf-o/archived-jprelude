@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.QuoteMode;
 import org.jprelude.common.io.function.IOFunction;
 import org.jprelude.common.io.TextReader;
 import org.jprelude.common.io.TextWriter;
@@ -96,9 +98,11 @@ CsvFormat.builder()
 
 public final class CsvFormat implements Function<List<?>, String> {
     private final List<CsvColumn> columns;
-    private final String delimiter;
+    private final char delimiter;
     private final String recordSeparator;
     private final boolean autoTrim;
+    private final CsvQuoteMode quoteMode;
+    private final CSVFormat apacheCommonsCsvFormat;
             
     
     private CsvFormat(final Builder builder) {
@@ -106,9 +110,36 @@ public final class CsvFormat implements Function<List<?>, String> {
         this.delimiter = builder.delimiter;
         this.recordSeparator = builder.recordSeparator;
         this.autoTrim = builder.autoTrim;
+        this.quoteMode = builder.quoteMode;
+        
+        
+        final QuoteMode apacheCommonsCsvQuoteMode;
+        
+        switch (this.quoteMode) {
+            case ALL:
+                apacheCommonsCsvQuoteMode = QuoteMode.ALL;
+                break;
+
+            case NONE:
+                apacheCommonsCsvQuoteMode = QuoteMode.ALL;
+                break;
+            
+            case NON_NUMERIC:
+                apacheCommonsCsvQuoteMode = QuoteMode.ALL;
+                break;
+
+            default:
+              apacheCommonsCsvQuoteMode = QuoteMode.MINIMAL;
+        }
+        
+        this.apacheCommonsCsvFormat = CSVFormat.DEFAULT
+                .withDelimiter(this.delimiter)
+                .withRecordSeparator(this.recordSeparator)
+                .withIgnoreSurroundingSpaces(this.autoTrim)
+                .withQuoteMode(apacheCommonsCsvQuoteMode);
     }
-    
-    public String getDelimiter() {
+
+    public char getDelimiter() {
         return this.delimiter;
     }
     
@@ -122,40 +153,7 @@ public final class CsvFormat implements Function<List<?>, String> {
     
     @Override
     public String apply(final List<?> fields) {
-        final StringBuilder strBuilder = new StringBuilder();
-        final String quoting = "\""; // TODO
-        
-        if (fields == null) {
-            strBuilder.append(this.recordSeparator);
-        } else {
-            Seq.from(fields).forEach((field, idx) -> {
-                String cell = (field == null ? "" : field.toString());
-
-                if (idx > 0) {
-                    strBuilder.append(this.delimiter);
-                }
-
-                if (this.isAutoTrim()) {
-                    cell = cell.trim();
-                }
-
-
-                cell = cell.replace(quoting, quoting + quoting);
-
-                if (/*this.quotingForced
-                        ||*/ cell.contains("\"")
-                        || cell.contains(this.delimiter)
-                        || cell.contains("\n")
-                        || cell.contains("\r")
-                        || cell.contains(recordSeparator)) {
-                    strBuilder.append(quoting).append(cell).append(quoting);
-                } else {
-                    strBuilder.append(cell);
-                }
-            });
-        }
-
-        return strBuilder.toString();
+        return this.apacheCommonsCsvFormat.format(fields.toArray());
     }
     
     public Seq<String> apply(final Seq<List<?>> rows) {
@@ -198,15 +196,17 @@ public final class CsvFormat implements Function<List<?>, String> {
         
     public static final class Builder {
         private List<CsvColumn> columns;
-        private String delimiter;
+        private char delimiter;
         private String recordSeparator;
         private boolean autoTrim;
+        private CsvQuoteMode quoteMode;
         
         private Builder() {
             this.columns = new ArrayList<>();
-            this.delimiter = ",";
+            this.delimiter = ',';
             this.recordSeparator = "\r\n";
-            this.autoTrim = false;         
+            this.autoTrim = false;
+            this.quoteMode = CsvQuoteMode.MINIMAL;
         }
         
         private Builder(final CsvFormat prototype) {
@@ -215,14 +215,11 @@ public final class CsvFormat implements Function<List<?>, String> {
                 this.delimiter = prototype.delimiter;
                 this.recordSeparator = prototype.recordSeparator;
                 this.autoTrim = prototype.autoTrim;
+                this.quoteMode = prototype.quoteMode;
             }
         }
         
-        public Builder delimiter(final String delimiter) {
-            if (delimiter == null || delimiter.isEmpty()) {
-                throw new IllegalArgumentException("First parameter must not be null or empty string");
-            }
-            
+        public Builder delimiter(final char delimiter) {
             this.delimiter = delimiter;
             return this;
         }
@@ -233,6 +230,13 @@ public final class CsvFormat implements Function<List<?>, String> {
             }
             
             this.recordSeparator = recordSeparator;
+            return this;
+        }
+        
+        public Builder quoteMode(final CsvQuoteMode quoteMode) {
+            Objects.requireNonNull(quoteMode);
+            
+            this.quoteMode = quoteMode;
             return this;
         }
         

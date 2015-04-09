@@ -17,6 +17,7 @@ public class CsvFormatTest {
                 "COLUMN-2",
                 "COLUMN-3"
             )
+            .quoteMode(CsvQuoteMode.ALL)
             .build()
             .forOutputTo(TextWriter.from(System.out))
             .apply(records.map(n -> 
