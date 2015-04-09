@@ -112,7 +112,8 @@ public final class CsvFormat implements Function<List<?>, String> {
     private final Character escapeCharacter;
     private final Character quoteCharacter;
     private final CsvQuoteMode quoteMode;
-    private final CSVFormat apacheCommonsCsvFormat;
+    private final CSVFormat apacheCommonsCsvFormatForOutput;
+    private final CSVFormat apacheCommonsCsvFormatForInput;
             
     
     private CsvFormat(final Builder builder) {
@@ -143,7 +144,7 @@ public final class CsvFormat implements Function<List<?>, String> {
               apacheCommonsCsvQuoteMode = QuoteMode.MINIMAL;
         }
         
-        CSVFormat format = CSVFormat.DEFAULT
+        CSVFormat formatOutput = CSVFormat.DEFAULT
                 .withDelimiter(this.delimiter)
                 .withRecordSeparator(this.recordSeparator)
                 .withIgnoreSurroundingSpaces(this.autoTrim)
@@ -151,13 +152,16 @@ public final class CsvFormat implements Function<List<?>, String> {
                 .withQuote(this.quoteCharacter)
                 .withQuoteMode(apacheCommonsCsvQuoteMode);
         
+        CSVFormat formatInput = formatOutput;
+        
         if (!this.columns.isEmpty()) {
             final String[] columnNames = new String[this.columns.size()];
             Seq.from(this.columns).forEach((col, idx) -> columnNames[idx] = col.getName());
-            format = format.withHeader(columnNames).withSkipHeaderRecord();
+            formatInput = formatInput.withHeader(columnNames).withSkipHeaderRecord();
         }
         
-        this.apacheCommonsCsvFormat = format;
+        this.apacheCommonsCsvFormatForInput = formatInput;
+        this.apacheCommonsCsvFormatForOutput = formatOutput;
     }
 
     public char getDelimiter() {
@@ -192,7 +196,7 @@ public final class CsvFormat implements Function<List<?>, String> {
             stream = stream.map(field -> field == null ? null : field.toString().trim());
         }
         
-        return this.apacheCommonsCsvFormat.format(stream.toArray());
+        return this.apacheCommonsCsvFormatForOutput.format(stream.toArray());
     }
     
     public Seq<String> apply(final Seq<List<?>> rows) {
@@ -235,7 +239,7 @@ public final class CsvFormat implements Function<List<?>, String> {
                 @Override
                 public void init() throws IOException {
                     this.reader = textReader.readAsReader();
-                    this.parser = new CSVParser(this.reader, CsvFormat.this.apacheCommonsCsvFormat);
+                    this.parser = new CSVParser(this.reader, CsvFormat.this.apacheCommonsCsvFormatForInput);
                     this.iterator = this.parser.iterator();
                 }
                 

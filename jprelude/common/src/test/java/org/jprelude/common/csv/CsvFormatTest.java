@@ -8,7 +8,7 @@ import org.jprelude.common.util.Seq;
 import org.junit.Test;
 
 public class CsvFormatTest {
-    //@Test
+    @Test
     public void testOutput() throws IOException  {
         final Seq<Integer> records = Seq.range(0, 10);
         
