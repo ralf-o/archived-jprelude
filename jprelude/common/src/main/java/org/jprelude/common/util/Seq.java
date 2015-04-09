@@ -6,8 +6,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.function.BinaryOperator;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
@@ -18,12 +21,7 @@ import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-import org.jprelude.common.function.UnaryConsumer;
-import org.jprelude.common.function.BinaryConsumer;
-import org.jprelude.common.function.BinaryFunction;
-import org.jprelude.common.function.TernaryFunction;
-import org.jprelude.common.function.UnaryPredicate;
-import org.jprelude.common.function.BinaryPredicate;
+import org.jprelude.common.function.TriFunction;
 
 
 @FunctionalInterface
@@ -34,19 +32,19 @@ public interface Seq<T> {
         return Seq.from(() -> StreamUtils.stream(Seq.this.stream()).map(f));
     }
    
-    default <R> Seq<R> map(final BinaryFunction<? super T, Integer, R> f) {
+    default <R> Seq<R> map(final BiFunction<? super T, Integer, R> f) {
         final Seq<Integer> nums  = Seq.iterate(0, n -> n + 1);
         return this.zip(nums, (v, n) -> f.apply(v, n));
     }
     
-    default <U, R> Seq<R> zip(final Seq<U> otherSeq, final BinaryFunction<? super T, ? super U, R> f) {
+    default <U, R> Seq<R> zip(final Seq<U> otherSeq, final BiFunction<? super T, ? super U, R> f) {
         return Seq.from(() ->
             com.codepoetics.protonpack.StreamUtils.zip(
                 this.stream(), otherSeq.stream(), (x, y) -> f.apply(x, y)));
 
     }
     
-    default <U, R> Seq<R> zip(final Seq<U> otherSeq, final TernaryFunction<? super T, ? super U, Integer, R> f) { 
+    default <U, R> Seq<R> zip(final Seq<U> otherSeq, final TriFunction<? super T, ? super U, Integer, R> f) { 
         return Seq.from(() -> {
             final Stream<Indexed<T>> indexedStream = com.codepoetics.protonpack.StreamUtils.zipWithIndex(this.stream());
             return com.codepoetics.protonpack.StreamUtils.zip(
@@ -61,7 +59,7 @@ public interface Seq<T> {
         return this.map(f).filter(o -> o.isPresent()).map(o -> o.get());
     }
 
-    default <U, R> Seq<R> mapFiltered(final BinaryFunction<T, Integer, Optional<R>> f) {
+    default <U, R> Seq<R> mapFiltered(final BiFunction<T, Integer, Optional<R>> f) {
         return this.map((v, i) -> f.apply(v, i)).filter(o -> o.isPresent()).map(o -> o.get());
     }
  
@@ -71,21 +69,21 @@ public interface Seq<T> {
             .flatMap(v -> f.apply(v).stream()));
     }
     
-    default <R> Seq<R> flatMap(final BinaryFunction<? super T, Integer, ? extends Seq<? extends R>> f) {
+    default <R> Seq<R> flatMap(final BiFunction<? super T, Integer, ? extends Seq<? extends R>> f) {
         final Seq<Integer> ints  = Seq.iterate(0, n -> n + 1);
         return this.zip(ints, (v, n) -> f.apply(v, n)).flatMap(v -> v);
     }
     
-    default Seq<T> filter(final UnaryPredicate<? super T> pred) {
+    default Seq<T> filter(final Predicate<? super T> pred) {
         return Seq.from(() -> StreamUtils.stream(Seq.this.stream()).filter(pred));
     }
     
-    default Seq<T> filter(final BinaryPredicate<? super T, Integer> pred) {
+    default Seq<T> filter(final BiPredicate<? super T, Integer> pred) {
         final Seq<Integer> ints  = Seq.iterate(0, n -> n + 1);        
         return this.mapFiltered((v, i) -> pred.test(v, i) ? Optional.of(v) : Optional.empty());
     }
     
-    default Seq<T> peek(final UnaryConsumer<? super T> action) {
+    default Seq<T> peek(final Consumer<? super T> action) {
         final Function<? super T, T> f = (v) -> {
             action.accept(v);
             return v;
@@ -95,7 +93,7 @@ public interface Seq<T> {
     }
     
     
-    default Seq<T> peek(final BinaryConsumer<? super T, Integer> consumer) {
+    default Seq<T> peek(final BiConsumer<? super T, Integer> consumer) {
         return this.map((v, idx) -> {consumer.accept(v, idx); return v;});
     }
     
@@ -121,7 +119,23 @@ public interface Seq<T> {
     
     default Seq<T> skipUntil(final Predicate<T> pred) {
         return Seq.from(() -> com.codepoetics.protonpack.StreamUtils.skipUntil(this.stream(), pred));
-    }    
+    }
+    
+    default Seq<T> prepend(final T value) {
+        return Seq.concat(Seq.of(value), Seq.from(this));
+    }
+    
+    default Seq<T> prependMany(final T... values) {
+        return Seq.concat(this, Seq.of(values));
+    }
+    
+    default Seq<T> append(final T value) {
+        return Seq.concat(Seq.from(this), Seq.of(value));
+    }
+    
+    default Seq<T> appendMany(final T... values) {
+        return Seq.concat(Seq.of(values), this);
+    }
     
     default <A, R> R collect(final Collector<? super T, A, R> collector) {
         try (final Stream<T> stream = StreamUtils.stream(this.stream())) {
@@ -187,7 +201,7 @@ public interface Seq<T> {
         return this.skip(1);
     }
     
-    default T reduce(final T start, final BinaryFunction<T, T, T> f) {
+    default T reduce(final T start, final BiFunction<T, T, T> f) {
         final BinaryOperator<T> operator = (v1, v2) -> f.apply(v1, v2);
         return StreamUtils.stream(this.stream()).reduce(start, operator);
     }
@@ -200,13 +214,13 @@ public interface Seq<T> {
         return StreamUtils.stream(this.stream()).collect(Collectors.toList());
     }
     
-    default void forEach(final UnaryConsumer<? super T> action) {
+    default void forEach(final Consumer<? super T> action) {
         try (final Stream<T> stream = StreamUtils.stream(this.stream())) {
             stream.forEach(action);
         }
     }
     
-    default void forEach(final BinaryConsumer<? super T, Integer> action) {
+    default void forEach(final BiConsumer<? super T, Integer> action) {
         final Seq<Integer> nums  = Seq.iterate(0, n -> n + 1);
  
         this.zip(nums, (v, n) -> new Object[] {v, n})
@@ -261,7 +275,7 @@ public interface Seq<T> {
                 .map(n -> blockReader.apply(n, blockSize))
                 .flatMap(coll -> (coll  == null ? Seq.of((Collection<T>) null) : (coll.size() == blockSize ? Seq.of(coll) : Seq.of(coll, null))))                 
                 .takeWhile(coll -> coll != null)
-                .flatMap(coll -> Seq.from(coll));   
+                .flatMap(coll -> Seq.from(coll));
     }
     
     public static <T> Seq<T> of(final T value) {

@@ -1,5 +1,7 @@
 package org.jprelude.common.io;
 
+import org.jprelude.common.io.function.IOConsumer;
+import org.jprelude.common.io.function.IOSupplier;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -81,13 +83,13 @@ public class TextWriter {
 
     public void writeLines(final Seq<?> lines) throws IOException {
         final PrintStream printStream = this.printStreamSupplier.get();
-
+        
         try {
             Seq.sequential(lines).forEach(line -> {
                 printStream.println(line == null ? "" : line.toString());
             });
         } catch (final UncheckedIOException e) {
-            throw new IOException(e.getMessage(), e);
+            throw e.getCause();
         } finally {
             if (this.autoClosePrintStream) {
                 printStream.close();

@@ -1,5 +1,6 @@
 package org.jprelude.common.io;
 
+import org.jprelude.common.io.function.IOPredicate;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;

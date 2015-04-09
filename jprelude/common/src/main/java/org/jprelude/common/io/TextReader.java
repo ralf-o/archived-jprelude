@@ -1,5 +1,6 @@
 package org.jprelude.common.io;
 
+import org.jprelude.common.io.function.IOSupplier;
 import java.io.*;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
@@ -109,7 +110,7 @@ public final class TextReader {
             try {
                 bufferedReader = this.bufferedReaderSupplier.get();
             } catch (final IOException e)  {
-                throw new UncheckedIOException(e.getMessage(), e);
+                throw new UncheckedIOException(e);
             }
             
             return bufferedReader.lines();

@@ -1,4 +1,5 @@
-package org.jprelude.common.io;
+
+package org.jprelude.common.io.function;
 
 import java.io.IOException;
 
