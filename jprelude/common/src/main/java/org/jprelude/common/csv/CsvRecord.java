@@ -12,12 +12,16 @@ public final class CsvRecord {
         this.apacheCommonsCsvRecord = apacheCommonsCsvRecord;
     }
     
-    public String get(int columnIdx) {
+    public String get(final int columnIdx) {
         return this.apacheCommonsCsvRecord.get(columnIdx);
     }
     
-    public String get(String columnName) {
+    public String get(final String columnName) {
         return this.apacheCommonsCsvRecord.get(columnName);
+    }
+    
+    public String get(final Enum<?> column) {
+        return this.apacheCommonsCsvRecord.get(column);
     }
         
     long index() {

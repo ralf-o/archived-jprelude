@@ -1,5 +1,6 @@
 package org.jprelude.common.csv;
 
+import org.jprelude.common.util.LineSeparator;
 import com.codepoetics.protonpack.StreamUtils;
 import java.io.IOException;
 import java.io.Reader;
@@ -107,7 +108,7 @@ CsvFormat.builder()
 public final class CsvFormat implements Function<List<?>, String> {
     private final List<CsvColumn> columns;
     private final char delimiter;
-    private final String recordSeparator;
+    private final LineSeparator recordSeparator;
     private final boolean autoTrim;
     private final Character escapeCharacter;
     private final Character quoteCharacter;
@@ -146,7 +147,7 @@ public final class CsvFormat implements Function<List<?>, String> {
         
         CSVFormat formatOutput = CSVFormat.DEFAULT
                 .withDelimiter(this.delimiter)
-                .withRecordSeparator(this.recordSeparator)
+                .withRecordSeparator(this.recordSeparator.getSeparator())
                 .withIgnoreSurroundingSpaces(this.autoTrim)
                 .withEscape(this.escapeCharacter)
                 .withQuote(this.quoteCharacter)
@@ -168,11 +169,11 @@ public final class CsvFormat implements Function<List<?>, String> {
         return this.delimiter;
     }
     
-    public String getRecordSeparator() {
+    public LineSeparator getRecordSeparator() {
         return this.recordSeparator;
     }
     
-    public boolean isAutoTrim() {
+    public boolean isAutoTrimmed() {
         return this.autoTrim;
     }
     
@@ -199,7 +200,7 @@ public final class CsvFormat implements Function<List<?>, String> {
         return this.apacheCommonsCsvFormatForOutput.format(stream.toArray());
     }
     
-    public Seq<String> apply(final Seq<List<?>> rows) {
+    public Seq<String> map(final Seq<List<?>> rows) {
         Seq<String> ret = Seq.sequential(rows).map(this);
         
         if (!this.columns.isEmpty()) {
@@ -210,26 +211,30 @@ public final class CsvFormat implements Function<List<?>, String> {
         return ret;
     }
     
-    public IOFunction<Seq<List<?>>, Long> forOutputTo(final TextWriter textWriter) {
+    public IOFunction<Seq<List<?>>, Long> prepareOutputTo(final TextWriter textWriter) {
         Objects.requireNonNull(textWriter);
         
         return records -> {
             final long[] lineCounter = {0};
             
-            final Seq<String> lines = CsvFormat.this.apply(records).peek(
+            final Seq<String> lines = CsvFormat.this.map(records).peek(
                 (rec, idx) -> lineCounter[0] = idx);
             
             
             textWriter.write(printStream -> lines.forEach(line -> {
                 printStream.print(line);
-                printStream.print(CsvFormat.this.recordSeparator);
+                printStream.print(CsvFormat.this.recordSeparator.getSeparator());
             }));
             
             return lineCounter[0];
         };
-    }   
+    }
     
-    public <T> Function<Function<CsvRecord, T>, Seq<T>> forInputFrom(final TextReader textReader) {
+    public IOFunction<TextWriter, Long> prepareOutputOf(final Seq<List<?>> records) {
+        return writer ->  this.prepareOutputTo(writer).apply(records);
+    }
+    
+    public Seq<CsvRecord> parse(final TextReader textReader) {
         final Seq<CsvRecord> seq = Seq.from(() ->        
             new Generator<CsvRecord>() {
                 private Reader reader;
@@ -258,7 +263,7 @@ public final class CsvFormat implements Function<List<?>, String> {
             }
         );
         
-        return f -> seq.map(f);
+        return seq;
     }   
     
     public static Builder builder() {
@@ -272,7 +277,7 @@ public final class CsvFormat implements Function<List<?>, String> {
     public static final class Builder {
         private List<CsvColumn> columns;
         private char delimiter;
-        private String recordSeparator;
+        private LineSeparator recordSeparator;
         private boolean autoTrim;
         private Character escapeCharacter;
         private Character quoteCharacter;
@@ -281,7 +286,7 @@ public final class CsvFormat implements Function<List<?>, String> {
         private Builder() {
             this.columns = new ArrayList<>();
             this.delimiter = ',';
-            this.recordSeparator = "\r\n";
+            this.recordSeparator = LineSeparator.SYSTEM;
             this.autoTrim = false;
             this.escapeCharacter = null;
             this.quoteCharacter = '"';
@@ -305,11 +310,7 @@ public final class CsvFormat implements Function<List<?>, String> {
             return this;
         }
         
-        public Builder recordSeparator(final String recordSeparator) {
-            if (recordSeparator == null || recordSeparator.isEmpty()) {
-                throw new IllegalArgumentException("First parameter must not be null or empty string");
-            }
- 
+        public Builder recordSeparator(final LineSeparator recordSeparator) {
             this.recordSeparator = recordSeparator;
             return this;
         }

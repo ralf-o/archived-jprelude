@@ -81,7 +81,23 @@ public class TextWriter {
         );
     }
 
-    public void writeLines(final Seq<?> lines) throws IOException {
+    public void write(final Seq<?> lines) throws IOException {
+        final PrintStream printStream = this.printStreamSupplier.get();
+        
+        try {   
+            Seq.sequential(lines).forEach(line -> {
+                printStream.print(line == null ? "" : line.toString());
+            });
+        } catch (final UncheckedIOException e) {
+            throw e.getCause();
+        } finally {
+            if (this.autoClosePrintStream) {
+                printStream.close();
+            }
+        }
+    }
+
+    public void writeln(final Seq<?> lines) throws IOException {
         final PrintStream printStream = this.printStreamSupplier.get();
         
         try {
