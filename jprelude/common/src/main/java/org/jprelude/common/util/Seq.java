@@ -21,6 +21,7 @@ import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import org.jprelude.common.event.EventStream;
 import org.jprelude.common.function.TriFunction;
 
 
@@ -143,10 +144,6 @@ public interface Seq<T> {
         }
     }
     
-    default Seq<T> force() {
-        return Seq.from(this.toList());
-    }
-    
     default Seq<T> sequential() {
         return Seq.from(() ->  StreamUtils.sequential(this.stream()));
     }
@@ -212,6 +209,21 @@ public interface Seq<T> {
     
     default List<T> toList() {
         return StreamUtils.stream(this.stream()).collect(Collectors.toList());
+    }
+    
+    default EventStream<T> toEventStream() {
+        return EventStream.create(observer -> {
+            if (observer != null) {
+                try (final Stream<T> stream = StreamUtils.sequential(this.stream())) {
+                    stream.forEach(val -> observer.onNext(val));
+                    observer.onComplete();
+                } catch (final Throwable t) {
+                    observer.onError(t);
+                }
+            }
+            
+            return () -> {};
+        });
     }
     
     default void forEach(final Consumer<? super T> action) {
