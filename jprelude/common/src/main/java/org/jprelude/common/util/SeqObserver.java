@@ -1,6 +1,6 @@
-package org.jprelude.common.event;
+package org.jprelude.common.util;
 
-public interface EventObserver<T> {
+public interface SeqObserver<T> {
     void onNext(T item);
     void onError(Throwable throwable);
     void onComplete();

@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -13,7 +14,6 @@ import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.UnaryOperator;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
@@ -21,8 +21,9 @@ import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-import org.jprelude.common.event.EventStream;
 import org.jprelude.common.function.TriFunction;
+import org.jprelude.common.tuple.Pair;
+import org.jprelude.common.tuple.Triple;
 
 
 @FunctionalInterface
@@ -68,6 +69,10 @@ public interface Seq<T> {
         return Seq.from(() ->
             StreamUtils.stream(Seq.this.stream())
             .flatMap(v -> f.apply(v).stream()));
+    }
+    
+    default <T> Seq<T> flatten(final Seq<Seq<T>> seqs) {
+        return Seq.from(seqs).flatMap(Function.identity());
     }
     
     default <R> Seq<R> flatMap(final BiFunction<? super T, Integer, ? extends Seq<? extends R>> f) {
@@ -211,21 +216,6 @@ public interface Seq<T> {
         return StreamUtils.stream(this.stream()).collect(Collectors.toList());
     }
     
-    default EventStream<T> toEventStream() {
-        return EventStream.create(observer -> {
-            if (observer != null) {
-                try (final Stream<T> stream = StreamUtils.sequential(this.stream())) {
-                    stream.forEach(val -> observer.onNext(val));
-                    observer.onComplete();
-                } catch (final Throwable t) {
-                    observer.onError(t);
-                }
-            }
-            
-            return () -> {};
-        });
-    }
-    
     default void forEach(final Consumer<? super T> action) {
         try (final Stream<T> stream = StreamUtils.stream(this.stream())) {
             stream.forEach(action);
@@ -311,11 +301,31 @@ public interface Seq<T> {
         return Seq.from(() -> Stream.empty());
     }
     
-    public static <T> Seq<T> iterate(final T seed, final UnaryOperator<T> f) {
-        return Seq.from(() -> Stream.iterate(seed, f));
+    public static <T> Seq<T> iterate(final T seed, final Function<T, T> f) {
+        Objects.requireNonNull(f);
+        return Seq.from(() -> Stream.iterate(seed, v -> f.apply(v)));
+    }
+    
+    public static <T> Seq<T> iterate(final T seed1, final T seed2, final BiFunction<T, T, T> f) {
+        Objects.requireNonNull(f);
+        final Pair<T, T> seedPair = Pair.of(seed1, seed2);
+        
+        return Seq.iterate(seedPair, pair -> Pair.of(pair.getSecond(), f.apply(pair.getFirst(), pair.getSecond())))
+                .map(pair -> pair.getFirst());
+    }
+    
+    public static <T> Seq<T> iterate(final T seed1, final T seed2, final T seed3, final TriFunction<T, T, T, T> f) {
+        final Triple<T, T, T> seedTriple = Triple.of(seed1, seed2, seed3);
+      
+        return Seq.iterate(seedTriple, triple -> Triple.of(triple.getFirst(), triple.getSecond(), f.apply(triple.getFirst(), triple.getSecond(), triple.getThrid())))
+                .map(Triple::getFirst);
     }
 
     public static Seq<Integer> range(final int start, final int end) {
         return Seq.from(() -> IntStream.range(start, end).boxed());
-    }    
+    }
+    
+    default SeqObservable<T> toObservable() {
+        return SeqObservable.from(this);
+    }
 }

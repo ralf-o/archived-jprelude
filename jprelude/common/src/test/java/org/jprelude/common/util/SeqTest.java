@@ -47,4 +47,9 @@ public class SeqTest {
  
         Assert.assertArrayEquals(result.toArray(), expected);
     }
+    
+    @Test
+    public void testMethodIterate() {
+        Seq.iterate(0, 1, (n, m) -> n + m).take(20).forEach(System.out::println);
+    }
 }
