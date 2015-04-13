@@ -16,7 +16,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.csv.QuoteMode;
-import org.jprelude.common.util.SeqObservable;
+import org.jprelude.common.util.Observable;
 import org.jprelude.common.io.function.IOFunction;
 import org.jprelude.common.io.TextReader;
 import org.jprelude.common.io.TextWriter;
@@ -212,8 +212,8 @@ public final class CsvFormat implements Function<List<?>, String> {
         return ret;
     }
     
-    public SeqObservable<String> map(final SeqObservable<List<?>> rows) {
-        SeqObservable<String> ret = (rows == null ? SeqObservable.<List<?>>empty() : rows).map(row -> this.apply(row));
+    public Observable<String> map(final Observable<List<?>> rows) {
+        Observable<String> ret = (rows == null ? Observable.<List<?>>empty() : rows).map(row -> this.apply(row));
         
         if (!this.columns.isEmpty()) {
             final String headline = this.apply(columns.stream().map(CsvColumn::getTitle).collect(Collectors.toList()));

@@ -325,7 +325,11 @@ public interface Seq<T> {
         return Seq.from(() -> IntStream.range(start, end).boxed());
     }
     
-    default SeqObservable<T> toObservable() {
-        return SeqObservable.from(this);
+    public static Seq<Long> range(final long start, final long end) {
+        return Seq.from(() -> LongStream.range(start, end).boxed());
+    }
+    
+    default Observable<T> toObservable() {
+        return Observable.from(this);
     }
 }

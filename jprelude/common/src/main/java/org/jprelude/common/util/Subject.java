@@ -1,15 +1,15 @@
 package org.jprelude.common.util;
 
-import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentSkipListSet;
 
-public interface SeqSubject<T> extends SeqObserver<T>, SeqObservable<T> {
+public interface Subject<T, R> extends Observer<T>, Observable<R> {
     boolean hasObservers();
     
-    static <T> SeqSubject<T> create() {
-        return new SeqSubject<T>() {
-            final Set<SeqObserver<T>> observers = new HashSet<>(); 
+    static <T> Subject<T, T> create() {
+        return new Subject<T, T>() {
+            final Set<Observer<T>> observers = new ConcurrentSkipListSet<>(); 
 
             @Override
             public boolean hasObservers() {
@@ -32,7 +32,7 @@ public interface SeqSubject<T> extends SeqObserver<T>, SeqObservable<T> {
             }
 
             @Override
-            public Disposable subscribe(final SeqObserver<T> observer) {
+            public Disposable subscribe(final Observer<T> observer) {
                 Objects.requireNonNull(observer);
                 
                 this.observers.add(observer);
