@@ -452,14 +452,14 @@ public interface Observable<T> {
                     if (this.masterSubscription == null) {
                         this.masterSubscription = observables.subscribe(new Observer<Observable<T>>() {
                             @Override
-                            public void onNext(final Observable<T> observable) {System.out.println("New master");
+                            public void onNext(final Observable<T> observable) {
                                 try {
                                     if (subSubscription != null) {
                                         observablesQueue.add(observable);
                                     } else {
                                         subSubscription = observable.subscribe(new Observer<T>() {
                                             @Override
-                                            public void onNext(T item) {System.out.println("new sub");
+                                            public void onNext(T item) {
                                                 observer.onNext(item);
                                             }
 
@@ -472,11 +472,13 @@ public interface Observable<T> {
 
                                             @Override
                                             public void onComplete() {
+                                                subSubscription = null;
                                                 if (!observablesQueue.isEmpty()) {
-                                                     subSubscription = observablesQueue.poll().subscribe(this);    
+                                                     subSubscription = observablesQueue.poll().subscribe(this);
                                                      subSubscription.requestAll(); // TODO
                                                 } else if (noMoreObservables) {
                                                     observer.onComplete();
+                                                    cancel();
                                                 }
                                             }
                                             

@@ -38,7 +38,7 @@ public class ObservableTest {
             
         });
         
-        merged.forEach(System.out::println);
+        merged.filter(n -> n % 2 == 0).forEach(System.out::println);
         
         //subscription.request(13);
     
