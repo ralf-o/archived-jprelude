@@ -28,7 +28,7 @@ public final class CsvExportResult {
         return this.recordCount;
     }
     
-    public CsvExportResult doOnSuccess(final Command command) {
+    public CsvExportResult ifSuccess(final Command command) {
         if (command != null && this.status == Status.SUCCESS) {
             command.execute();
         }
@@ -36,7 +36,7 @@ public final class CsvExportResult {
         return this;
     };
     
-    public CsvExportResult doOnSuccess(final Consumer<CsvExportResult> consumer) {
+    public CsvExportResult ifSuccess(final Consumer<CsvExportResult> consumer) {
         if (consumer != null && this.status == Status.SUCCESS) {
             consumer.accept(this);
         }
@@ -52,7 +52,7 @@ public final class CsvExportResult {
         return this;
     };
     
-    public CsvExportResult doOnError(final Consumer<Throwable> consumer) {
+    public CsvExportResult ifError(final Consumer<Throwable> consumer) {
         if (consumer != null && this.status == Status.ERROR) {
             consumer.accept(this.error);
         }
@@ -60,7 +60,16 @@ public final class CsvExportResult {
         return this;
     };
 
-    public CsvExportResult throwOnError() throws Throwable {
+    public CsvExportResult ifError(final Command command) {
+        if (command != null && this.status == Status.ERROR) {
+            command.execute();
+        }
+        
+        return this;
+    };
+
+    
+    public CsvExportResult ifErrorThrow() throws Throwable {
         if (this.status == Status.ERROR) {
             throw this.error;
         }

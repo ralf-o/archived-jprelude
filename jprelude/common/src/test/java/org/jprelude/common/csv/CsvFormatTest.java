@@ -51,8 +51,8 @@ public class CsvFormatTest {
             .prepareOutputTo(TextWriter.from(System.out))
             .apply(records.map(n -> 
                 Arrays.asList("   a" + n, "b" + n, "c" + n)))
-            .throwOnError()
-            .doOnSuccess(result -> System.out.println(String.format(">>>> Exported %d records successfully", result.getRecordCount())));
+            .ifErrorThrow()
+            .ifSuccess(result -> System.out.println(String.format(">>>> Exported %d records successfully", result.getRecordCount())));
     }
 
     
