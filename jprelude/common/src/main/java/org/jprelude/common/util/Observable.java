@@ -1,9 +1,7 @@
 package org.jprelude.common.util;
 
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.Objects;
-import java.util.Queue;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
@@ -175,6 +173,8 @@ public interface Observable<T> {
                                 try {
                                     if (pred.test(item, counter++)) {
                                         observer.onNext(item);
+                                    } else {
+                                        subscription.request(1);
                                     }
                                 } catch (final Throwable throwable) {
                                     final Subscription theSubscription = subscription;
@@ -327,6 +327,8 @@ public interface Observable<T> {
                                     if (hasStarted || !pred.test(item, counter)) {
                                         hasStarted = true;
                                         observer.onNext(item);
+                                    } else {
+                                        subscription.request(1);
                                     }
                                 } catch (final Throwable throwable) {
                                     subscription.cancel();
@@ -422,12 +424,13 @@ public interface Observable<T> {
 
     static <T> Observable<T> flatten(final Observable<Observable<T>> observables) {
         return Observable.create(observer -> new Subscription() {
-            final Queue<Observable<T>> observablesQueue = new LinkedList<>();
             private Subscription masterSubscription = null;
             private Subscription subSubscription = null;
             private boolean noMoreObservables = false;
             private boolean isCancelled = false;
-           
+            private long openItemCount = 0;
+            
+            
             @Override
             public void cancel() {
                 this.isCancelled = true;
@@ -447,19 +450,24 @@ public interface Observable<T> {
             }
 
             @Override
-            public void request(long n) {
-                if (n > 0 && !this.isCancelled) {
-                    if (this.masterSubscription == null) {
+            public void request(long n) {System.out.println("=>> " + n);
+                if (n > 0 && !this.isCancelled && this.subSubscription != null) {
+                    this.openItemCount += n;
+                } else if (n > 0 && !this.isCancelled) {
+                   this.openItemCount += n;
+                   
+                   if (this.masterSubscription == null) {
                         this.masterSubscription = observables.subscribe(new Observer<Observable<T>>() {
                             @Override
                             public void onNext(final Observable<T> observable) {
                                 try {
                                     if (subSubscription != null) {
-                                        observablesQueue.add(observable);
+                                         assert false : "This shoud never happen";
                                     } else {
                                         subSubscription = observable.subscribe(new Observer<T>() {
                                             @Override
                                             public void onNext(T item) {
+                                                --openItemCount;
                                                 observer.onNext(item);
                                             }
 
@@ -473,22 +481,26 @@ public interface Observable<T> {
                                             @Override
                                             public void onComplete() {
                                                 subSubscription = null;
-                                                if (!observablesQueue.isEmpty()) {
-                                                     subSubscription = observablesQueue.poll().subscribe(this);
-                                                     subSubscription.requestAll(); // TODO
-                                                } else if (noMoreObservables) {
+                                                
+                                                if (noMoreObservables) {
                                                     observer.onComplete();
                                                     cancel();
+                                                } else {
+                                                    if (openItemCount > 0) {
+                                                        masterSubscription.request(1);
+                                                    }
                                                 }
                                             }
                                             
                                             @Override
                                             public void onSubscribe(Subscription subscription) {
-                                                observer.onSubscribe(subscription);
+                                               observer.onSubscribe(subscription);
                                             }
                                         });
                                     
-                                        subSubscription.requestAll(); // TODO
+                                        if (openItemCount > 0) {
+                                            subSubscription.request(openItemCount);
+                                        }
                                     }     
                                 } catch (final Throwable throwable) {
                                     cancel();
@@ -514,8 +526,8 @@ public interface Observable<T> {
                             }
                        });
                     }
-                    
-                    this.masterSubscription.requestAll(); // TODO
+                   
+                    this.masterSubscription.request(1);
                }
            }
        });  

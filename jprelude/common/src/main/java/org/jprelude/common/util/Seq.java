@@ -34,8 +34,8 @@ public interface Seq<T> {
         return Seq.from(() -> StreamUtils.stream(Seq.this.stream()).map(f));
     }
    
-    default <R> Seq<R> map(final BiFunction<? super T, Integer, R> f) {
-        final Seq<Integer> nums  = Seq.iterate(0, n -> n + 1);
+    default <R> Seq<R> map(final BiFunction<? super T, Long, R> f) {
+        final Seq<Long> nums  = Seq.iterate(0L, n -> n + 1);
         return this.zip(nums, (v, n) -> f.apply(v, n));
     }
     
@@ -46,13 +46,13 @@ public interface Seq<T> {
 
     }
     
-    default <U, R> Seq<R> zip(final Seq<U> otherSeq, final TriFunction<? super T, ? super U, Integer, R> f) { 
+    default <U, R> Seq<R> zip(final Seq<U> otherSeq, final TriFunction<? super T, ? super U, Long, R> f) { 
         return Seq.from(() -> {
             final Stream<Indexed<T>> indexedStream = com.codepoetics.protonpack.StreamUtils.zipWithIndex(this.stream());
             return com.codepoetics.protonpack.StreamUtils.zip(
                 indexedStream,
                 otherSeq.stream(),
-                (indexedValue, otherValue) -> f.apply(indexedValue.getValue(), otherValue, (int) indexedValue.getIndex())
+                (indexedValue, otherValue) -> f.apply(indexedValue.getValue(), otherValue, (long) indexedValue.getIndex())
             );
         });
     }
@@ -61,7 +61,7 @@ public interface Seq<T> {
         return this.map(f).filter(o -> o.isPresent()).map(o -> o.get());
     }
 
-    default <U, R> Seq<R> mapFiltered(final BiFunction<T, Integer, Optional<R>> f) {
+    default <U, R> Seq<R> mapFiltered(final BiFunction<T, Long, Optional<R>> f) {
         return this.map((v, i) -> f.apply(v, i)).filter(o -> o.isPresent()).map(o -> o.get());
     }
  
@@ -75,8 +75,8 @@ public interface Seq<T> {
         return Seq.from(seqs).flatMap(Function.identity());
     }
     
-    default <R> Seq<R> flatMap(final BiFunction<? super T, Integer, ? extends Seq<? extends R>> f) {
-        final Seq<Integer> ints  = Seq.iterate(0, n -> n + 1);
+    default <R> Seq<R> flatMap(final BiFunction<? super T, Long, ? extends Seq<? extends R>> f) {
+        final Seq<Long> ints  = Seq.iterate(0L, n -> n + 1);
         return this.zip(ints, (v, n) -> f.apply(v, n)).flatMap(v -> v);
     }
     
@@ -84,8 +84,8 @@ public interface Seq<T> {
         return Seq.from(() -> StreamUtils.stream(Seq.this.stream()).filter(pred));
     }
     
-    default Seq<T> filter(final BiPredicate<? super T, Integer> pred) {
-        final Seq<Integer> ints  = Seq.iterate(0, n -> n + 1);        
+    default Seq<T> filter(final BiPredicate<? super T, Long> pred) {
+        final Seq<Long> ints  = Seq.iterate(0L, n -> n + 1);        
         return this.mapFiltered((v, i) -> pred.test(v, i) ? Optional.of(v) : Optional.empty());
     }
     
@@ -99,7 +99,7 @@ public interface Seq<T> {
     }
     
     
-    default Seq<T> peek(final BiConsumer<? super T, Integer> consumer) {
+    default Seq<T> peek(final BiConsumer<? super T, Long> consumer) {
         return this.map((v, idx) -> {consumer.accept(v, idx); return v;});
     }
     
@@ -222,11 +222,11 @@ public interface Seq<T> {
         }
     }
     
-    default void forEach(final BiConsumer<? super T, Integer> action) {
-        final Seq<Integer> nums  = Seq.iterate(0, n -> n + 1);
+    default void forEach(final BiConsumer<? super T, Long> action) {
+        final Seq<Long> nums  = Seq.iterate(0L, n -> n + 1);
  
         this.zip(nums, (v, n) -> new Object[] {v, n})
-            .forEach(pair -> action.accept((T) pair[0], (int) pair[1]));
+            .forEach(pair -> action.accept((T) pair[0], (long) pair[1]));
     }
     
     public static <T> Seq<T> from(final Seq<T> seq) {

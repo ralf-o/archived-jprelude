@@ -38,8 +38,8 @@ public class ObservableTest {
             
         });
         
-        merged.filter(n -> n % 2 == 0).forEach(System.out::println);
-        
+        merged.filter(n -> n % 2 == 0).subscribe(System.out::println).request(5);
+        //Observable.range(1, 20).skipWhile(n -> n < 4).subscribe(System.out::println).request(5);
         //subscription.request(13);
     
        // test1.forEach(System.out::println, System.out::println);

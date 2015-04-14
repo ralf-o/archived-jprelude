@@ -2,10 +2,15 @@ package org.jprelude.common.util;
 
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 public interface Mutable<T>  extends Supplier<T> {
     void set(T value);
+
+    default void update(final Function<T, T> f) {
+        this.set(f.apply(this.get()));
+    }
     
     default void clear() {
         this.set(null);

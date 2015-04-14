@@ -16,11 +16,12 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.csv.QuoteMode;
+import org.jprelude.common.csv.CsvExportResult.Status;
 import org.jprelude.common.util.Observable;
-import org.jprelude.common.io.function.IOFunction;
 import org.jprelude.common.io.TextReader;
 import org.jprelude.common.io.TextWriter;
 import org.jprelude.common.util.Generator;
+import org.jprelude.common.util.Mutable;
 import org.jprelude.common.util.Seq;
 
 
@@ -114,8 +115,8 @@ public final class CsvFormat implements Function<List<?>, String> {
     private final Character escapeCharacter;
     private final Character quoteCharacter;
     private final CsvQuoteMode quoteMode;
-    private final CSVFormat apacheCommonsCsvFormatForOutput;
-    private final CSVFormat apacheCommonsCsvFormatForInput;
+    private final CSVFormat apacheCommonsCsvFormatForExport;
+    private final CSVFormat apacheCommonsCsvFormatForImport;
             
     
     private CsvFormat(final Builder builder) {
@@ -146,7 +147,7 @@ public final class CsvFormat implements Function<List<?>, String> {
               apacheCommonsCsvQuoteMode = QuoteMode.MINIMAL;
         }
         
-        CSVFormat formatOutput = CSVFormat.DEFAULT
+        CSVFormat formatExport = CSVFormat.DEFAULT
                 .withDelimiter(this.delimiter)
                 .withRecordSeparator(this.recordSeparator.getSeparator())
                 .withIgnoreSurroundingSpaces(this.autoTrim)
@@ -154,16 +155,16 @@ public final class CsvFormat implements Function<List<?>, String> {
                 .withQuote(this.quoteCharacter)
                 .withQuoteMode(apacheCommonsCsvQuoteMode);
         
-        CSVFormat formatInput = formatOutput;
+        CSVFormat formatImport = formatExport;
         
         if (!this.columns.isEmpty()) {
             final String[] columnNames = new String[this.columns.size()];
-            Seq.from(this.columns).forEach((col, idx) -> columnNames[idx] = col.getName());
-            formatInput = formatInput.withHeader(columnNames).withSkipHeaderRecord();
+            Seq.from(this.columns).forEach((col, idx) -> columnNames[idx.intValue()] = col.getName());
+            formatImport = formatImport.withHeader(columnNames).withSkipHeaderRecord();
         }
         
-        this.apacheCommonsCsvFormatForInput = formatInput;
-        this.apacheCommonsCsvFormatForOutput = formatOutput;
+        this.apacheCommonsCsvFormatForImport = formatImport;
+        this.apacheCommonsCsvFormatForExport = formatExport;
     }
 
     public char getDelimiter() {
@@ -198,7 +199,7 @@ public final class CsvFormat implements Function<List<?>, String> {
             stream = stream.map(field -> field == null ? null : field.toString().trim());
         }
         
-        return this.apacheCommonsCsvFormatForOutput.format(stream.toArray());
+        return this.apacheCommonsCsvFormatForExport.format(stream.toArray());
     }
     
     public Seq<String> map(final Seq<List<?>> rows) {
@@ -223,27 +224,36 @@ public final class CsvFormat implements Function<List<?>, String> {
         return ret;
     }
     
-    public IOFunction<Seq<List<?>>, Long> prepareOutputTo(final TextWriter textWriter) {
+    public Function<Seq<List<?>>, CsvExportResult> prepareOutputTo(final TextWriter textWriter) {
         Objects.requireNonNull(textWriter);
         
         return records -> {
-            final long[] lineCounter = {0};
+            final Mutable<Long> recordCount = Mutable.of(0L);
+            final Mutable<Throwable> error = Mutable.empty();
             
-            final Seq<String> lines = CsvFormat.this.map(records).peek(
-                (rec, idx) -> lineCounter[0] = idx);
+            final Seq<String> lines = CsvFormat.this
+                    .map(Seq.sequential(records))
+                    .peek((rec, idx) -> recordCount.set(idx));
             
-            
-            textWriter.write(printStream -> lines.forEach(line -> {
-                printStream.print(line);
-                printStream.print(CsvFormat.this.recordSeparator.getSeparator());
-            }));
-            
-            return lineCounter[0];
+            try {
+                textWriter.write(printStream -> lines.forEach(line -> {
+                    printStream.print(line);
+                    printStream.print(CsvFormat.this.recordSeparator.getSeparator());
+                }));
+            } catch (final Throwable throwable) {
+                error.set(throwable);
+            }
+
+            return CsvExportResult.builder()
+                .status(error.isPresent() ? Status.ERROR : Status.SUCCESS)
+                .error(error.orElse(null))
+                .recordCount(recordCount.get())
+                .build();
         };
     }
     
-    public IOFunction<TextWriter, Long> prepareOutputOf(final Seq<List<?>> records) {
-        return writer ->  this.prepareOutputTo(writer).apply(records);
+    public Function<TextWriter, CsvExportResult> prepareExportOf(final Seq<List<?>> records) {
+        return writer -> this.prepareOutputTo(writer).apply(records);
     }
     
     public Seq<CsvRecord> parse(final TextReader textReader) {
@@ -256,7 +266,7 @@ public final class CsvFormat implements Function<List<?>, String> {
                 @Override
                 public void init() throws IOException {
                     this.reader = textReader.readAsReader();
-                    this.parser = new CSVParser(this.reader, CsvFormat.this.apacheCommonsCsvFormatForInput);
+                    this.parser = new CSVParser(this.reader, CsvFormat.this.apacheCommonsCsvFormatForImport);
                     this.iterator = this.parser.iterator();
                 }
                 
@@ -277,7 +287,11 @@ public final class CsvFormat implements Function<List<?>, String> {
         
         return seq;
     }   
-    
+/*
+    public Function<TextWriter, CsvExportResult> prepareExportOf(final Observable<List<?>> records) {
+        return writer -> this.prepareOutputTo(writer).apply(records);
+    }
+  */  
     public static Builder builder() {
         return new Builder();
     }
