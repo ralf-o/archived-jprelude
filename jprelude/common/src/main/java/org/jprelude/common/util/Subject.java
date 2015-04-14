@@ -3,7 +3,7 @@ package org.jprelude.common.util;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
-
+/*
 public interface Subject<T, R> extends Observer<T>, Observable<R> {
     boolean hasObservers();
     
@@ -41,3 +41,4 @@ public interface Subject<T, R> extends Observer<T>, Observable<R> {
         };
     }
 }
+*/

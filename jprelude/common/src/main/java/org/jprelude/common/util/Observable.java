@@ -1,5 +1,6 @@
 package org.jprelude.common.util;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Objects;
 import java.util.Queue;
@@ -12,11 +13,10 @@ import java.util.stream.Stream;
 import org.jprelude.common.function.Command;
 
 public interface Observable<T> {
-    Disposable subscribe(final Observer<T> observer);
+    Subscription subscribe(final Observer<T> observer);
     
-    default Disposable subscribe(final Consumer<T> onNext, final Command onComplete, final Consumer<Throwable> onError) {
-        final Disposable[] disposableWrapper  = { null };
-        
+
+    default Subscription subscribe(final Consumer<T> onNext, final Command onComplete, final Consumer<Throwable> onError, final Consumer<Subscription> onSubscribe) {
         final Observer<T> observer = new Observer<T>() {
             @Override
             public void onNext(T item) {
@@ -30,130 +30,181 @@ public interface Observable<T> {
                 if (onComplete != null) {
                     onComplete.execute();
                 }
-                
-                if (disposableWrapper[0] != null) {
-                    disposableWrapper[0].dispose();
-                    System.out.println("Juhuuuuuuuuuuuuuuuuuuuuuuu");
-                    disposableWrapper[0] = null;
-                }
             }
             
             @Override
-            public void onError(final Throwable t) {
+            public void onError(final Throwable throwable) {
                 if (onError != null) {
-                    onError.accept(t);
+                    onError.accept(throwable);
+                } else {
+                    if (throwable instanceof RuntimeException) {
+                        throw (RuntimeException) throwable;
+                    } else {
+                        throw new RuntimeException(throwable);
+                    }
+                }
+            }
+
+            @Override
+            public void onSubscribe(Subscription subscription) {
+                if (onSubscribe != null) {
+                    onSubscribe.accept(subscription);
                 }
             }
         };
         
-        disposableWrapper[0] = this.subscribe(observer);
-        return disposableWrapper[0];
+        return this.subscribe(observer);
     }
     
-    default Disposable subscribe(final Consumer<T> onNext) {
-        return this.subscribe(onNext, null, null);
+    default Subscription subscribe(final Consumer<T> onNext) {
+        return this.subscribe(onNext, null, null, null);
     } 
     
-    default Disposable subscribe(final Consumer<T> onNext, final Command onComplete) {
-        return this.subscribe(onNext, onComplete, null);
+    default Subscription subscribe(final Consumer<T> onNext, final Command onComplete) {
+        return this.subscribe(onNext, onComplete, null, null);
     }
     
-    default Disposable subscribe(final Consumer<T> onNext, final Consumer<Throwable> onError) {
-        return this.subscribe(onNext, null, onError);
+    default Subscription subscribe(final Consumer<T> onNext, final Consumer<Throwable> onError) {
+        return this.subscribe(onNext, null, onError, null);
     }
     
-    static <T> Observable<T> create(final Function<Observer<T>, Disposable> onSubscribe) {
-        Objects.requireNonNull(onSubscribe);
+     default Subscription subscribe(final Consumer<T> onNext, final Command onComplete, final Consumer<Throwable> onError) {
+        return this.subscribe(onNext, onComplete, onError, null);
+    }
+    
+    default <R> Observable<R> map(final Function<T, R> f) {
+        Objects.requireNonNull(f);
+        return this.map((item, idx) -> f.apply(item));
+    }
+
+    default <R> Observable<R> map(final BiFunction<T, Long, R> f) {
+        Objects.requireNonNull(f);
         
-        return observer -> {
-            Objects.requireNonNull(observer);
-            final Disposable disposable = onSubscribe.apply(observer);
-            return disposable::dispose;
-        };
-    }
-    
+        return Observable.create(observer -> new Subscription() {
+            private Subscription subscription = null;
+            private boolean isCancelled = false;
+            private long counter = 0;
+           
+            @Override
+            public void cancel() {
+                this.isCancelled = true;
+               
+                if (this.subscription != null) {
+                    final Subscription theSubscription = this.subscription;
+                    this.subscription = null;
+                    theSubscription.cancel();
+                }
+            }
+
+            @Override
+            public void request(long n) {
+                if (n > 0 && !this.isCancelled) {
+                    if (this.subscription == null) {
+                        this.subscription = Observable.this.subscribe(new Observer<T>() {
+                            @Override
+                            public void onNext(final T item) {
+                                try {
+                                    observer.onNext(f.apply(item, counter++));
+                                } catch (final Throwable throwable) {
+                                    final Subscription theSubscription = subscription;
+                                    subscription = null;
+                                    theSubscription.cancel();
+                                    observer.onError(throwable);
+                                }
+                            }
+ 
+                            @Override
+                            public void onError(Throwable throwable) {
+                                observer.onError(throwable);
+                            }
+
+                            @Override
+                            public void onComplete() {
+                                observer.onComplete();
+                            }
+
+                            @Override
+                            public void onSubscribe(Subscription subscription) {
+                            }
+                       });
+                    }
+                    
+                    this.subscription.request(n);
+               }
+           }
+       });  
+    };
+
     default Observable<T> flatMap(final Function<T, Observable<T>> f) {
         Objects.requireNonNull(f);
         
         return Observable.flatten(this.map(f));
     }
 
-    default <R> Observable <R> map(final Function<? super T, ? extends R> f) {
-        return this.map((item, idx) -> f.apply(item));
-    }
-    
-    default <R> Observable<R> map(final BiFunction<? super T, Long, ? extends R> f) {
-        return Observable.create(
-            observer -> {
-                final Mutable<Disposable> disposable = Mutable.empty();
-                
-                disposable.set(this.subscribe(new Observer<T>() {
-                    private long counter = 0;
-
-                    @Override
-                    public void onNext(final T item) {
-                        try {
-                            observer.onNext(f.apply(item, counter++));
-                        } catch (final Throwable throwable) {
-                            observer.onError(throwable);
-                            
-                            disposable.ifPresent(Disposable::dispose);
-                        }
-                    }
-
-                    @Override
-                    public void onError(Throwable throwable) {
-                        observer.onError(throwable);
-                    }
-
-                    @Override
-                    public void onComplete() {
-                        observer.onComplete();
-                    }
-                }));
-
-                return disposable.get();
-            }
-        );
-    }
-    
-    
     default Observable<T> filter(final Predicate<T> pred) {
         Objects.requireNonNull(pred);
-        return this.filter((item,idx) -> pred.test(item));
+        return this.filter((item, idx) -> pred.test(item));
     }
-        
-        
+ 
     default Observable<T> filter(final BiPredicate<T, Long> pred) {
         Objects.requireNonNull(pred);
         
-        return Observable.create(
-            observer -> this.subscribe(new Observer<T>() {
-                private long counter = 0;
-                
-                @Override
-                public void onNext(final T item) {
-                    try {
-                        if (pred.test(item, counter++)) {
-                            observer.onNext(item);
-                        }
-                    } catch (final Throwable throwable) {
-                        observer.onError(throwable);
+        return Observable.create(observer -> new Subscription() {
+            private Subscription subscription = null;
+            private boolean isCancelled = false;
+            private long counter = 0;
+           
+            @Override
+            public void cancel() {
+                this.isCancelled = true;
+               
+                if (this.subscription != null) {
+                    final Subscription theSubscription = this.subscription;
+                    this.subscription = null;
+                    theSubscription.cancel();
+                }
+            }
+
+            @Override
+            public void request(long n) {
+                if (n > 0 && !this.isCancelled) {
+                    if (this.subscription == null) {
+                        this.subscription = Observable.this.subscribe(new Observer<T>() {
+                            @Override
+                            public void onNext(final T item) {
+                                try {
+                                    if (pred.test(item, counter++)) {
+                                        observer.onNext(item);
+                                    }
+                                } catch (final Throwable throwable) {
+                                    final Subscription theSubscription = subscription;
+                                    subscription = null;
+                                    theSubscription.cancel();
+                                    observer.onError(throwable);
+                                }
+                            }
+ 
+                            @Override
+                            public void onError(Throwable throwable) {
+                                observer.onError(throwable);
+                            }
+
+                            @Override
+                            public void onComplete() {
+                                observer.onComplete();
+                            }
+
+                            @Override
+                            public void onSubscribe(Subscription subscription) {
+                            }
+                       });
                     }
-                }
-
-                @Override
-                public void onError(Throwable throwable) {
-                    observer.onError(throwable);
-                }
-
-                @Override
-                public void onComplete() {
-                    observer.onComplete();
-                }
-            })
-        );
-    }
+                    
+                    this.subscription.request(n);
+               }
+           }
+       });  
+    };
     
     default Observable<T> reject(final Predicate<T> pred) {
         Objects.requireNonNull(pred);
@@ -165,55 +216,7 @@ public interface Observable<T> {
         return this.filter((item, idx) -> !pred.test(item, idx));
     }    
 
-    default Observable<T> skip(final long n) {
-        return this.skipWhile((item, idx) -> idx < n);
-    }
     
-    default Observable<T> skipWhile(final Predicate<T> pred) {
-        Objects.requireNonNull(pred);
-        
-        return this.skipWhile((item, idx) -> pred.test(item));
-    }
-    
-    default Observable<T> skipWhile(final BiPredicate<T, Long> pred) {
-        Objects.requireNonNull(pred);
-        
-        return Observable.create(
-            observer -> this.subscribe(new Observer<T> () {
-                private boolean hasStarted = false;
-                private Long counter = 0L;
-                
-                @Override
-                public void onNext(final T item) {
-                    if (this.hasStarted) {
-                        ++counter;
-                        observer.onNext(item);
-                    } else {
-                        try {
-                            if (pred.test(item, counter)) {
-                                this.hasStarted = true;
-                                ++counter;
-                                observer.onNext(item);
-                            }
-                        } catch (final Throwable throwable) {
-                            observer.onError(throwable);
-                        }
-                    }
-                }
-
-                @Override
-                public void onError(Throwable throwable) {
-                    observer.onError(throwable);
-                }
-
-                @Override
-                public void onComplete() {
-                    observer.onComplete();
-                }
-            })
-        );        
-    }
-
     default Observable<T> take(final long n) {
         return this.takeWhile((item, idx) -> idx < n);
     }
@@ -223,109 +226,339 @@ public interface Observable<T> {
     }
     
     default Observable<T> takeWhile(final BiPredicate<T, Long> pred) {
-        Objects.requireNonNull(pred);
-        
-        return Observable.create(observer -> this.subscribe(new Observer<T> () {
-            private Long counter = 0L;
-
+        return Observable.create(observer -> new Subscription() {
+            private Subscription subscription = null;
+            private boolean isCancelled = false;
+            private long counter = 0;
+           
             @Override
-            public void onNext(final T item) {System.out.println("--------------------------" + this.counter);
-                try {
-                    if (!pred.test(item, counter++)) {
-                        observer.onComplete();
-                    } else {
-                        observer.onNext(item);
-                        ++counter;
-                    }
-                } catch (final Throwable throwable) {
-                    observer.onError(throwable);
+            public void cancel() {
+                this.isCancelled = true;
+               
+                if (this.subscription != null) {
+                    final Subscription theSubscription = this.subscription;
+                    this.subscription = null;
+                    theSubscription.cancel();
                 }
             }
 
             @Override
-            public void onError(Throwable throwable) {
-                observer.onError(throwable);
+            public void request(long n) {
+                if (n > 0 && !this.isCancelled) {
+                    if (this.subscription == null) {
+                        this.subscription = Observable.this.subscribe(new Observer<T>() {
+                            @Override
+                            public void onNext(final T item) {
+                                try {
+                                    if (pred.test(item, counter)) {
+                                        ++counter;
+                                        observer.onNext(item);
+                                    } else {
+                                        final Subscription theSubscription = subscription;
+                                        subscription = null;
+                                        theSubscription.cancel();
+                                    }
+                                } catch (final Throwable throwable) {
+                                    final Subscription theSubscription = subscription;
+                                    subscription = null;
+                                    theSubscription.cancel();
+                                    observer.onError(throwable);
+                                }
+                            }
+ 
+                            @Override
+                            public void onError(Throwable throwable) {
+                                observer.onError(throwable);
+                            }
+
+                            @Override
+                            public void onComplete() {
+                                observer.onComplete();
+                            }
+
+                            @Override
+                            public void onSubscribe(Subscription subscription) {
+                            }
+                       });
+                    }
+                    
+                    this.subscription.request(n);
+               }
+           }
+       });  
+    };
+    
+    default Observable<T> skip(final long n) {
+        return this.skipWhile((item, idx) -> idx < n);
+    }
+    
+    default Observable<T> skipWhile(final Predicate<T> pred) {
+        Objects.requireNonNull(pred);
+
+        return this.skipWhile((item, idx) -> pred.test(item));
+    }
+
+    default Observable<T> skipWhile(final BiPredicate<T, Long> pred) {
+        return Observable.create(observer -> new Subscription() {
+            private Subscription subscription = null;
+            private boolean isCancelled = false;
+            private long counter = 0;
+            private boolean hasStarted = false;
+           
+            @Override
+            public void cancel() {
+                this.isCancelled = true;
+               
+                if (this.subscription != null) {
+                    final Subscription theSubscription = this.subscription;
+                    this.subscription = null;
+                    theSubscription.cancel();
+                }
             }
 
             @Override
-            public void onComplete() {
-                observer.onComplete();
-            }
-        }));
-    }
+            public void request(long n) {
+                if (n > 0 && !this.isCancelled) {
+                    if (this.subscription == null) {
+                        this.subscription = Observable.this.subscribe(new Observer<T>() {
+                            @Override
+                            public void onNext(final T item) {
+                                try {
+                                    if (hasStarted || !pred.test(item, counter)) {
+                                        hasStarted = true;
+                                        observer.onNext(item);
+                                    }
+                                } catch (final Throwable throwable) {
+                                    subscription.cancel();
+                                    observer.onError(throwable);
+                                }
+                                
+                                ++counter;
+                            }
+ 
+                            @Override
+                            public void onError(Throwable throwable) {
+                                observer.onError(throwable);
+                            }
 
+                            @Override
+                            public void onComplete() {
+                                observer.onComplete();
+                            }
+
+                            @Override
+                            public void onSubscribe(Subscription subscription) {
+                            }
+                       });
+                    }
+                    
+                    this.subscription.request(n);
+               }
+           }
+       });  
+    };
+
+    
     default Observable<T> prepend(final T value) {
         return Observable.concat(Observable.of(value), this);
     }
 
+    
     default Observable<T> prependMany(final T... values) {
         return Observable.concat(Observable.of(values), this);
     }
 
+    
     default Observable<T> append(final T value) {
         return Observable.concat(this, Observable.of(value));
     }
 
+    
     default Observable<T> appendMany(final T... values) {
         return Observable.concat(this, Observable.of(values));
     }
+
+    default void forEach(final Observer<T> observer) {
+        if (observer != null) {
+            this.subscribe(observer).requestAll();
+        }
+    }
+
+   default void forEach(final Consumer<T> onNext) {
+        if (onNext != null) {
+            this.subscribe(onNext).requestAll();
+        }
+    }
     
-    static <T> Observable<T> from(final Seq<T> seq) {
-        Objects.requireNonNull(seq);
+    default void forEach(final Consumer<T> onNext, final Command onComplete) {
+        if (onNext != null) {
+            this.subscribe(onNext, onComplete).requestAll();
+        }
+    }
 
-        return Observable.create(observer -> {
-            final Mutable<Boolean> isCompleted = Mutable.of(false);
-            
-            if (observer != null) {
-                final Seq<T> seq2 = Seq.sequential(seq).takeWhile(item -> !isCompleted.get());
-                
-                final Observer<T> observer2 = new Observer<T>() {
-                    @Override
-                    public void onNext(final T item) {
-                        observer.onNext(item);
-                    }
+    default void forEach(final Consumer<T> onNext, final Consumer<Throwable> onError) {
+        if (onNext != null) {
+            this.subscribe(onNext, onError).requestAll();
+        }
+    }
 
-                    @Override
-                    public void onError(final Throwable throwable) {
-                        observer.onError(throwable);
-                        isCompleted.set(true);
-                    }
+    default void forEach(final Consumer<T> onNext, final Command onComplete, final Consumer<Throwable> onError) {
+        if (onNext != null) {
+            this.subscribe(onNext, onComplete, onError).requestAll();
+        }
+    }
 
-                    @Override
-                    public void onComplete() {
-                        observer.onComplete();
-                        isCompleted.set(true);
-                    }                
-                };
+    static <T> Observable<T> concat(final Observable<T>... observables) {
+        final Observable<T> ret;
+        
+        if (observables == null) {
+            ret = Observable.empty();
+        } else {
+            ret = Observable.flatten(Observable.of(observables));
+        }
+        
+        return ret;
+    }
 
-                try (final Stream<T> stream = seq2.stream()) {
-                    stream.forEach(val -> observer.onNext(val));
-                    observer.onComplete();
-                } catch (final Throwable throwable) {
-                    observer.onError(throwable);
+    static <T> Observable<T> flatten(final Observable<Observable<T>> observables) {
+        return Observable.create(observer -> new Subscription() {
+            final Queue<Observable<T>> observablesQueue = new LinkedList<>();
+            private Subscription masterSubscription = null;
+            private Subscription subSubscription = null;
+            private boolean noMoreObservables = false;
+            private boolean isCancelled = false;
+           
+            @Override
+            public void cancel() {
+                this.isCancelled = true;
+                this.noMoreObservables = true;
+               
+                if (this.masterSubscription != null) {
+                    final Subscription theMasterSubscription = this.masterSubscription;
+                    this.masterSubscription = null;
+                    theMasterSubscription.cancel();
                 }
+
+                if (this.subSubscription != null) {
+                    final Subscription theSubSubscription = this.subSubscription;
+                    this.subSubscription = null;
+                    theSubSubscription.cancel();
+                }                
             }
+
+            @Override
+            public void request(long n) {
+                if (n > 0 && !this.isCancelled) {
+                    if (this.masterSubscription == null) {
+                        this.masterSubscription = observables.subscribe(new Observer<Observable<T>>() {
+                            @Override
+                            public void onNext(final Observable<T> observable) {System.out.println("New master");
+                                try {
+                                    if (subSubscription != null) {
+                                        observablesQueue.add(observable);
+                                    } else {
+                                        subSubscription = observable.subscribe(new Observer<T>() {
+                                            @Override
+                                            public void onNext(T item) {System.out.println("new sub");
+                                                observer.onNext(item);
+                                            }
+
+                                            @Override
+                                            public void onError(Throwable throwable) {
+                                                observer.onError(throwable);
+                                                noMoreObservables = true;
+                                                cancel();
+                                            }
+
+                                            @Override
+                                            public void onComplete() {
+                                                if (!observablesQueue.isEmpty()) {
+                                                     subSubscription = observablesQueue.poll().subscribe(this);    
+                                                     subSubscription.requestAll(); // TODO
+                                                } else if (noMoreObservables) {
+                                                    observer.onComplete();
+                                                }
+                                            }
+                                            
+                                            @Override
+                                            public void onSubscribe(Subscription subscription) {
+                                                observer.onSubscribe(subscription);
+                                            }
+                                        });
+                                    
+                                        subSubscription.requestAll(); // TODO
+                                    }     
+                                } catch (final Throwable throwable) {
+                                    cancel();
+                                    observer.onError(throwable);
+                                }
+                            }
+ 
+                            @Override
+                            public void onError(Throwable throwable) {
+                                cancel();
+                                observer.onError(throwable);
+                            }
+
+                            @Override
+                            public void onComplete() {
+                                cancel();
+                                observer.onComplete();
+                            }
+
+                            @Override
+                            public void onSubscribe(Subscription subscription) {
+                                observer.onSubscribe(subscription);
+                            }
+                       });
+                    }
+                    
+                    this.masterSubscription.requestAll(); // TODO
+               }
+           }
+       });  
+    };
+
+    static <T> Observable<T> create(final Function<Observer<T>, Subscription> onSubscribe) {
+        Objects.requireNonNull(onSubscribe);
+        
+        return observer -> {
+            Objects.requireNonNull(observer);
             
-            return () -> isCompleted.set(true);
-        });
+            final Subscription subscription = onSubscribe.apply(observer);
+            observer.onSubscribe(subscription);
+            return subscription;
+        };
     }
     
     static <T> Observable<T> empty() {
         return Observable.create(observer -> {
-            if (observer != null) {
-                observer.onComplete();
-            }
+            final Subscription subscription = new Subscription() {
+                @Override
+                public void cancel() {
+               }
+
+               @Override
+               public void request(long n) {
+               }
+            };
             
-            return () -> {};
+            observer.onSubscribe(subscription);
+            observer.onComplete();
+            return subscription;
         });
     }
     
     static <T> Observable<T> of(final T... items) {
-        return Seq.of(items).toObservable();
+        return items == null || items.length == 0
+            ? Observable.empty()
+            : Seq.of(items).toObservable();
     }
     
     static <T> Observable<T> from(final Iterable<T> items) {
-        return Seq.from(items).toObservable();
+        return items == null
+            ? Observable.empty()
+            : Seq.from(items).toObservable();
     }
     
     public static Observable<Integer> range(final int start, final int end) {
@@ -334,96 +567,60 @@ public interface Observable<T> {
     
     public static Observable<Long> range(final Long start, final Long end) {
         return Seq.range(start, end).toObservable();
-    }
-                
-    static <T> Observable<T> flatten(final Observable<Observable<T>> eventStreams) {
-        final Observable<T> ret;
-        
-        // TODO: Ugly implementation - find a better solution
-        
-        if (eventStreams == null) {
-            ret = Observable.empty();
-        } else {
-            ret = Observable.create(new Function<Observer<T>, Disposable>() {
-                final Queue<Observable<T>> eventStreamQueue = new LinkedList<>();
-                final Mutable<Boolean> noMoreEventStreams = Mutable.of(false);
-                final Mutable<Disposable> subDisposable = Mutable.empty();
-                
+    }    
+    
+    static <T> Observable<T> from(final Seq<T> seq) {
+        return seq == null
+            ? Observable.empty()
+            :Observable.create(observer -> new Subscription() {
+                private boolean isCompleted = false;
+                private Stream<T> stream = null;
+                private Iterator<T> iterator = null;
+
                 @Override
-                public Disposable apply(final Observer<T> observer) {
-                    final Mutable<Disposable> masterDisposable = Mutable.empty();
-                    
-                    masterDisposable.set(eventStreams.subscribe(new Observer<Observable<T>>() {
-                        @Override
-                        public void onNext(final Observable<T> eventStream) {
-                            if (subDisposable.isPresent()) {
-                                eventStreamQueue.add(eventStream);
-                            } else {
-                                subDisposable.set(eventStream.subscribe(new Observer<T>() {
-                                    @Override
-                                    public void onNext(T item) {
-                                        observer.onNext(item);
-                                    }
+                public void cancel() {
+                    if (this.stream != null) {
+                       final Stream<T> theStream;
+                       theStream = this.stream;
+                       this.isCompleted = true;
+                       this.iterator = null;	
+                       this.stream = null;
+                       theStream.close();
+                    }
+                }
 
-                                    @Override
-                                    public void onError(Throwable throwable) {
-                                        observer.onError(throwable);
-                                        noMoreEventStreams.set(true);
-                                        masterDisposable.ifPresent(Disposable::dispose);
-                                        masterDisposable.clear();
-                                    }
-
-                                    @Override
-                                    public void onComplete() {
-                                        System.out.println("Unsetting subDisposable");
-                                        subDisposable.clear();
-                                        
-                                        System.out.println("sub-complete");
-                                        if (!eventStreamQueue.isEmpty()) {
-                                            System.out.println("Setting subDisposable2");
-                                             subDisposable.set(eventStreamQueue.poll().subscribe(this));                                            
-                                        } else if (noMoreEventStreams.get()) {
-                                            observer.onComplete();
-                                        }
-                                    }                                    
-                                }));
+                 @Override
+                 public void request(long n) {
+                    if (n > 0 && !this.isCompleted) {
+                        try {
+                            if (stream == null) {
+                                this.stream = seq.stream();
+                                this.iterator = stream.iterator();
                             }
-                        }
 
-                        @Override
-                        public void onError(final Throwable throwable) {
+                            long counter = 0L;
+
+                            for (long i = 0; iterator!= null && iterator.hasNext() && i < n; ++i) {
+                                observer.onNext(iterator.next());
+                            }
+
+                            if (iterator != null && !iterator.hasNext()) {
+                                this.stream = null;
+                                this.iterator = null;
+                                observer.onComplete();
+                            }
+                        } catch (final Throwable throwable) {
+                            if (this.stream != null) {
+                               this.stream.close();
+                            }
+
+                            this.stream = null;
+                            this.iterator = null;
                             observer.onError(throwable);
-                            eventStreamQueue.clear();
-                            noMoreEventStreams.set(true);
-                            subDisposable.ifPresent(Disposable::dispose);
-                            subDisposable.clear();
                         }
-
-                        @Override
-                        public void onComplete() {
-                            noMoreEventStreams.set(true);
-                        }
-                    }));
-                    
-                    return masterDisposable.get();
+                    }
                 }
             });
-            
-        }
-        
-        return ret;
-    }
-    
-    static <T> Observable<T> concat(final Observable<T>... eventStreams) {
-        final Observable<T> ret;
-        
-        if (eventStreams == null) {
-            ret = Observable.empty();
-        } else {
-            ret = Observable.flatten(Observable.of(eventStreams));
-        }
-        
-        return ret;
     }
 }
 
