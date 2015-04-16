@@ -6,8 +6,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public interface Validation<V, E extends Throwable> {
-    V getValue();
+public interface Try<V, E extends Throwable> {
+    V get();
     E getError();
 
     boolean isSuccess();
@@ -17,13 +17,13 @@ public interface Validation<V, E extends Throwable> {
     }
     
     default V orElse(final V other) {
-        return this.isSuccess() ? this.getValue() : other;
+        return this.isSuccess() ? this.get() : other;
     }
     
     default V orElseGet(final Supplier<? extends V> other) {
         Objects.requireNonNull(other);
         
-        return this.isSuccess() ? this.getValue() : other.get() ;
+        return this.isSuccess() ? this.get() : other.get() ;
     }
     
     default V orElseThrow() throws E {
@@ -31,10 +31,10 @@ public interface Validation<V, E extends Throwable> {
             throw this.getError();
         }
         
-        return this.getValue();
+        return this.get();
     }
     
-    default Validation<V, E> ifErrorThrow() throws E {
+    default Try<V, E> ifErrorThrow() throws E {
         if (this.isError()) {
             throw this.getError();
         }
@@ -42,27 +42,27 @@ public interface Validation<V, E extends Throwable> {
         return this;
     }
     
-    default <R> Validation<R, E> map(final Function<? super V, ? extends R> f) {
+    default <R> Try<R, E> map(final Function<? super V, ? extends R> f) {
         return this.isSuccess()
-                ? Validation.value(f.apply(this.getValue()))
-                : Validation.error(this.getError());
+                ? Try.of(f.apply(this.get()))
+                : Try.error(this.getError());
     }
     
-    default <R> Validation<R, E> flatMap(final Function<? super V, Validation<R, E>> f) {
+    default <R> Try<R, E> flatMap(final Function<? super V, Try<R, E>> f) {
         return this.isSuccess()
-                ? f.apply(this.getValue())
-                : Validation.error(this.getError());
+                ? f.apply(this.get())
+                : Try.error(this.getError());
     }
    
-    default Validation<V, E>  ifSuccess(final Consumer<V> consumer) {
+    default Try<V, E>  ifSuccess(final Consumer<V> consumer) {
         if (this.isSuccess()) {
-            consumer.accept(this.getValue());
+            consumer.accept(this.get());
         }
         
         return this;
     }
     
-    default Validation<V, E> ifError(final Consumer<E> consumer) {
+    default Try<V, E> ifError(final Consumer<E> consumer) {
         if (this.isError()) {
             consumer.accept(this.getError());
         }
@@ -70,10 +70,10 @@ public interface Validation<V, E extends Throwable> {
         return this;
     }
     
-    static <V, E extends Throwable> Validation<V, E> value(final V value) {
-        return new Validation<V, E>() {
+    static <V, E extends Throwable> Try<V, E> of(final V value) {
+        return new Try<V, E>() {
             @Override
-            public V getValue() {
+            public V get() {
                 return value;
             }
 
@@ -93,14 +93,14 @@ public interface Validation<V, E extends Throwable> {
         };
     }
 
-    static <V, E extends Throwable> Validation<V, E> error(final E error) {
+    static <V, E extends Throwable> Try<V, E> error(final E error) {
         Objects.requireNonNull(error);
 
-        return new Validation<V, E>() {
+        return new Try<V, E>() {
             @Override
-            public V getValue() {
+            public V get() {
                 if (this.isSuccess()) {
-                    throw new NoSuchElementException("Validation object represents an error - value cannot be retrieved");
+                    throw new NoSuchElementException("Try object represents an error - value cannot be retrieved");
                 }
                 
                 return null;

@@ -16,12 +16,12 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.csv.QuoteMode;
-import org.jprelude.common.csv.CsvExportResult.Status;
 import org.jprelude.common.io.TextReader;
 import org.jprelude.common.io.TextWriter;
 import org.jprelude.common.util.Generator;
 import org.jprelude.common.util.Mutable;
 import org.jprelude.common.util.Seq;
+import org.jprelude.common.util.Try;
 
 
 /*
@@ -212,12 +212,12 @@ public final class CsvFormat implements Function<List<?>, String> {
         return ret;
     }
 
-    public Function<Seq<List<?>>, CsvExportResult> prepareExportTo(final TextWriter textWriter) {
+    public Function<Seq<List<?>>, Try<CsvExportResult, Throwable>> prepareExportTo(final TextWriter textWriter) {
         Objects.requireNonNull(textWriter);
         
         return records -> {
+            Try<CsvExportResult, Throwable> ret;
             final Mutable<Long> recordCount = Mutable.of(0L);
-            final Mutable<Throwable> error = Mutable.empty();
             
             final Seq<String> lines = CsvFormat.this
                     .map(Seq.sequential(records))
@@ -228,20 +228,21 @@ public final class CsvFormat implements Function<List<?>, String> {
                     printStream.print(line);
                     printStream.print(CsvFormat.this.recordSeparator.getSeparator());
                 }));
-            } catch (final Throwable throwable) {
-                error.set(throwable);
-            }
 
-            return CsvExportResult.builder()
-                .status(error.isPresent() ? Status.ERROR : Status.SUCCESS)
-                .error(error.orElse(null))
+               ret = Try.of(CsvExportResult.builder()
                 .sourceRecordCount(recordCount.get())
                 .targetRowCount(recordCount.get())
-                .build();
+                .build());
+
+            } catch (final Throwable throwable) {
+                ret = Try.error(throwable);
+            }
+            
+            return ret;
         };
     }
     
-    public Function<TextWriter, CsvExportResult> prepareExportOf(final Seq<List<?>> records) {
+    public Function<TextWriter, Try<CsvExportResult, Throwable>> prepareExportOf(final Seq<List<?>> records) {
         return writer -> this.prepareExportTo(writer).apply(records);
     }
     
