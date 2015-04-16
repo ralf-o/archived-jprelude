@@ -222,6 +222,26 @@ public interface Seq<T> {
         }
     }
     
+    default void forEach(final Observer<? super T>... observers) {
+        if (observers != null)  {
+            this.forEach(Arrays.asList(observers));
+        }
+    }
+        
+    default void forEach(final List<Observer<? super T>> observers) {
+        final List<Observer<? super T>> observerList = Seq.from(observers).filter(observer -> observer != null).toList();
+    
+        if (!observerList.isEmpty()) {
+            try {
+                this.forEach(item -> observerList.forEach(observer -> observer.onNext(item)));
+                observerList.forEach(observer -> observer.onComplete()); // TODO
+            } catch (final Throwable throwable) {
+                observerList.forEach(observer -> observer.onError(throwable));
+            }
+        }
+    }
+    
+    
     default void forEach(final BiConsumer<? super T, Long> action) {
         final Seq<Long> nums  = Seq.iterate(0L, n -> n + 1);
  
@@ -317,7 +337,7 @@ public interface Seq<T> {
     public static <T> Seq<T> iterate(final T seed1, final T seed2, final T seed3, final TriFunction<T, T, T, T> f) {
         final Triple<T, T, T> seedTriple = Triple.of(seed1, seed2, seed3);
       
-        return Seq.iterate(seedTriple, triple -> Triple.of(triple.getFirst(), triple.getSecond(), f.apply(triple.getFirst(), triple.getSecond(), triple.getThrid())))
+        return Seq.iterate(seedTriple, triple -> Triple.of(triple.getFirst(), triple.getSecond(), f.apply(triple.getFirst(), triple.getSecond(), triple.getThird())))
                 .map(Triple::getFirst);
     }
 
@@ -327,9 +347,5 @@ public interface Seq<T> {
     
     public static Seq<Long> range(final long start, final long end) {
         return Seq.from(() -> LongStream.range(start, end).boxed());
-    }
-    
-    default Observable<T> toObservable() {
-        return Observable.from(this);
     }
 }

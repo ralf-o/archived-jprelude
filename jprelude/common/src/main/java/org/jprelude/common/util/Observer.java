@@ -8,30 +8,24 @@ public interface Observer<T> {
     void onNext(T item);
     void onError(Throwable throwable);
     void onComplete();
-    void onSubscribe(Subscription subscription);
     
     static <T> Observer<T> create(final Consumer<T> onNext) {
-        return Observer.create(onNext, null, null, null);
+        return Observer.create(onNext, null, null);
     }
 
     static <T> Observer<T> create(final Consumer<T> onNext, final Command onComplete) {
-        return Observer.create(onNext, onComplete, null, null);
+        return Observer.create(onNext, onComplete, null);
     }
 
     static <T> Observer<T> create(final Consumer<T> onNext, final Consumer<Throwable> onError) {
-        return Observer.create(onNext, null, onError, null);
+        return Observer.create(onNext, null, onError);
     }
     
     static <T> Observer<T> create(final Consumer<T> onNext, final Command onComplete, final Consumer<Throwable> onError) {
-        return Observer.create(onNext, onComplete, onError, null);
-    }
-    
-    static <T> Observer<T> create(final Consumer<T> onNext, final Command onComplete, final Consumer<Throwable> onError, final Consumer<Subscription> onSubscribe) {
         return Observer.builder()
                 .onNext(onNext)
                 .onComplete(onComplete)
                 .onError(onError)
-                .onSubscribe(onSubscribe)
                 .build();
     }
     
@@ -40,20 +34,19 @@ public interface Observer<T> {
     }
     
     static class Builder<T> {
-        private BiConsumer<T, Long> onNextWithIndex;
-        private Consumer<Long> onCompleteWithIndex;
-        private BiConsumer<Throwable, Long> onErrorWithIndex;
-        private Consumer<Subscription> onSubscribe;
+        private BiConsumer<? super T, ? super Long> onNextWithIndex;
+        private Consumer<? super Long> onCompleteWithIndex;
+        private BiConsumer<? super Throwable, ? super Long> onErrorWithIndex;
         
-        public Builder onNext(final Consumer<T> consumer) {
+        public Builder onNext(final Consumer<? super T> consumer) {
             this.onNextWithIndex = consumer == null
                     ? null
                     : (item, idx) -> consumer.accept(item);
             
             return this;
         }
-
-        public Builder onNext(final BiConsumer<T, Long> consumer) {
+        
+        public Builder onNextx(final BiConsumer<? super T, ? super Long> consumer) {
             this.onNextWithIndex = consumer;
             return this;
         }
@@ -66,7 +59,7 @@ public interface Observer<T> {
             return this;
         }
         
-        public Builder onComplete(final Consumer<Long> consumer) {
+        public Builder onComplete(final Consumer<? super Long> consumer) {
             this.onCompleteWithIndex = consumer;
             return this;
         }
@@ -84,17 +77,11 @@ public interface Observer<T> {
             return this;
         }
 
-        public Builder onSubscribe(final Consumer<Subscription> consumer) {
-            this.onSubscribe = consumer;
-            return this;
-        }
-
         Observer<T> build() {
             return new Observer<T>() {
-                private final BiConsumer<T, Long> onNextWithIndex = Builder.this.onNextWithIndex;
-                private final Consumer<Long> onCompleteWithIndex = Builder.this.onCompleteWithIndex;
-                private final BiConsumer<Throwable, Long> onErrorWithIndex = Builder.this.onErrorWithIndex;
-                private final Consumer<Subscription> onSubscribe  = Builder.this.onSubscribe;
+                private final BiConsumer<? super T, ? super Long> onNextWithIndex = Builder.this.onNextWithIndex;
+                private final Consumer<? super Long> onCompleteWithIndex = Builder.this.onCompleteWithIndex;
+                private final BiConsumer<? super Throwable, ? super Long> onErrorWithIndex = Builder.this.onErrorWithIndex;
                 private long index = -1;
                 
                 @Override
@@ -115,13 +102,6 @@ public interface Observer<T> {
                 public void onComplete() {
                     if (this.onCompleteWithIndex != null) {
                         this.onCompleteWithIndex.accept(this.index);
-                    }
-                }
-
-                @Override
-                public void onSubscribe(final Subscription subscription) {
-                    if (this.onSubscribe != null) {
-                        this.onSubscribe.accept(subscription);
                     }
                 }
             };

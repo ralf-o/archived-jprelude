@@ -17,7 +17,6 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.csv.QuoteMode;
 import org.jprelude.common.csv.CsvExportResult.Status;
-import org.jprelude.common.util.Observable;
 import org.jprelude.common.io.TextReader;
 import org.jprelude.common.io.TextWriter;
 import org.jprelude.common.util.Generator;
@@ -212,19 +211,8 @@ public final class CsvFormat implements Function<List<?>, String> {
         
         return ret;
     }
-    
-    public Observable<String> map(final Observable<List<?>> rows) {
-        Observable<String> ret = (rows == null ? Observable.<List<?>>empty() : rows).map(row -> this.apply(row));
-        
-        if (!this.columns.isEmpty()) {
-            final String headline = this.apply(columns.stream().map(CsvColumn::getTitle).collect(Collectors.toList()));
-            ret = ret.prepend(headline);
-        }
-        
-        return ret;
-    }
-    
-    public Function<Seq<List<?>>, CsvExportResult> prepareOutputTo(final TextWriter textWriter) {
+
+    public Function<Seq<List<?>>, CsvExportResult> prepareExportTo(final TextWriter textWriter) {
         Objects.requireNonNull(textWriter);
         
         return records -> {
@@ -247,13 +235,14 @@ public final class CsvFormat implements Function<List<?>, String> {
             return CsvExportResult.builder()
                 .status(error.isPresent() ? Status.ERROR : Status.SUCCESS)
                 .error(error.orElse(null))
-                .recordCount(recordCount.get())
+                .sourceRecordCount(recordCount.get())
+                .targetRowCount(recordCount.get())
                 .build();
         };
     }
     
     public Function<TextWriter, CsvExportResult> prepareExportOf(final Seq<List<?>> records) {
-        return writer -> this.prepareOutputTo(writer).apply(records);
+        return writer -> this.prepareExportTo(writer).apply(records);
     }
     
     public Seq<CsvRecord> parse(final TextReader textReader) {
@@ -287,11 +276,7 @@ public final class CsvFormat implements Function<List<?>, String> {
         
         return seq;
     }   
-/*
-    public Function<TextWriter, CsvExportResult> prepareExportOf(final Observable<List<?>> records) {
-        return writer -> this.prepareOutputTo(writer).apply(records);
-    }
-  */  
+
     public static Builder builder() {
         return new Builder();
     }

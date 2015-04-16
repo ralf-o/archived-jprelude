@@ -6,14 +6,16 @@ import org.jprelude.common.function.Command;
 public final class CsvExportResult {
     private final Status status;
     private final Throwable error;
-    private final long recordCount;
+    private final long sourceRecordCount;
+    private final long targetRowCount;
     
     private CsvExportResult(final Builder builder) {
         assert builder != null;
         
         this.status = builder.status;
         this.error = builder.error;
-        this.recordCount = builder.recordCount; 
+        this.sourceRecordCount = builder.sourceRecordCount;
+        this.targetRowCount = builder.targetRowCount;
     }
         
     public Status getStatus() {
@@ -24,8 +26,12 @@ public final class CsvExportResult {
         return this.error;
     }
     
-    public long getRecordCount() {
-        return this.recordCount;
+    public long getSourceRecordCount() {
+        return this.sourceRecordCount;
+    }
+    
+    public long getTargetRowCount() {
+        return this.targetRowCount;
     }
     
     public CsvExportResult ifSuccess(final Command command) {
@@ -88,12 +94,14 @@ public final class CsvExportResult {
     public static class Builder {
         private Status status = null;
         private Throwable error = null;
-        private long recordCount = 0;
+        private long sourceRecordCount = 0;
+        private long targetRowCount = 0;
         
         private Builder() {
             status = null;
             error = null;
-            recordCount = 0;
+            sourceRecordCount = 0;
+            targetRowCount = 0;
         }
         
         public Builder status(final Status status) {
@@ -106,8 +114,13 @@ public final class CsvExportResult {
             return this;
         }
         
-        public Builder recordCount(final long recordCount) {
-            this.recordCount = recordCount;
+        public Builder sourceRecordCount(final long sourceRecordCount) {
+            this.sourceRecordCount = sourceRecordCount;
+            return this;
+        }
+        
+        public Builder targetRowCount(final long targetRowCount) {
+            this.targetRowCount = targetRowCount;
             return this;
         }
         

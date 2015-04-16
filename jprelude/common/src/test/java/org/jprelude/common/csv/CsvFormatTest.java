@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import org.jprelude.common.io.TextReader;
 import org.jprelude.common.io.TextWriter;
-import org.jprelude.common.util.Observable;
 import org.jprelude.common.util.Seq;
 import org.junit.Test;
 
@@ -48,11 +47,11 @@ public class CsvFormatTest {
             .recordSeparator(LineSeparator.SYSTEM)
             .quoteMode(CsvQuoteMode.ALL)
             .build()
-            .prepareOutputTo(TextWriter.from(System.out))
+            .prepareExportTo(TextWriter.from(System.out))
             .apply(records.map(n -> 
                 Arrays.asList("   a" + n, "b" + n, "c" + n)))
             .ifErrorThrow()
-            .ifSuccess(result -> System.out.println(String.format(">>>> Exported %d records successfully", result.getRecordCount())));
+            .ifSuccess(result -> System.out.println(String.format(">>>> Exported %d records successfully", result.getSourceRecordCount())));
     }
 
     

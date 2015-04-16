@@ -1,6 +1,7 @@
 package org.jprelude.common.util;
 
 import java.util.Arrays;
+import java.util.function.BiConsumer;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -19,7 +20,7 @@ public class SeqTest {
             .parallel()
             .forEach(v ->  {synchronized (this) { System.out.println("[" + v + "]");}});
         
-        Assert.assertArrayEquals(seq.toArray(), new Integer[] {2, 5, 8});
+//        Assert.assertArrayEquals(seq.toArray(), new Integer[] {2, 5, 8});
     }
   
     @Test
@@ -51,5 +52,21 @@ public class SeqTest {
     @Test
     public void testMethodIterate() {
         Seq.iterate(0, 1, (n, m) -> n + m).take(20).forEach(System.out::println);
+        
+        Observer<Integer> obs = Observer.<Integer>builder()
+            .onNextx((item, idx) -> {
+                if ((Long) idx == 0) {
+                    System.out.print(1);
+                } else if (((Long) idx + 1) % 100 == 0) {
+                    System.out.print((Long) idx + 1);
+                } else if (((Long) idx + 1) % 10 == 0) {
+                    System.out.print(".");
+                }
+            })
+            .onComplete(idx -> System.out.println(((Long) idx + 1) % 100 != 0 ? (Long) idx + 1 : ""))
+            .onError(error -> System.out.println(" ERROR"))
+            .build();
+        
+        Seq.range(1, 242).forEach(obs);
     }
 }

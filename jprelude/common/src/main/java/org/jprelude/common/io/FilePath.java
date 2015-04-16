@@ -75,7 +75,7 @@ public interface FilePath extends Path {
         });
     }
     
-    default Seq<FilePath> listRecursive(IOPredicate filter) {
+    default Seq<FilePath> listRecursive(final IOPredicate filter) {
         return this.listRecursive().filter(filePath -> {
             final boolean ret;
             
@@ -89,7 +89,7 @@ public interface FilePath extends Path {
         });
     }
     
-    default Seq<FilePath> listRecursive(IOPredicate filter, int maxDepth) {
+    default Seq<FilePath> listRecursive(final IOPredicate filter, int maxDepth) {
         return this.listRecursive(filter, dir -> true, maxDepth);
     }
    
