@@ -65,8 +65,8 @@ public final class TextWriter {
         final Charset nonNullCharset = charset != null ? charset : Charset.defaultCharset();
         
         final OpenOption[] openOptions = append
-                ? new OpenOption[] { StandardOpenOption.WRITE, StandardOpenOption.APPEND }
-                : new OpenOption[] { StandardOpenOption.WRITE };
+                ? new OpenOption[] { StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.APPEND }
+                : new OpenOption[] { StandardOpenOption.CREATE, StandardOpenOption.WRITE };
         
         return new TextWriter(
                 path.toString(),
@@ -163,7 +163,7 @@ public final class TextWriter {
         try (final PrintStream out = this.newPrintStream()) {
             printStream = out;
             consumer.accept(out);
-        } catch (final Throwable throwable) {
+        } catch (final Throwable throwable) {System.out.println(throwable + throwable.getMessage());
             this.handleError(throwable);
         }
         
@@ -243,7 +243,7 @@ public final class TextWriter {
             this.onError.execute();
         } catch (final Throwable t) {
         }
-        
+      
         if (cause == null || cause.getMessage() == null || cause.getMessage().isEmpty()) {
             final StringBuilder errorMsgBuilder = new StringBuilder();
 

@@ -15,7 +15,6 @@ import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
-import org.jprelude.common.io.function.IOCommand;
 import org.jprelude.common.io.function.IOConsumer;
 import org.jprelude.common.util.Mutable;
 import org.jprelude.common.util.Seq;

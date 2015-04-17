@@ -1,5 +1,6 @@
 package org.jprelude.common.csv;
 
+import java.io.File;
 import org.jprelude.common.util.LineSeparator;
 import java.io.IOException;
 import java.util.Arrays;
@@ -47,7 +48,7 @@ public class CsvFormatTest {
             .recordSeparator(LineSeparator.SYSTEM)
             .quoteMode(CsvQuoteMode.ALL)
             .build()
-            .prepareExportTo(TextWriter.from(System.out))
+            .prepareExportTo(TextWriter.from(new File("/home/kenny/test.juhu")))
             .apply(records.map(n -> 
                 Arrays.asList("   a" + n, "b" + n, "c" + n)))
             .ifErrorThrow()

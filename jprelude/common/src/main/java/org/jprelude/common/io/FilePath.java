@@ -31,7 +31,7 @@ public interface FilePath extends Path {
             final Stream<FilePath> ret;
             
             try {
-                final DirectoryStream<Path> dirStream = this.getFileSystem().provider().newDirectoryStream(this, file -> true);
+                final DirectoryStream<Path> dirStream = Files.newDirectoryStream(this, file -> true);
                 
                 ret = StreamSupport.stream(dirStream.spliterator(), false)
                         .map(path -> FilePath.from(path));
