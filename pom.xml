@@ -11,7 +11,7 @@
     <name>jprelude-parent</name>
 
     <modules>
-        <module>core</module>
-        <module>csv</module>
+        <module>jprelude-core</module>
+        <module>jprelude-csv</module>
     </modules>
 </project>
