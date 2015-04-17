@@ -1,8 +1,8 @@
-package org.jprelude.common.io;
+package org.jprelude.core.io;
 
 
 import java.io.IOException;
-import org.jprelude.common.util.Seq;
+import org.jprelude.core.util.Seq;
 import org.junit.Test;
 
 public class TextWriterTest {

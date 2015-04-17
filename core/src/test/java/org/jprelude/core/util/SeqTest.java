@@ -1,7 +1,8 @@
-package org.jprelude.common.util;
+package org.jprelude.core.util;
 
 import java.util.Arrays;
-import java.util.function.BiConsumer;
+import org.jprelude.core.util.Observer;
+import org.jprelude.core.util.Seq;
 import org.junit.Assert;
 import org.junit.Test;
 

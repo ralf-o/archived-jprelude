@@ -1,12 +1,12 @@
-package org.jprelude.common.csv;
+package org.jprelude.csv;
 
 import java.io.File;
-import org.jprelude.common.util.LineSeparator;
 import java.io.IOException;
 import java.util.Arrays;
-import org.jprelude.common.io.TextReader;
-import org.jprelude.common.io.TextWriter;
-import org.jprelude.common.util.Seq;
+import org.jprelude.core.io.TextReader;
+import org.jprelude.core.io.TextWriter;
+import org.jprelude.core.util.LineSeparator;
+import org.jprelude.core.util.Seq;
 import org.junit.Test;
 
 public class CsvFormatTest {

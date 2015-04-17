@@ -1,4 +1,4 @@
-package org.jprelude.common.io;
+package org.jprelude.core.io;
 
 import java.nio.file.FileSystems;
 import org.junit.Test;

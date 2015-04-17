@@ -77,7 +77,7 @@ public interface Observer<T> {
             return this;
         }
 
-        Observer<T> build() {
+        public Observer<T> build() {
             return new Observer<T>() {
                 private final BiConsumer<? super T, ? super Long> onNextWithIndex = Builder.this.onNextWithIndex;
                 private final Consumer<? super Long> onCompleteWithIndex = Builder.this.onCompleteWithIndex;
