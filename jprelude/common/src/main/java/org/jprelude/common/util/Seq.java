@@ -1,8 +1,6 @@
 package org.jprelude.common.util;
 
 import com.codepoetics.protonpack.Indexed;
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -24,7 +22,6 @@ import java.util.stream.LongStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import org.jprelude.common.function.TriFunction;
-import org.jprelude.common.io.function.IOConsumer;
 import org.jprelude.common.tuple.Pair;
 import org.jprelude.common.tuple.Triple;
 
@@ -34,7 +31,7 @@ public interface Seq<T> {
     Stream<T> stream();
     
     default <R> Seq<R> map(final Function<? super T, ? extends R> f) {
-        return Seq.from(() -> StreamUtils.stream(Seq.this.stream()).map(f));
+        return Seq.from(() -> Seq.this.stream().map(f));
     }
    
     default <R> Seq<R> map(final BiFunction<? super T, Long, R> f) {
@@ -69,9 +66,7 @@ public interface Seq<T> {
     }
  
     default <R> Seq<R> flatMap(final Function<? super T, ? extends Seq<? extends R>> f) {
-        return Seq.from(() ->
-            StreamUtils.stream(Seq.this.stream())
-            .flatMap(v -> f.apply(v).stream()));
+        return Seq.from(() -> Seq.this.stream().flatMap(v -> f.apply(v).stream()));
     }
     
     default <T> Seq<T> flatten(final Seq<Seq<T>> seqs) {
@@ -84,7 +79,7 @@ public interface Seq<T> {
     }
     
     default Seq<T> filter(final Predicate<? super T> pred) {
-        return Seq.from(() -> StreamUtils.stream(Seq.this.stream()).filter(pred));
+        return Seq.from(() -> Seq.this.stream().filter(pred));
     }
     
     default Seq<T> filter(final BiPredicate<? super T, Long> pred) {
@@ -98,7 +93,7 @@ public interface Seq<T> {
             return v;
         };
                 
-        return Seq.from((() -> StreamUtils.stream(this.stream()).map(f)));
+        return Seq.from((() -> this.stream().map(f)));
     }
     
     
@@ -107,7 +102,7 @@ public interface Seq<T> {
     }
     
     default Seq<T> take(final int n) {
-        return Seq.from(() -> StreamUtils.stream(this.stream()).limit(n));
+        return Seq.from(() -> this.stream().limit(n));
     }
     
     default Seq<T> takeWhile(final Predicate<T> pred) {
@@ -119,7 +114,7 @@ public interface Seq<T> {
     }
 
     default Seq<T> skip(final int n) {
-        return Seq.from(() -> StreamUtils.stream(this.stream()).skip(n));
+        return Seq.from(() -> this.stream()).skip(n);
     }
 
     default Seq<T> skipWhile(final Predicate<T> pred) {
@@ -147,17 +142,39 @@ public interface Seq<T> {
     }
     
     default <A, R> R collect(final Collector<? super T, A, R> collector) {
-        try (final Stream<T> stream = StreamUtils.stream(this.stream())) {
+        try (final Stream<T> stream = this.stream()) {
             return stream.collect(collector);
         }
     }
     
     default Seq<T> sequential() {
-        return Seq.from(() ->  StreamUtils.sequential(this.stream()));
+        return Seq.from(() -> {
+            final Stream<T> ret;
+            final Stream<T> stream = this.stream();
+            
+            if (!stream.isParallel()) {
+                ret = stream;
+            } else {
+                ret = stream.sequential();
+            }
+            
+            return ret;
+        });
     }
     
     default Seq<T> parallel() {
-        return Seq.from(() ->  StreamUtils.parallel(this.stream()));
+        return Seq.from(() -> {
+            final Stream<T> ret;
+            final Stream<T> stream = this.stream();
+            
+            if (stream.isParallel()) {
+                ret = stream;
+            } else {
+                ret = stream.parallel();
+            }
+            
+            return ret;
+        });
     }
     
     static <T> Seq<T> concat(final Seq<Seq<T>> seqs) {
@@ -208,19 +225,19 @@ public interface Seq<T> {
     
     default T reduce(final T start, final BiFunction<T, T, T> f) {
         final BinaryOperator<T> operator = (v1, v2) -> f.apply(v1, v2);
-        return StreamUtils.stream(this.stream()).reduce(start, operator);
+        return this.stream().reduce(start, operator);
     }
     
     default Object[] toArray() {
-        return StreamUtils.stream(this.stream()).toArray();
+        return this.stream().toArray();
     }
     
     default List<T> toList() {
-        return StreamUtils.stream(this.stream()).collect(Collectors.toList());
+        return this.stream().collect(Collectors.toList());
     }
     
     default void forEach(final Consumer<? super T> consumer) {
-        try (final Stream<T> stream = StreamUtils.stream(this.stream())) {
+        try (final Stream<T> stream = this.stream()) {
             stream.forEach(consumer);
         }
     }
