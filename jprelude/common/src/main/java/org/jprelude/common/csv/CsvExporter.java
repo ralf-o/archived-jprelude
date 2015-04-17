@@ -7,6 +7,7 @@ import java.util.function.Function;
 import org.jprelude.common.io.TextWriter;
 import org.jprelude.common.util.Observer;
 import org.jprelude.common.util.Seq;
+import org.jprelude.common.util.Try;
 
 public final class CsvExporter<T> {
     private final CsvFormat format;
@@ -45,14 +46,14 @@ public final class CsvExporter<T> {
         return target;
     }
     
-    public CsvExportResult export(final Seq<T> records) {
+    public Try<CsvExportResult> export(final Seq<T> records) {
         Objects.requireNonNull(records, "NPE CsvExporter::export(records)");
      
         return CsvMultiExporter.<T>builder()
                 .addExporter("myExport", this)
                 .build()
                 .export(records)
-                .get("myExport");
+                .map(resultMap -> resultMap.get("myExport"));
     }
     
     public static <T> Builder builder() {

@@ -38,7 +38,7 @@ public class CsvFormatTest {
         
         CsvFormat.builder()
             .columns(
-                "COLUMN1",
+                "COLUMN1y",
                 "COLUMN2",
                 "COLUMN3"
             )

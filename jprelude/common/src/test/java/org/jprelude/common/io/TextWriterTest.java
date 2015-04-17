@@ -10,6 +10,6 @@ public class TextWriterTest {
     public void testWritingToStdOut() throws IOException {
         final Seq<?> seq = Seq.range(1, 11).map(n -> "Line " + n);
         final TextWriter textWriter = TextWriter.from(System.out);
-        textWriter.write(seq);
+        textWriter.writeln(seq);
     }
 }

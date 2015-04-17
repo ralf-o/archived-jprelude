@@ -5,8 +5,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.jprelude.common.util.Mutable;
 import org.jprelude.common.util.Observer;
 import org.jprelude.common.util.Seq;
+import org.jprelude.common.util.Try;
 
 public final class CsvMultiExporter<T> {
     final Map<String, CsvExporter<T>> exportersByID;
@@ -19,16 +21,43 @@ public final class CsvMultiExporter<T> {
         this.sourceRecordsObservers = new ArrayList<>(builder.sourceRecordsObservers);
     }
     
-    public Map<String, CsvExportResult> export(final Seq<T> records) {
+    public Try<Map<String, CsvExportResult>> export(final Seq<T> records) {
         Objects.requireNonNull(records, "NPE CsvMultiExporter::export(records)");
         
-        final Map<String, CsvExportResult> ret = new HashMap<>();
-        final List<Observer<T>> observers = new ArrayList();
+        final Map<String, CsvExportResult> resultMap  = new HashMap<>();
+        final Mutable<Throwable> error = Mutable.empty();
+        final List<Observer<? super T>> observers = new ArrayList();
         
-        this.exportersByID.keySet().forEach(id -> { // TODO
+        this.exportersByID.forEach((id, export) -> {
+            final CsvExportResult.Builder builder = CsvExportResult.builder();
+            final CsvFormat format = export.getFormat();
+            
+            observers.add(new Observer<T>() {
+                private long idx = -1;
+ 
+                @Override
+                public void onNext(final T item) {
+                    if (++idx == 0) {
+                        
+                    }
+                }
+
+                @Override
+                public void onError(final Throwable throwable) {
+                    error.set(throwable);
+                }
+
+                @Override
+                public void onComplete() {
+                    resultMap.put(id, builder.build());
+                }
+            });
+            
+            resultMap.put(id, builder.build());
         });
         
-        return ret;
+        records.sequential().forEach(observers);
+        return (error.isEmpty() ? Try.of(resultMap) : Try.error(error.get()));
     }
     
     public static <T> Builder<T> builder() {

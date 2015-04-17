@@ -1,28 +1,47 @@
 package org.jprelude.common.io;
 
-import org.jprelude.common.io.function.IOConsumer;
+import java.io.BufferedOutputStream;
 import org.jprelude.common.io.function.IOSupplier;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.io.UncheckedIOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Objects;
+import org.jprelude.common.io.function.IOCommand;
+import org.jprelude.common.io.function.IOConsumer;
+import org.jprelude.common.util.LineSeparator;
 import org.jprelude.common.util.Seq;
 
-public class TextWriter {
-    final IOSupplier<PrintStream> printStreamSupplier;
-    final boolean autoClosePrintStream;
+public final class TextWriter {
+    final String targetName;
+    final Charset charset;
+    final boolean autoCloseOutputStream;
+    final IOSupplier<OutputStream> outputStreamSupplier;
+    final IOCommand onSuccess;
+    final IOCommand onError;
     
-    private TextWriter(final IOSupplier<PrintStream> printStreamSupplier, final boolean autoClosePrintStream) {
-        assert printStreamSupplier != null;
-        this.printStreamSupplier = printStreamSupplier;
-        this.autoClosePrintStream = autoClosePrintStream;
+    private TextWriter(
+            final String targetName,
+            final IOSupplier<OutputStream> outputStreamSupplier,
+            final Charset charset,
+            final boolean autoCloseOutputStream,
+            final IOCommand onSuccess,
+            final IOCommand onError) {
+        assert outputStreamSupplier != null;
+        assert onSuccess != null;
+        assert onError != null;
+        
+        this.targetName = (targetName == null || targetName.trim().isEmpty() ? null : targetName.trim());
+        this.charset = charset != null ? charset : Charset.defaultCharset();
+        this.autoCloseOutputStream = autoCloseOutputStream;
+        this.outputStreamSupplier = outputStreamSupplier;
+        this.onSuccess = onSuccess;
+        this.onError = onError;
     }
     
     public static TextWriter from(final Path path) {
@@ -43,11 +62,19 @@ public class TextWriter {
     public static TextWriter from(final Path path, final boolean append, final Charset charset) {
         Objects.requireNonNull(path);
         
-        final OpenOption[] openOptions = append
-                ? new OpenOption[] {StandardOpenOption.WRITE, StandardOpenOption.APPEND}
-                : new OpenOption[] {StandardOpenOption.WRITE    };
+        final Charset nonNullCharset = charset != null ? charset : Charset.defaultCharset();
         
-        return new TextWriter(() -> new PrintStream(Files.newOutputStream(path, openOptions)), true);
+        final OpenOption[] openOptions = append
+                ? new OpenOption[] { StandardOpenOption.WRITE, StandardOpenOption.APPEND }
+                : new OpenOption[] { StandardOpenOption.WRITE };
+        
+        return new TextWriter(
+                path.toString(),
+                () -> Files.newOutputStream(path, openOptions),
+                charset,
+                true,
+                () -> {},
+                () -> {});
     }
     
     public static TextWriter from(final File file) {
@@ -71,61 +98,169 @@ public class TextWriter {
     }
     
     public static TextWriter from(final OutputStream outputStream) {
+        return TextWriter.from(outputStream, null);
+    }
+    
+    public static TextWriter from(final OutputStream outputStream, final Charset charset) {
         Objects.requireNonNull(outputStream);
-
-        return new TextWriter(() ->
-            outputStream instanceof PrintStream
-                    ? (PrintStream) outputStream
-                    : new PrintStream(outputStream),
-            false
-        );
+        final Charset nonNullCharset = charset != null ? charset : Charset.defaultCharset();
+        
+        return new TextWriter(
+                "OutputStream", () -> outputStream,
+                charset,
+                false,
+                () -> {},
+                () -> {});
+    }
+       
+    public Charset getCharset() {
+        return this.charset;
     }
 
     public void write(final Seq<?> lines) throws IOException {
-        final PrintStream printStream = this.printStreamSupplier.get();
-        
-        try {   
-            Seq.sequential(lines).forEach(line -> {
-                printStream.print(line == null ? "" : line.toString());
-            });
-        } catch (final UncheckedIOException e) {
-            throw e.getCause();
-        } finally {
-            if (this.autoClosePrintStream) {
-                printStream.close();
-            }
-        }
+        this.writeln(lines, null);
+    }
+    
+    public void writeln(final Seq<?> lines) throws IOException  {
+        this.writeln(lines, LineSeparator.SYSTEM);
     }
 
-    public void writeln(final Seq<?> lines) throws IOException {
-        final PrintStream printStream = this.printStreamSupplier.get();
+    public void writeln(final Seq<?> lines, LineSeparator lineSeparator) throws IOException {
+        boolean isError = false;
         
-        try {
-            Seq.sequential(lines).forEach(line -> {
-                printStream.println(line == null ? "" : line.toString());
-            });
-        } catch (final UncheckedIOException e) {
-            throw e.getCause();
-        } finally {
-            if (this.autoClosePrintStream) {
-                printStream.close();
+        try (final PrintStream printStream = this.newPrintStream()) {   
+            if (lineSeparator == null) {
+                Seq.sequential(lines).forEach(line -> {
+                    printStream.print(line == null ? "" : line.toString());
+                });
+            } else {
+                final String sep = lineSeparator.getSeparator();
+                
+                Seq.sequential(lines).forEach(line -> {
+                    printStream.print(line == null ? "" : line.toString());
+                    printStream.print(sep);
+                });                
             }
+            
+            if (printStream.checkError()) {
+                isError = true;
+            }
+        } catch (final Throwable throwable) {
+            this.handleError(throwable);
+        }
+        
+        if (isError) {
+            this.handleError(null);
+        } else {
+            this.handleSuccess();
         }
     }
     
-    public void write(final IOConsumer<PrintStream> printStreamConsumer) throws IOException {
-        if (printStreamConsumer != null) {
-            final PrintStream printStream = this.printStreamSupplier.get();
-            
-            try {
-                printStreamConsumer.accept(printStream);                
-            } catch (final UncheckedIOException e) {
-                throw new IOException(e.getMessage(), e);
-            } finally {
-                if (this.autoClosePrintStream) {
-                    printStream.close();
+    public void write(final IOConsumer<PrintStream> consumer) throws IOException {
+        Objects.requireNonNull(consumer);
+        PrintStream printStream = null;
+        
+        try (final PrintStream out = this.newPrintStream()) {
+            printStream = out;
+            consumer.accept(out);
+        } catch (final Throwable throwable) {
+            this.handleError(throwable);
+        }
+        
+        if (printStream != null && printStream.checkError()) {
+            this.handleError(null);
+        } else {
+            this.onSuccess.execute();
+        }
+    }
+    
+    public OutputStream newOutputStream() throws IOException {
+        final OutputStream ret;
+        
+        if (this.autoCloseOutputStream) {
+            ret = this.outputStreamSupplier.get();
+        } else {
+            ret = new OutputStream() {
+                private OutputStream outputStream = TextWriter.this.outputStreamSupplier.get();
+
+                @Override
+                public void write(int b) throws IOException {
+                    if (this.outputStream != null) {
+                        this.outputStream.write(b);
+                    } else {
+                        throw new IOException("Output stream is already closed");
+                    }
                 }
+
+                @Override
+                public void flush() throws IOException {
+                    if (this.outputStream != null) {
+                        this.outputStream.flush();
+                    }
+                }
+
+                @Override
+                public void close() throws IOException {
+                    if (this.outputStream != null) {
+                        final OutputStream outStream = this.outputStream;
+                        this.outputStream = null;
+
+                        if (TextWriter.this.autoCloseOutputStream) {
+                            outStream.close();
+                        }
+                    }
+                }
+            };
+        }
+        
+        return ret;
+    }
+    
+    private PrintStream newPrintStream() throws IOException {
+        return new PrintStream(new BufferedOutputStream(this.newOutputStream()), true, this.charset.name());
+    }
+    
+    private void closePrintStream(final PrintStream printStream) throws IOException {
+        assert printStream != null;
+ 
+        printStream.close();
+ 
+        if (printStream.checkError()) {
+            this.handleError(null);
+        }
+    }
+    
+    private void handleSuccess() throws IOException {
+        try {
+            this.onSuccess.execute();
+        } catch (final Throwable throwable) {
+            this.handleError(throwable);
+        }
+    }
+    
+    private void handleError(final Throwable cause) throws IOException {
+        try {
+            this.onError.execute();
+        } catch (final Throwable t) {
+        }
+        
+        if (cause == null || cause.getMessage() == null || cause.getMessage().isEmpty()) {
+            final StringBuilder errorMsgBuilder = new StringBuilder();
+
+            errorMsgBuilder.append("Error while writing");
+
+            if (this.targetName != null) {
+                errorMsgBuilder.append(" ");
+                errorMsgBuilder.append(this.targetName);
             }
+
+            throw new IOException(errorMsgBuilder.toString(), cause);            
+        }
+        
+        if (cause instanceof IOException) {
+            throw (IOException) cause;
+        } else {
+            throw new IOException(cause);
         }
     }
 }

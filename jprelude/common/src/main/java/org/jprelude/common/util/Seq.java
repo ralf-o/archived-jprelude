@@ -1,6 +1,8 @@
 package org.jprelude.common.util;
 
 import com.codepoetics.protonpack.Indexed;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -22,6 +24,7 @@ import java.util.stream.LongStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import org.jprelude.common.function.TriFunction;
+import org.jprelude.common.io.function.IOConsumer;
 import org.jprelude.common.tuple.Pair;
 import org.jprelude.common.tuple.Triple;
 
@@ -216,9 +219,9 @@ public interface Seq<T> {
         return StreamUtils.stream(this.stream()).collect(Collectors.toList());
     }
     
-    default void forEach(final Consumer<? super T> action) {
+    default void forEach(final Consumer<? super T> consumer) {
         try (final Stream<T> stream = StreamUtils.stream(this.stream())) {
-            stream.forEach(action);
+            stream.forEach(consumer);
         }
     }
     

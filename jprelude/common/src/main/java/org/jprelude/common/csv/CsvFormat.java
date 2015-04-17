@@ -2,8 +2,12 @@ package org.jprelude.common.csv;
 
 import org.jprelude.common.util.LineSeparator;
 import com.codepoetics.protonpack.StreamUtils;
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.Reader;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
+import static java.lang.System.out;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -18,6 +22,7 @@ import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.csv.QuoteMode;
 import org.jprelude.common.io.TextReader;
 import org.jprelude.common.io.TextWriter;
+import org.jprelude.common.io.function.IOFunction;
 import org.jprelude.common.util.Generator;
 import org.jprelude.common.util.Mutable;
 import org.jprelude.common.util.Seq;
@@ -177,6 +182,10 @@ public final class CsvFormat implements Function<List<?>, String> {
     public boolean isAutoTrimmed() {
         return this.autoTrim;
     }
+   
+    public List<CsvColumn> getColumns() {
+        return new ArrayList<>(this.columns);
+    }
     
     public Character getEscapeCharacter() {
         return this.escapeCharacter;
@@ -212,11 +221,11 @@ public final class CsvFormat implements Function<List<?>, String> {
         return ret;
     }
 
-    public Function<Seq<List<?>>, Try<CsvExportResult, Throwable>> prepareExportTo(final TextWriter textWriter) {
+    public IOFunction<Seq<List<?>>, Try<CsvExportResult>> prepareExportTo(final TextWriter textWriter) {
         Objects.requireNonNull(textWriter);
         
-        return records -> {
-            Try<CsvExportResult, Throwable> ret;
+        return (IOFunction<Seq<List<?>>, Try<CsvExportResult>>) records -> {
+            Try<CsvExportResult> ret;
             final Mutable<Long> recordCount = Mutable.of(0L);
             
             final Seq<String> lines = CsvFormat.this
@@ -224,16 +233,23 @@ public final class CsvFormat implements Function<List<?>, String> {
                     .peek((rec, idx) -> recordCount.set(idx));
             
             try {
-                textWriter.write(printStream -> lines.forEach(line -> {
-                    printStream.print(line);
-                    printStream.print(CsvFormat.this.recordSeparator.getSeparator());
-                }));
+                textWriter.write(outputStream -> {
+                    final PrintStream printStream = new PrintStream(new BufferedOutputStream(outputStream));
+                    
+                    lines.forEach(line -> {
+                        printStream.print(line);
+                        printStream.print(CsvFormat.this.recordSeparator.getSeparator());
+                    });
 
-               ret = Try.of(CsvExportResult.builder()
-                .sourceRecordCount(recordCount.get())
-                .targetRowCount(recordCount.get())
-                .build());
+                    if (printStream.checkError()) {
+                        throw new IOException();
+                    }
+                });
 
+                ret = Try.of(CsvExportResult.builder()
+                    .sourceRecordCount(recordCount.get())
+                    .targetRowCount(recordCount.get())
+                    .build());
             } catch (final Throwable throwable) {
                 ret = Try.error(throwable);
             }
@@ -242,20 +258,20 @@ public final class CsvFormat implements Function<List<?>, String> {
         };
     }
     
-    public Function<TextWriter, Try<CsvExportResult, Throwable>> prepareExportOf(final Seq<List<?>> records) {
+    public IOFunction<TextWriter, Try<CsvExportResult>> prepareExportOf(final Seq<List<?>> records) {
         return writer -> this.prepareExportTo(writer).apply(records);
     }
     
     public Seq<CsvRecord> parse(final TextReader textReader) {
         final Seq<CsvRecord> seq = Seq.from(() ->        
             new Generator<CsvRecord>() {
-                private Reader reader;
+                private BufferedReader reader;
                 private CSVParser parser;
                 private Iterator<CSVRecord> iterator;
                 
                 @Override
                 public void init() throws IOException {
-                    this.reader = textReader.readAsReader();
+                    this.reader = new BufferedReader(new InputStreamReader(textReader.newInputStream(), textReader.getCharset()));
                     this.parser = new CSVParser(this.reader, CsvFormat.this.apacheCommonsCsvFormatForImport);
                     this.iterator = this.parser.iterator();
                 }
