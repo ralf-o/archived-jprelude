@@ -1,6 +1,6 @@
 package org.jprelude.common.csv;
 
-public class CsvColumn {
+public final class CsvColumn {
     private final String name;
     private final String title;
     

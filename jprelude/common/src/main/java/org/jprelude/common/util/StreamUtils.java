@@ -2,7 +2,7 @@ package org.jprelude.common.util;
 
 import java.util.stream.Stream;
 
-public class StreamUtils {
+public final class StreamUtils {
     public static <T> Stream<T> stream(Stream<T> stream) {
         return (stream == null ? Stream.empty() : stream);
     }

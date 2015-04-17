@@ -7,10 +7,13 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.io.Reader;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -22,7 +25,6 @@ import org.apache.commons.csv.QuoteMode;
 import org.jprelude.common.io.TextReader;
 import org.jprelude.common.io.TextWriter;
 import org.jprelude.common.io.function.IOFunction;
-import org.jprelude.common.util.Generator;
 import org.jprelude.common.util.Mutable;
 import org.jprelude.common.util.Seq;
 import org.jprelude.common.util.Try;
@@ -262,36 +264,80 @@ public final class CsvFormat implements Function<List<?>, String> {
     }
     
     public Seq<CsvRecord> parse(final TextReader textReader) {
-        final Seq<CsvRecord> seq = Seq.from(() ->        
-            new Generator<CsvRecord>() {
-                private BufferedReader reader;
-                private CSVParser parser;
-                private Iterator<CSVRecord> iterator;
-                
+        return Seq.from(() ->
+            {
+            return new Iterator<CsvRecord>() {
+                private boolean initialized = false;
+                private boolean completed = false;
+                private BufferedReader reader =  null;
+                private CSVParser parser = null;
+                private Iterator<CSVRecord> iterator = null;
+
                 @Override
-                public void init() throws IOException {
-                    this.reader = new BufferedReader(new InputStreamReader(textReader.newInputStream(), textReader.getCharset()));
-                    this.parser = new CSVParser(this.reader, CsvFormat.this.apacheCommonsCsvFormatForImport);
-                    this.iterator = this.parser.iterator();
+                public boolean hasNext() {
+                    final boolean ret;
+                    
+                    if (this.completed) {
+                        ret = false;
+                    } else {
+                        try {
+                            if (!this.initialized) {
+                                this.reader = new BufferedReader(new InputStreamReader(textReader.newInputStream(), textReader.getCharset()));
+                                this.parser = new CSVParser(this.reader, CsvFormat.this.apacheCommonsCsvFormatForImport);
+                                this.iterator = this.parser.iterator();
+                                this.initialized = true;
+                            }
+
+                            ret = this.iterator.hasNext();
+
+                            if (!ret) {
+                                this.completed = true;
+                                this.reader.close();
+                                this.parser.close();
+                            }
+                        } catch (final IOException e) {
+                            try {
+                                this.close();
+                            } finally {
+                                throw new UncheckedIOException(e); 
+                            }
+                        }
+                    }
+                    
+                    return ret;
+                }
+
+                @Override
+                public CsvRecord next() {
+                    final CsvRecord ret;
+                    
+                    if (!this.hasNext()) {
+                        throw new NoSuchElementException();
+                    } else {
+                        ret = new CsvRecord(this.iterator.next());
+                    }
+                    
+                    return ret;
                 }
                 
-                @Override
-                public void generate() {
-                    if (this.iterator.hasNext()) {
-                        this.yield(new CsvRecord(this.iterator.next()));
+                private void close() throws IOException {
+                    final Reader theReader = this.reader;
+                    final CSVParser theParser = this.parser;
+                   
+                    this.completed = true;
+                    this.reader = null;
+                    this.parser = null;
+                    this.iterator = null;
+                    
+                    try {
+                        theReader.close();
+                    } finally {
+                        theParser.close();
                     }
                 }
-                
-                @Override
-                public void dispose() throws IOException {
-                    this.reader.close();
-                    this.parser.close();
-                }
-            }
-        );
-        
-        return seq;
-    }   
+            };
+        });
+    }
 
     public static Builder builder() {
         return new Builder();
