@@ -269,7 +269,7 @@ public interface Seq<T> {
             .forEach(pair -> action.accept((T) pair[0], (long) pair[1]));
     }
     
-    public static <T> Seq<T> from(final Seq<T> seq) {
+    static <T> Seq<T> from(final Seq<T> seq) {
         return seq == null
                 ? Seq.empty()
                 : seq;

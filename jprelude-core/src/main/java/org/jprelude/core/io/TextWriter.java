@@ -167,7 +167,9 @@ public final class TextWriter {
             this.handleError(throwable);
         }
         
-        if (printStream != null && printStream.checkError()) {
+        assert printStream == null;
+        
+        if (printStream.checkError()) {
             this.handleError(null);
         } else {
             this.onSuccess.execute();
