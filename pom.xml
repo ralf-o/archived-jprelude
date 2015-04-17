@@ -5,10 +5,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.jprelude</groupId>
-    <artifactId>parent</artifactId>
+    <artifactId>jprelude-parent</artifactId>
     <packaging>pom</packaging>
     <version>0.2-SNAPSHOT</version>
-    <name>JPrelude parent prject</name>
+    <name>jprelude-parent</name>
 
     <modules>
         <module>core</module>
