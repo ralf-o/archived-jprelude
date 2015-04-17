@@ -1,4 +1,4 @@
-package org.jprelude.core.tuple;
+package org.jprelude.core.util.tuple;
 
 public interface Triple<T1, T2, T3> {
   T1 getFirst();

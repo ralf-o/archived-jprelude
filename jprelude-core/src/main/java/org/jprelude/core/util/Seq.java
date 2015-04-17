@@ -21,9 +21,9 @@ import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-import org.jprelude.core.function.TriFunction;
-import org.jprelude.core.tuple.Pair;
-import org.jprelude.core.tuple.Triple;
+import org.jprelude.core.util.function.TriFunction;
+import org.jprelude.core.util.tuple.Pair;
+import org.jprelude.core.util.tuple.Triple;
 
 
 @FunctionalInterface

@@ -2,7 +2,7 @@ package org.jprelude.core.util;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import org.jprelude.core.function.Command;
+import org.jprelude.core.util.function.Command;
 
 public interface Observer<T> {
     void onNext(T item);

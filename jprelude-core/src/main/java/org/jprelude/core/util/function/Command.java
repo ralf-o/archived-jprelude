@@ -1,4 +1,4 @@
-package org.jprelude.core.function;
+package org.jprelude.core.util.function;
 
 public interface Command {
     void execute();

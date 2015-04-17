@@ -1,4 +1,4 @@
-package org.jprelude.core.tuple;
+package org.jprelude.core.util.tuple;
 
 public interface Pair<T1, T2> {
   T1 getFirst();

@@ -1,4 +1,4 @@
-package org.jprelude.core.function;
+package org.jprelude.core.util.function;
 
 @FunctionalInterface
 public interface TriFunction<A1, A2, A3, R> {

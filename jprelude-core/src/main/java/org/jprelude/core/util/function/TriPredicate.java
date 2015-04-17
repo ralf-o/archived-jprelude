@@ -1,4 +1,4 @@
-package org.jprelude.core.function;
+package org.jprelude.core.util.function;
 
 @FunctionalInterface
 public interface TriPredicate<A1, A2, A3> {
