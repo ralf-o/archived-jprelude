@@ -6,6 +6,7 @@ import java.util.Objects;
 import java.util.function.Function;
 import org.jprelude.core.io.function.IOPredicate;
 import org.jprelude.core.util.Seq;
+import org.jprelude.core.util.function.CheckedPredicate;
 
 public final class PathLister {
     final Function<Path, IOPredicate<PathRef>> pathFilterFunction;
@@ -63,7 +64,7 @@ public final class PathLister {
 
         return this
                 .listRefs(path)
-                .filter(IOPredicate.unchecked(ref -> !ref.isDirectory()));
+                .filter(CheckedPredicate.unchecked(ref -> !ref.isDirectory()));
     }
 
     public Seq<PathRef> listDirectoryRefs(final Path path) {
@@ -71,7 +72,7 @@ public final class PathLister {
 
         return this
                 .listRefs(path)
-                .filter(IOPredicate.unchecked(ref -> ref.isDirectory()));        
+                .filter(CheckedPredicate.unchecked(ref -> ref.isDirectory()));        
     }
     
     public static class Builder {

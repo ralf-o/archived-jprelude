@@ -102,7 +102,7 @@ public interface PathRef {
     
     default Seq<PathRef> list(final IOPredicate<? super PathRef> pathFilter) {
         Objects.requireNonNull(pathFilter);
-        return this.list().filter(IOPredicate.unchecked(pathFilter));
+        return this.list().filter(pathFilter.unchecked());
     }
 
     default Seq<PathRef> listRecursive() {
@@ -112,7 +112,7 @@ public interface PathRef {
     default Seq<PathRef> listRecursive(final IOPredicate<? super PathRef> pathFilter) {
         Objects.requireNonNull(pathFilter);
 
-        return this.listRecursive(pathFilter, p -> true);
+        return this.listRecursive(pathFilter, (IOPredicate) p -> true);
     }
  
     default Seq<PathRef> listRecursive(final IOPredicate<? super PathRef> pathFilter, final IOPredicate<? super PathRef> recursionFilter) {

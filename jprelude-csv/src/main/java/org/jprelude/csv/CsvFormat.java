@@ -24,7 +24,7 @@ import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.csv.QuoteMode;
 import org.jprelude.core.io.TextReader;
 import org.jprelude.core.io.TextWriter;
-import org.jprelude.core.io.function.IOFunction;
+import org.jprelude.core.io.function.CheckedFunction;
 import org.jprelude.core.util.Mutable;
 import org.jprelude.core.util.Seq;
 import org.jprelude.core.util.Try;
@@ -222,10 +222,10 @@ public final class CsvFormat implements Function<List<?>, String> {
         return ret;
     }
 
-    public IOFunction<Seq<List<?>>, Try<CsvExportResult>> prepareExportTo(final TextWriter textWriter) {
+    public CheckedFunction<Seq<List<?>>, Try<CsvExportResult>> prepareExportTo(final TextWriter textWriter) {
         Objects.requireNonNull(textWriter);
         
-        return (IOFunction<Seq<List<?>>, Try<CsvExportResult>>) records -> {
+        return (CheckedFunction<Seq<List<?>>, Try<CsvExportResult>>) records -> {
             Try<CsvExportResult> ret;
             final Mutable<Long> recordCount = Mutable.of(0L);
             
@@ -259,7 +259,7 @@ public final class CsvFormat implements Function<List<?>, String> {
         };
     }
     
-    public IOFunction<TextWriter, Try<CsvExportResult>> prepareExportOf(final Seq<List<?>> records) {
+    public CheckedFunction<TextWriter, Try<CsvExportResult>> prepareExportOf(final Seq<List<?>> records) {
         return writer -> this.prepareExportTo(writer).apply(records);
     }
     

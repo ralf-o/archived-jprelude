@@ -5,6 +5,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import org.jprelude.core.util.function.CheckedSupplier;
 
 public interface Try<T> {
     T get();
@@ -172,4 +173,16 @@ public interface Try<T> {
             }
         };
     }
+    
+    static <T> Try<T> tryToGet(final CheckedSupplier<? extends T> supplier) {
+        Try<T> ret;
+        
+        try {
+            ret = Try.of(supplier.get());
+        } catch (final Throwable trowable) {
+            ret = Try.error(trowable);
+        }
+        
+        return ret;
+    };
 }

@@ -1,27 +1,10 @@
 package org.jprelude.core.io.function;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.util.Objects;
-import java.util.function.Consumer;
+import org.jprelude.core.util.function.CheckedConsumer;
 
 @FunctionalInterface
-public interface IOConsumer<T> {
+public interface IOConsumer<T> extends CheckedConsumer<T> {
+    @Override
     void accept(T t) throws IOException;
-   
-    default Consumer<T> unchecked() {
-        return value -> {
-            try {
-                IOConsumer.this.accept(value);
-            } catch (final IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        };
-    }
-
-    static <T> Consumer<T> unchecked(final IOConsumer<T> ioConsumer) {
-        Objects.requireNonNull(ioConsumer);
-        
-        return ioConsumer.unchecked();
-    }
 }

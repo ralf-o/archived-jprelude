@@ -2,31 +2,10 @@
 package org.jprelude.core.io.function;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.util.Objects;
-import java.util.function.Predicate;
+import org.jprelude.core.util.function.CheckedPredicate;
 
 @FunctionalInterface
-public interface IOPredicate<T> {
+public interface IOPredicate<T> extends CheckedPredicate<T> {
+    @Override
     boolean test(T t) throws IOException;
-
-    default Predicate<T> unchecked() {
-        return value -> {
-            boolean ret;
-            
-            try {
-                ret = IOPredicate.this.test(value);
-            } catch (final IOException e) {
-                throw new UncheckedIOException(e);
-            }
-            
-            return ret;
-        };
-    }
-    
-    static <T> Predicate<T> unchecked(final IOPredicate<T> ioPredicate) {
-        Objects.requireNonNull(ioPredicate);
-        
-        return ioPredicate.unchecked();
-    }
 }

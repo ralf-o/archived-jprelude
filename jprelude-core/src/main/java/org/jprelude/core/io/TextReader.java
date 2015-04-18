@@ -1,6 +1,5 @@
 package org.jprelude.core.io;
 
-import org.jprelude.core.io.function.IOSupplier;
 import java.io.*;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
@@ -15,9 +14,11 @@ import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
-import org.jprelude.core.io.function.IOConsumer;
+import org.jprelude.core.io.function.IOSupplier;
 import org.jprelude.core.util.Mutable;
 import org.jprelude.core.util.Seq;
+import org.jprelude.core.util.function.CheckedConsumer;
+import org.jprelude.core.util.function.CheckedSupplier;
 
 public final class TextReader {
     final String sourceName;
@@ -187,7 +188,7 @@ public final class TextReader {
         });
     }
     
-    public void read(final IOConsumer<InputStream> consumer) throws IOException {
+    public void read(final CheckedConsumer<InputStream> consumer) throws IOException {
         Objects.requireNonNull(consumer);
         
         try (final InputStream inputStream = this.newInputStream()) {

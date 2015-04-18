@@ -2,8 +2,6 @@ package org.jprelude.core.io;
 
 import java.io.File;
 import java.nio.file.FileSystems;
-import java.util.concurrent.TimeUnit;
-import org.jprelude.core.io.function.IOConsumer;
 import org.jprelude.core.util.Seq;
 import org.junit.Test;
 

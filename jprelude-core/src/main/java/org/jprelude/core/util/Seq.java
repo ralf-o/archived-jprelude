@@ -1,7 +1,6 @@
 package org.jprelude.core.util;
 
 import com.codepoetics.protonpack.Indexed;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
@@ -24,7 +23,6 @@ import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-import org.jprelude.core.io.function.IOConsumer;
 import org.jprelude.core.util.function.TriFunction;
 import org.jprelude.core.util.tuple.Pair;
 import org.jprelude.core.util.tuple.Triple;
