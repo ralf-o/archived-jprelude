@@ -1,16 +1,22 @@
 package org.jprelude.core.io;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import org.jprelude.core.io.function.IOPredicate;
 import org.jprelude.core.util.Seq;
 import org.jprelude.core.util.function.CheckedPredicate;
 
 public final class PathLister {
-    final Function<Path, IOPredicate<PathRef>> pathFilterFunction;
-    final Function<Path, IOPredicate<PathRef>> recursionFilterFunction; 
+    final Function<Path, IOPredicate<Path>> pathFilterFunction;
+    final Function<Path, IOPredicate<Path>> recursionFilterFunction; 
     final Integer maxDepth;
     
     private PathLister(final Builder builder) {
@@ -24,60 +30,33 @@ public final class PathLister {
     public static Builder builder() {
         return new Builder();
     }
+   
     
     public Seq<Path> list(final Path path) {
         Objects.requireNonNull(path);
-
-        return this
-                .listRefs(path)
-                .map(ref -> ref.getPath());
+        
+        return PathLister.listPath(path);
     }
     
     public Seq<Path> listFiles(final Path path) {
         Objects.requireNonNull(path);
 
         return this
-                .listFileRefs(path)
-                .map(ref -> ref.getPath());                
+                .list(path)
+                .filter(CheckedPredicate.unchecked(p -> !Files.isDirectory(p)));
     }
     
     public Seq<Path> listDirectories(final Path path) {
         Objects.requireNonNull(path);
 
         return this
-                .listDirectoryRefs(path)
-                .map(ref -> ref.getPath());                
-    }
-    
-    public Seq<PathRef> listRefs(final Path path) {
-        Objects.requireNonNull(path);
-
-        return PathRef.from(path)
-                .listRecursive(
-                        this.pathFilterFunction.apply(path),
-                        this.recursionFilterFunction.apply(path),
-                        (this.maxDepth == null ? Integer.MAX_VALUE : this.maxDepth));
-    }
-    
-    public Seq<PathRef> listFileRefs(final Path path) {
-        Objects.requireNonNull(path);
-
-        return this
-                .listRefs(path)
-                .filter(CheckedPredicate.unchecked(ref -> !ref.isDirectory()));
-    }
-
-    public Seq<PathRef> listDirectoryRefs(final Path path) {
-        Objects.requireNonNull(path);
-
-        return this
-                .listRefs(path)
-                .filter(CheckedPredicate.unchecked(ref -> ref.isDirectory()));        
+                .list(path)
+                .filter(CheckedPredicate.unchecked(p -> Files.isDirectory(p)));
     }
     
     public static class Builder {
-        Function<Path, IOPredicate<PathRef>> pathFilterFunction;
-        Function<Path, IOPredicate<PathRef>> recursionFilterFunction; 
+        Function<Path, IOPredicate<Path>> pathFilterFunction;
+        Function<Path, IOPredicate<Path>> recursionFilterFunction; 
         Integer maxDepth = Integer.MAX_VALUE;
         
         public Builder() {
@@ -86,7 +65,7 @@ public final class PathLister {
             this.maxDepth = null;
         }
         
-        public Builder pathFilter(final IOPredicate<PathRef> pathFilter) {
+        public Builder pathFilter(final IOPredicate<Path> pathFilter) {
             Objects.requireNonNull(pathFilter);
             
             this.pathFilterFunction = p -> pathFilter;
@@ -99,17 +78,17 @@ public final class PathLister {
             this.pathFilterFunction = p1 -> {
                 final PathMatcher pathMatcher =  p1.getFileSystem().getPathMatcher(syntaxAndPattern);
                 
-                return p2 -> pathMatcher.matches(p2.getPath());
+                return p2 -> pathMatcher.matches(p2);
             };
             
             return this;
         }
         
-        public Builder recursionFilter(final IOPredicate<PathRef> recursionFilter) {
+        public Builder recursionFilter(final IOPredicate<Path> recursionFilter) {
             Objects.requireNonNull(recursionFilter);
             
             this.recursionFilterFunction =
-                    p1 -> p2 -> p2.isDirectory() && recursionFilter.test(p2);
+                    p1 -> p2 -> Files.isDirectory(p2) && recursionFilter.test(p2);
             
             return this;
         }
@@ -120,7 +99,7 @@ public final class PathLister {
             this.recursionFilterFunction = p1 -> {
                 final PathMatcher pathMatcher =  p1.getFileSystem().getPathMatcher(syntaxAndPattern);
                 
-                return p2 -> pathMatcher.matches(p2.getPath()) && p2.isDirectory();
+                return p2 -> pathMatcher.matches(p2) && Files.isDirectory(p2);
             };
                                  
             return this;
@@ -148,5 +127,80 @@ public final class PathLister {
         public PathLister build() {
             return new PathLister(this);
         }
-    }    
+    }
+
+    static Seq<Path> listPath(final Path path) {
+        Objects.requireNonNull(path);
+
+        return Seq.from(() -> {
+            final Stream<Path> ret;
+            
+            try {
+                final DirectoryStream<Path> dirStream = Files.newDirectoryStream(path, file -> true);
+                
+                ret = StreamSupport.stream(dirStream.spliterator(), false);
+            } catch (final IOException e) {
+                throw new UncheckedIOException(e.getMessage(), e);
+            }
+
+            return ret;
+        });
+    }
+    
+    static Seq<Path> listPath(final Path path, final IOPredicate<? super Path> pathFilter) {
+        Objects.requireNonNull(path);
+        Objects.requireNonNull(pathFilter);
+
+        return PathLister.listPath(path).filter(pathFilter.unchecked());
+    }
+
+    static Seq<Path> listPathRecursive(final Path path) {
+        Objects.requireNonNull(path);
+
+        return PathLister.listPathRecursive(path, (IOPredicate) p -> true);
+    }
+ 
+    static Seq<Path> listPathRecursive(final Path path, final IOPredicate<? super Path> pathFilter) {
+        Objects.requireNonNull(path);
+        Objects.requireNonNull(pathFilter);
+
+        return PathLister.listPathRecursive(path, pathFilter, (IOPredicate) p -> true);
+    }
+ 
+    static Seq<Path> listPathRecursive(final Path path, final IOPredicate<? super Path> pathFilter, final IOPredicate<? super Path> recursionFilter) {
+        Objects.requireNonNull(path);
+        Objects.requireNonNull(pathFilter);
+        Objects.requireNonNull(recursionFilter);
+        
+        return PathLister.listPathRecursive(path, pathFilter, recursionFilter, Integer.MAX_VALUE);
+    }
+    
+    static Seq<Path> listPathRecursive(final Path path, final IOPredicate<? super Path> pathFilter, final IOPredicate<? super Path> recursionFilter, final int maxDepth) {
+        Objects.requireNonNull(path);
+        Objects.requireNonNull(pathFilter);
+        Objects.requireNonNull(recursionFilter);
+
+        if (maxDepth <= 0) {
+            throw new IllegalArgumentException();
+        }
+        
+        System.out.println("==> " + PathLister.listPath(path).toList());
+        
+        return PathLister.listPath(path).flatMap(p -> {
+            final Seq<Path> ret;
+        System.out.println("yyyy");
+            try {
+                final boolean involve = pathFilter.test(p);
+                final boolean descent = maxDepth > 1 && Files.isDirectory(p) && recursionFilter.test(p);
+        System.out.println("==>" + descent);
+                ret = descent
+                        ? PathLister.listPathRecursive(p, pathFilter, recursionFilter, maxDepth - 1)
+                        : (!involve ? Seq.empty() : Seq.of(p));
+            } catch (final IOException e) {
+                throw new UncheckedIOException(e.getMessage(), e);
+            }
+            
+            return ret;
+        });
+    }
 }

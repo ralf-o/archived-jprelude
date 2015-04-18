@@ -18,7 +18,6 @@ import org.jprelude.core.io.function.IOSupplier;
 import org.jprelude.core.util.Mutable;
 import org.jprelude.core.util.Seq;
 import org.jprelude.core.util.function.CheckedConsumer;
-import org.jprelude.core.util.function.CheckedSupplier;
 
 public final class TextReader {
     final String sourceName;
