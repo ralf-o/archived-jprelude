@@ -1,4 +1,4 @@
-package org.jprelude.csv;
+package org.jprelude.csv.base;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -81,6 +81,13 @@ public final class CsvExporter<T> {
             this.target =  null;
             this.sourceRecordsObservers = new ArrayList<>();
             this.targetRowsObservers = new ArrayList<>();
+        }
+        
+        public Builder format(final CsvFormat format) {
+            Objects.requireNonNull(format);
+            
+            this.format = format;
+            return this;
         }
                 
         public Builder recordMapper(final Function<? super T, ? extends Seq<List<?>>> recordMapper) {

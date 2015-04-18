@@ -1,4 +1,4 @@
-package org.jprelude.csv;
+package org.jprelude.csv.base;
 
 import java.util.Objects;
 import org.apache.commons.csv.CSVRecord;
@@ -24,7 +24,7 @@ public final class CsvRecord {
         return this.apacheCommonsCsvRecord.get(column);
     }
         
-    long index() {
+    public long index() {
         return this.apacheCommonsCsvRecord.getRecordNumber() - 1;
     }
 }

@@ -134,7 +134,7 @@ public final class TextWriter {
                     printStream.print(line == null ? "" : line.toString());
                 });
             } else {
-                final String sep = lineSeparator.getSeparator();
+                final String sep = lineSeparator.getValue();
                 
                 Seq.sequential(lines).forEach(line -> {
                     printStream.print(line == null ? "" : line.toString());
@@ -167,7 +167,7 @@ public final class TextWriter {
             this.handleError(throwable);
         }
         
-        assert printStream == null;
+        assert printStream != null;
         
         if (printStream.checkError()) {
             this.handleError(null);

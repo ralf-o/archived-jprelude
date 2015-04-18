@@ -1,4 +1,4 @@
-package org.jprelude.csv;
+package org.jprelude.csv.base;
 
 public final class CsvColumn {
     private final String name;

@@ -27,7 +27,7 @@ public interface CheckedSupplier<T> {
         };
     }
     
-    static <T> Supplier<T> unchekched(final CheckedSupplier<T> supplier) {
+    static <T> Supplier<T> unchecked(final CheckedSupplier<T> supplier) {
         Objects.requireNonNull(supplier);
         
         return supplier.unchecked();

@@ -13,7 +13,7 @@ public enum LineSeparator {
         this.value = value;
     }
     
-    public final String getSeparator() {
+    public final String getValue() {
         return this.value;
     }
 }

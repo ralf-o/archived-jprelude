@@ -1,4 +1,4 @@
-package org.jprelude.csv;
+package org.jprelude.csv.base;
 
 public final class CsvExportResult {
     private final long sourceRecordCount;

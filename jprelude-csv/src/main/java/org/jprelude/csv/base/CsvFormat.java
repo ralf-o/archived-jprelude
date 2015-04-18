@@ -1,4 +1,4 @@
-package org.jprelude.csv;
+package org.jprelude.csv.base;
 
 import org.jprelude.core.util.LineSeparator;
 import com.codepoetics.protonpack.StreamUtils;
@@ -24,10 +24,10 @@ import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.csv.QuoteMode;
 import org.jprelude.core.io.TextReader;
 import org.jprelude.core.io.TextWriter;
-import org.jprelude.core.io.function.CheckedFunction;
 import org.jprelude.core.util.Mutable;
 import org.jprelude.core.util.Seq;
 import org.jprelude.core.util.Try;
+import org.jprelude.core.util.function.CheckedFunction;
 
 
 /*
@@ -154,7 +154,7 @@ public final class CsvFormat implements Function<List<?>, String> {
         
         CSVFormat formatExport = CSVFormat.DEFAULT
                 .withDelimiter(this.delimiter)
-                .withRecordSeparator(this.recordSeparator.getSeparator())
+                .withRecordSeparator(this.recordSeparator.getValue())
                 .withIgnoreSurroundingSpaces(this.autoTrim)
                 .withEscape(this.escapeCharacter)
                 .withQuote(this.quoteCharacter)
@@ -239,7 +239,7 @@ public final class CsvFormat implements Function<List<?>, String> {
                     
                     lines.forEach(line -> {
                         printStream.print(line);
-                        printStream.print(CsvFormat.this.recordSeparator.getSeparator());
+                        printStream.print(CsvFormat.this.recordSeparator.getValue());
                     });
 
                     if (printStream.checkError()) {

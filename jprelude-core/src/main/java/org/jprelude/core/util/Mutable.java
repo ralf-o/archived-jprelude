@@ -47,7 +47,7 @@ public interface Mutable<T>  extends Supplier<T> {
     }
     
     default boolean isEmpty() {
-        return this.get() != null;
+        return this.get() == null;
     }
     
     default void ifPresent(final Consumer<T> consumer) {

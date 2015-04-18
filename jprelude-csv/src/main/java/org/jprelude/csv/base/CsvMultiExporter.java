@@ -1,14 +1,19 @@
-package org.jprelude.csv;
+package org.jprelude.csv.base;
 
+import java.io.BufferedOutputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.jprelude.core.io.TextWriter;
 import org.jprelude.core.util.Mutable;
 import org.jprelude.core.util.Observer;
 import org.jprelude.core.util.Seq;
 import org.jprelude.core.util.Try;
+import org.jprelude.core.util.function.CheckedSupplier;
 
 public final class CsvMultiExporter<T> {
     final Map<String, CsvExporter<T>> exportersByID;
@@ -31,29 +36,44 @@ public final class CsvMultiExporter<T> {
         this.exportersByID.forEach((id, export) -> {
             final CsvExportResult.Builder builder = CsvExportResult.builder();
             final CsvFormat format = export.getFormat();
-            
+            final TextWriter target = export.getTarget();
+            final OutputStream outStream = CheckedSupplier.unchecked(() -> target.newOutputStream()).get(); // TODO
+            final PrintStream printStream = CheckedSupplier.unchecked(() -> new PrintStream(new BufferedOutputStream(outStream), true, target.getCharset().name())).get();
+            final String lineFeed = format.getRecordSeparator().getValue();
+                    
             observers.add(new Observer<T>() {
                 private long idx = -1;
  
                 @Override
                 public void onNext(final T item) {
                     if (++idx == 0) {
+                        final List<CsvColumn> columns = format.getColumns();
                         
+                        if (columns.size() > 0) {
+                           final String header = format.apply(Seq.from(columns).map(CsvColumn::getName).toList());
+                           printStream.print(header);
+                           printStream.print(lineFeed);
+                        }
                     }
+                    
+                    export.getRecordMapper().apply(item).forEach(row -> {
+                        printStream.print(format.apply(row));
+                        printStream.print(lineFeed);
+                    });
                 }
 
                 @Override
                 public void onError(final Throwable throwable) {
                     error.set(throwable);
+                    printStream.close();
                 }
 
                 @Override
                 public void onComplete() {
                     resultMap.put(id, builder.build());
+                    printStream.close();
                 }
             });
-            
-            resultMap.put(id, builder.build());
         });
         
         records.sequential().forEach(observers);

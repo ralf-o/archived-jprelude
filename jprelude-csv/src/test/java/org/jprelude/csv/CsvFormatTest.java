@@ -1,5 +1,7 @@
 package org.jprelude.csv;
 
+import org.jprelude.csv.base.CsvQuoteMode;
+import org.jprelude.csv.base.CsvFormat;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
