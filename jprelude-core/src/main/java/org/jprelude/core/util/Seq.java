@@ -1,12 +1,17 @@
 package org.jprelude.core.util;
 
 import com.codepoetics.protonpack.Indexed;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Spliterator;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
@@ -87,6 +92,15 @@ public interface Seq<T> {
         return this.mapFiltered((v, i) -> pred.test(v, i) ? Optional.of(v) : Optional.empty());
     }
     
+    default Seq<T> reject(final Predicate<? super T> pred) {
+        return Seq.from(() -> Seq.this.stream().filter(v -> !pred.test(v)));
+    }
+    
+    default Seq<T> reject(final BiPredicate<? super T, Long> pred) {
+        final Seq<Long> ints  = Seq.iterate(0L, n -> n + 1);        
+        return this.mapFiltered((v, i) -> !pred.test(v, i) ? Optional.of(v) : Optional.empty());
+    }
+    
     default Seq<T> peek(final Consumer<? super T> action) {
         final Function<? super T, T> f = (v) -> {
             action.accept(v);
@@ -99,6 +113,40 @@ public interface Seq<T> {
     
     default Seq<T> peek(final BiConsumer<? super T, Long> consumer) {
         return this.map((v, idx) -> {consumer.accept(v, idx); return v;});
+    }
+    
+    default Seq<T> peek(final Observer<? super T> observer) {
+        Objects.requireNonNull(observer);
+        
+        return () -> {
+            final Stream<T> stream = this.stream();
+            final Spliterator<T> spliterator = stream.spliterator();
+            
+            final Spliterator<T> wrapper = new Spliterator<T> () {
+                @Override
+                public boolean tryAdvance(Consumer<? super T> action) {
+                    return spliterator.tryAdvance(action);
+                }
+
+                @Override
+                public Spliterator<T> trySplit() {
+                    return spliterator.trySplit();
+                }
+
+                @Override
+                public long estimateSize() {
+                    return spliterator.estimateSize();
+                }
+
+                @Override
+                public int characteristics() {
+                    return spliterator.characteristics();
+                }
+            };
+            
+            
+            return StreamSupport.stream(spliterator, stream.isParallel());
+        };
     }
     
     default Seq<T> take(final int n) {
@@ -123,6 +171,61 @@ public interface Seq<T> {
     
     default Seq<T> skipUntil(final Predicate<T> pred) {
         return Seq.from(() -> com.codepoetics.protonpack.StreamUtils.skipUntil(this.stream(), pred));
+    }
+    
+    default Seq<T> sorted() {
+        return () -> this.stream().sorted();
+    }
+ 
+    default Seq<T> sorted(final Comparator<? super T> comparator) {
+        Objects.requireNonNull(comparator);
+        return () -> this.stream().sorted(comparator);
+    }
+    
+    default Seq<T> sorted(final Function<? super T, Comparable<?>> f) {
+        Objects.requireNonNull(f);
+        return this.sorted(Pair.of(f, false));
+    }
+
+    default Seq<T> sorted(final Function<? super T, Comparable<?>> f, boolean sortDesc) {
+        return this.sorted(Pair.of(f, sortDesc));
+    }
+    
+    default Seq<T> sorted(final Pair<Function<? super T, Comparable<?>>, Boolean>... sortings) {
+        return null; // TODO
+        /*
+        Objects.requireNonNull(sortings);
+        final List<Pair<Function<? super T, Comparable<?>>, Boolean>>  sorts = Seq.of(sortings).filter(pair -> pair != null && pair.getFirst() != null).toList();
+        
+        return () -> this.stream().sorted(new Comparator<T>() {
+            private Map<?, List<?>> cacheMap = new HashMap<>();
+                    
+            @Override
+            public int compare(T o1, T o2) {
+                int ret = 0;
+                final Function<T, List<?>> getCashedValues = item ->
+                
+                if (cacheMap.containsKey(o1)) {
+                    values1 = cacheMap.get(o1);
+                } else {
+                    values1 = new ArrayList<>();
+                    
+                    sorts.forEach(pair -> {
+                        final Function<? super T, Comparable<?>> f = pair.getFirst();
+                        final boolean SortDesc = pair.getSecond() == null ? false : pair.getSecond();
+                        
+                    });
+                }
+                
+                final List<?> values1 = getCachedValues(o1);
+                final List<?> values2 = getCachedValues(o2);
+                
+                for ()
+                
+                return 0; // TODO
+            }
+        });
+       */
     }
     
     default Seq<T> prepend(final T value) {

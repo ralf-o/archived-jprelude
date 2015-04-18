@@ -10,6 +10,7 @@ import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.PathMatcher;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
@@ -63,7 +64,12 @@ public interface PathInfo {
         return attrs.lastAccessTime();
      }
 
-     // TODO - Naming: Should we call it "getCreationTimeAge"?
+    // TODO - Is that method really useful? Naming: Should we call it "CreationTimeAge"?
+    default long getAge() throws IOException {
+        return this.getAge(TimeUnit.MILLISECONDS);
+    }
+     
+    // TODO - Naming: Should we call it "getCreationTimeAge"?
     default long getAge(final TimeUnit unit) throws IOException {
         Objects.requireNonNull(unit);
         final BasicFileAttributes attrs = Files.readAttributes(this.getPath(), BasicFileAttributes.class);
@@ -71,7 +77,12 @@ public interface PathInfo {
         final long currentTimestampInNanos = System.currentTimeMillis() * 1000000;
         return unit.convert(currentTimestampInNanos - creationTimestampInNanos, TimeUnit.NANOSECONDS);
     }
-       
+    
+    default boolean matches(final PathMatcher pathMatcher) {
+        Objects.requireNonNull(pathMatcher);
+        return pathMatcher.matches(this.getPath());
+    }
+        
     default Seq<PathInfo> list() {
         return Seq.from(() -> {
             final Stream<PathInfo> ret;
@@ -84,73 +95,37 @@ public interface PathInfo {
             } catch (final IOException e) {
                 throw new UncheckedIOException(e.getMessage(), e);
             }
-            
+
             return ret;
         });
     }
     
     default Seq<PathInfo> list(final IOPredicate<? super PathInfo> pathFilter) {
         Objects.requireNonNull(pathFilter);
-
-        return this.list().filter(pathInfo -> {
-            boolean ret;
-            
-            try {
-                ret = pathFilter.test(pathInfo);
-            } catch (final IOException e) {
-                throw new UncheckedIOException(e);
-            }
-            
-            return ret;
-        });
-    }
-    
-    default Seq<PathInfo> listFiles() {
-        return this.list(pathInfo -> !pathInfo.isDirectory());
+        return this.list().filter(IOPredicate.unchecked(pathFilter));
     }
 
-    default Seq<PathInfo> listFiles(final IOPredicate<? super PathInfo> pathFilter) {
-        Objects.requireNonNull(pathFilter);
-        return this.list(pathInfo -> !pathInfo.isDirectory() && pathFilter.test(pathInfo));
-    }
-    
-    default Seq<PathInfo> listDirs() {
-        return this.list(pathInfo -> !pathInfo.isDirectory());
-    }
-
-    default Seq<PathInfo> listDirs(final IOPredicate<? super PathInfo> dirFilter) {
-        Objects.requireNonNull(dirFilter);
-        return this.list(pathInfo -> pathInfo.isDirectory() && dirFilter.test(pathInfo));
-    }
-    
     default Seq<PathInfo> listRecursive() {
-        return this.listRecursive(pathInfo -> true, pathInfo -> true);
+        return this.list().filter(pathFilter -> true);
     }
-
-    default Seq<PathInfo> listRecursive(final int maxDepth) {
-        return this.listRecursive(pathInfo -> true, pathInfo -> true, maxDepth);
-    }
-
+ 
     default Seq<PathInfo> listRecursive(final IOPredicate<? super PathInfo> pathFilter) {
         Objects.requireNonNull(pathFilter);
-        return this.listRecursive(pathFilter, pathInfo -> true);
-    }
 
-    default Seq<PathInfo> listRecursive(final IOPredicate<? super PathInfo> pathFilter, final int maxDepth) {
-        Objects.requireNonNull(pathFilter);
-        return this.listRecursive(pathFilter, pathInfo -> true, maxDepth);
+        return this.listRecursive(pathFilter, p -> true);
     }
-    
-    default Seq<PathInfo> listRecursive(final IOPredicate<? super PathInfo> pathFilter, final IOPredicate<? super PathInfo> dirFilter) {
+ 
+    default Seq<PathInfo> listRecursive(final IOPredicate<? super PathInfo> pathFilter, final IOPredicate<? super PathInfo> recursionFilter) {
         Objects.requireNonNull(pathFilter);
-        Objects.requireNonNull(dirFilter);
-        return this.listRecursive(pathFilter, pathInfo -> true, Integer.MAX_VALUE);
-    }
-    
-    default Seq<PathInfo> listRecursive(final IOPredicate<? super PathInfo> pathFilter, final IOPredicate<? super PathInfo> dirFilter, int maxDepth) {
-        Objects.requireNonNull(pathFilter);
-        Objects.requireNonNull(dirFilter);
+        Objects.requireNonNull(recursionFilter);
         
+        return this.listRecursive(pathFilter, recursionFilter, Integer.MAX_VALUE);
+    }
+    
+    default Seq<PathInfo> listRecursive(final IOPredicate<? super PathInfo> pathFilter, final IOPredicate<? super PathInfo> dirFilter, final int maxDepth) {
+        Objects.requireNonNull(pathFilter);
+        Objects.requireNonNull(dirFilter);
+
         if (maxDepth <= 0) {
             throw new IllegalArgumentException();
         }
@@ -172,31 +147,7 @@ public interface PathInfo {
             return ret;
         });
     }
-            
-    default Seq<PathInfo> listFilesRecursive() {
-        return this.listFilesRecursive(pathInfo -> true);
-    }
     
-    default Seq<PathInfo> listFilesRecursive(final IOPredicate<? super PathInfo> fileFilter) {
-        return this.listFilesRecursive(fileFilter, pathInfo -> true);
-    }
-    
-    default Seq<PathInfo> listFilesRecursive(final IOPredicate<? super PathInfo> fileFilter, final IOPredicate<? super PathInfo> dirFilter) {
-        return this.listRecursive(pathInfo -> !pathInfo.isDirectory() && fileFilter.test(pathInfo), dirFilter);
-    }
-    
-    default Seq<PathInfo> listDirsRecursive() {
-        return this.listDirsRecursive(pathInfo -> true);
-    }
-    
-    default Seq<PathInfo> listDirsRecursive(final IOPredicate<? super PathInfo> dirFilter) {
-        return this.listFilesRecursive(dirFilter, pathInfo -> true);
-    }
-    
-    default Seq<PathInfo> listDirsRecursive(final IOPredicate<? super PathInfo> pathFilter, final IOPredicate<? super PathInfo> dirFilter) {
-        return this.listRecursive(pathInfo -> pathInfo.isDirectory() && pathFilter.test(pathInfo), dirFilter);
-    }
-
     default FileSystem getFileSystem() {
         return this.getPath().getFileSystem();
     }

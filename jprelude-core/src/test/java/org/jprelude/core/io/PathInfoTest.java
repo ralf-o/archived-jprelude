@@ -1,18 +1,34 @@
 package org.jprelude.core.io;
 
+import java.io.File;
 import java.nio.file.FileSystems;
 import java.util.concurrent.TimeUnit;
 import org.jprelude.core.io.function.IOConsumer;
+import org.jprelude.core.util.Seq;
 import org.junit.Test;
 
 public class PathInfoTest {
     @Test
     public void testSomething() {
-        PathInfo.from(FileSystems.getDefault().getPath("/home/kenny/Desktop"))
-                .listRecursive(1)
-                .forEach(
+        final Seq<PathInfo> pathInfos = PathInfo.from(FileSystems.getDefault().getPath("/home/kenny/Desktop")).list();
+        
+        final Seq<PathInfo> sortedPathInfos = pathInfos.sorted((info1, info2) -> info1.getFullName().compareTo(info2.getFullName()));
+        
+  
+        // this.maxDepth = builder.maxDepth;
+        
+        /*
+        sortedPathInfos.forEach(
                     IOConsumer.<PathInfo>unchecked(info -> 
                         System.out.println(info.getFullName()+ "   -> " + info.getAge(TimeUnit.HOURS))
                     ));
+       */
+        
+        PathLister.builder()
+                .fullRecursive()
+                .maxDepth(3)
+                .build()
+                .list(new File("/home/kenny/Desktop").toPath())
+                .forEach(System.out::println);
     }
 }

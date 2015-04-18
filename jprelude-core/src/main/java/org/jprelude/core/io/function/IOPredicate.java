@@ -4,7 +4,6 @@ package org.jprelude.core.io.function;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Objects;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 @FunctionalInterface
