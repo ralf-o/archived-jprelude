@@ -25,6 +25,7 @@
         <mavencompiler.version>2.0.2</mavencompiler.version>
         <mavenjavadoc.version>2.9.1</mavenjavadoc.version>
         <maven.pmd.version>5.2.3</maven.pmd.version>
+        <maven.jxr.version>2.5</maven.jxr.version>
         <findbugs.maven.version>3.0.1</findbugs.maven.version>
     </properties>
     
@@ -130,6 +131,20 @@
                     <effort>Min</effort>
                 </configuration>
             </plugin>
+            
+            <plugin>
+                <version>${maven.jxr.version}</version>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>jxr-maven-plugin</artifactId>
+            </plugin>
+            
+            <!--
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>javancss-maven-plugin</artifactId>
+                <version>33.54</version>
+            </plugin>
+            -->
         </plugins>
     </reporting>
 </project>
