@@ -8,8 +8,8 @@ import org.jprelude.core.io.function.IOPredicate;
 import org.jprelude.core.util.Seq;
 
 public final class PathLister {
-    final Function<Path, IOPredicate<PathInfo>> pathFilterFunction;
-    final Function<Path, IOPredicate<PathInfo>> recursionFilterFunction; 
+    final Function<Path, IOPredicate<PathRef>> pathFilterFunction;
+    final Function<Path, IOPredicate<PathRef>> recursionFilterFunction; 
     final Integer maxDepth;
     
     private PathLister(final Builder builder) {
@@ -28,55 +28,55 @@ public final class PathLister {
         Objects.requireNonNull(path);
 
         return this
-                .listInfos(path)
-                .map(info -> info.getPath());
+                .listRefs(path)
+                .map(ref -> ref.getPath());
     }
     
     public Seq<Path> listFiles(final Path path) {
         Objects.requireNonNull(path);
 
         return this
-                .listFileInfos(path)
-                .map(info -> info.getPath());                
+                .listFileRefs(path)
+                .map(ref -> ref.getPath());                
     }
     
     public Seq<Path> listDirectories(final Path path) {
         Objects.requireNonNull(path);
 
         return this
-                .listDirectoryInfos(path)
-                .map(info -> info.getPath());                
+                .listDirectoryRefs(path)
+                .map(ref -> ref.getPath());                
     }
     
-    public Seq<PathInfo> listInfos(final Path path) {
+    public Seq<PathRef> listRefs(final Path path) {
         Objects.requireNonNull(path);
 
-        return PathInfo.from(path)
+        return PathRef.from(path)
                 .listRecursive(
                         this.pathFilterFunction.apply(path),
                         this.recursionFilterFunction.apply(path),
                         (this.maxDepth == null ? Integer.MAX_VALUE : this.maxDepth));
     }
     
-    public Seq<PathInfo> listFileInfos(final Path path) {
+    public Seq<PathRef> listFileRefs(final Path path) {
         Objects.requireNonNull(path);
 
         return this
-                .listInfos(path)
-                .filter(IOPredicate.unchecked(info -> !info.isDirectory()));
+                .listRefs(path)
+                .filter(IOPredicate.unchecked(ref -> !ref.isDirectory()));
     }
 
-    public Seq<PathInfo> listDirectoryInfos(final Path path) {
+    public Seq<PathRef> listDirectoryRefs(final Path path) {
         Objects.requireNonNull(path);
 
         return this
-                .listInfos(path)
-                .filter(IOPredicate.unchecked(info -> info.isDirectory()));        
+                .listRefs(path)
+                .filter(IOPredicate.unchecked(ref -> ref.isDirectory()));        
     }
     
     public static class Builder {
-        Function<Path, IOPredicate<PathInfo>> pathFilterFunction;
-        Function<Path, IOPredicate<PathInfo>> recursionFilterFunction; 
+        Function<Path, IOPredicate<PathRef>> pathFilterFunction;
+        Function<Path, IOPredicate<PathRef>> recursionFilterFunction; 
         Integer maxDepth = Integer.MAX_VALUE;
         
         public Builder() {
@@ -85,7 +85,7 @@ public final class PathLister {
             this.maxDepth = null;
         }
         
-        public Builder pathFilter(final IOPredicate<PathInfo> pathFilter) {
+        public Builder pathFilter(final IOPredicate<PathRef> pathFilter) {
             Objects.requireNonNull(pathFilter);
             
             this.pathFilterFunction = p -> pathFilter;
@@ -104,7 +104,7 @@ public final class PathLister {
             return this;
         }
         
-        public Builder recursionFilter(final IOPredicate<PathInfo> recursionFilter) {
+        public Builder recursionFilter(final IOPredicate<PathRef> recursionFilter) {
             Objects.requireNonNull(recursionFilter);
             
             this.recursionFilterFunction =

@@ -23,7 +23,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import org.jprelude.core.util.Seq;
 
-public interface PathInfo {
+public interface PathRef {
     Path getPath();
     
     default boolean isRegularFile() throws IOException {
@@ -83,15 +83,15 @@ public interface PathInfo {
         return pathMatcher.matches(this.getPath());
     }
         
-    default Seq<PathInfo> list() {
+    default Seq<PathRef> list() {
         return Seq.from(() -> {
-            final Stream<PathInfo> ret;
+            final Stream<PathRef> ret;
             
             try {
                 final DirectoryStream<Path> dirStream = Files.newDirectoryStream(this.getPath(), file -> true);
                 
                 ret = StreamSupport.stream(dirStream.spliterator(), false)
-                        .map(path -> PathInfo.from(path));
+                        .map(path -> PathRef.from(path));
             } catch (final IOException e) {
                 throw new UncheckedIOException(e.getMessage(), e);
             }
@@ -100,29 +100,29 @@ public interface PathInfo {
         });
     }
     
-    default Seq<PathInfo> list(final IOPredicate<? super PathInfo> pathFilter) {
+    default Seq<PathRef> list(final IOPredicate<? super PathRef> pathFilter) {
         Objects.requireNonNull(pathFilter);
         return this.list().filter(IOPredicate.unchecked(pathFilter));
     }
 
-    default Seq<PathInfo> listRecursive() {
+    default Seq<PathRef> listRecursive() {
         return this.list().filter(pathFilter -> true);
     }
  
-    default Seq<PathInfo> listRecursive(final IOPredicate<? super PathInfo> pathFilter) {
+    default Seq<PathRef> listRecursive(final IOPredicate<? super PathRef> pathFilter) {
         Objects.requireNonNull(pathFilter);
 
         return this.listRecursive(pathFilter, p -> true);
     }
  
-    default Seq<PathInfo> listRecursive(final IOPredicate<? super PathInfo> pathFilter, final IOPredicate<? super PathInfo> recursionFilter) {
+    default Seq<PathRef> listRecursive(final IOPredicate<? super PathRef> pathFilter, final IOPredicate<? super PathRef> recursionFilter) {
         Objects.requireNonNull(pathFilter);
         Objects.requireNonNull(recursionFilter);
         
         return this.listRecursive(pathFilter, recursionFilter, Integer.MAX_VALUE);
     }
     
-    default Seq<PathInfo> listRecursive(final IOPredicate<? super PathInfo> pathFilter, final IOPredicate<? super PathInfo> dirFilter, final int maxDepth) {
+    default Seq<PathRef> listRecursive(final IOPredicate<? super PathRef> pathFilter, final IOPredicate<? super PathRef> dirFilter, final int maxDepth) {
         Objects.requireNonNull(pathFilter);
         Objects.requireNonNull(dirFilter);
 
@@ -131,7 +131,7 @@ public interface PathInfo {
         }
         
         return this.list().flatMap(filePath -> {
-            final Seq<PathInfo> ret;
+            final Seq<PathRef> ret;
             
             try {
                 final boolean involve = pathFilter.test(filePath);
@@ -253,13 +253,13 @@ public interface PathInfo {
     }     
 
 
-    static PathInfo from(final Path path) {
+    static PathRef from(final Path path) {
         Objects.requireNonNull(path);
         return () -> path;
     }
     
-    public static PathInfo from(final File file) {
+    public static PathRef from(final File file) {
         Objects.requireNonNull(file);
-        return PathInfo.from(file.toPath());
+        return PathRef.from(file.toPath());
     }
 }

@@ -7,12 +7,12 @@ import org.jprelude.core.io.function.IOConsumer;
 import org.jprelude.core.util.Seq;
 import org.junit.Test;
 
-public class PathInfoTest {
+public class PathRefTest {
     @Test
     public void testSomething() {
-        final Seq<PathInfo> pathInfos = PathInfo.from(FileSystems.getDefault().getPath("/home/kenny/Desktop")).list();
+        final Seq<PathRef> pathInfos = PathRef.from(FileSystems.getDefault().getPath("/home/kenny/Desktop")).list();
         
-        final Seq<PathInfo> sortedPathInfos = pathInfos.sorted((info1, info2) -> info1.getFullName().compareTo(info2.getFullName()));
+        final Seq<PathRef> sortedPathInfos = pathInfos.sorted((info1, info2) -> info1.getFullName().compareTo(info2.getFullName()));
         
   
         // this.maxDepth = builder.maxDepth;

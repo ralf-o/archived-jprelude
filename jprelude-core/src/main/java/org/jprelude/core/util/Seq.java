@@ -1,13 +1,11 @@
 package org.jprelude.core.util;
 
 import com.codepoetics.protonpack.Indexed;
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
@@ -26,6 +24,7 @@ import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import org.jprelude.core.io.function.IOConsumer;
 import org.jprelude.core.util.function.TriFunction;
 import org.jprelude.core.util.tuple.Pair;
 import org.jprelude.core.util.tuple.Triple;
@@ -182,52 +181,6 @@ public interface Seq<T> {
         return () -> this.stream().sorted(comparator);
     }
     
-    default Seq<T> sorted(final Function<? super T, Comparable<?>> f) {
-        Objects.requireNonNull(f);
-        return this.sorted(Pair.of(f, false));
-    }
-
-    default Seq<T> sorted(final Function<? super T, Comparable<?>> f, boolean sortDesc) {
-        return this.sorted(Pair.of(f, sortDesc));
-    }
-    
-    default Seq<T> sorted(final Pair<Function<? super T, Comparable<?>>, Boolean>... sortings) {
-        return null; // TODO
-        /*
-        Objects.requireNonNull(sortings);
-        final List<Pair<Function<? super T, Comparable<?>>, Boolean>>  sorts = Seq.of(sortings).filter(pair -> pair != null && pair.getFirst() != null).toList();
-        
-        return () -> this.stream().sorted(new Comparator<T>() {
-            private Map<?, List<?>> cacheMap = new HashMap<>();
-                    
-            @Override
-            public int compare(T o1, T o2) {
-                int ret = 0;
-                final Function<T, List<?>> getCashedValues = item ->
-                
-                if (cacheMap.containsKey(o1)) {
-                    values1 = cacheMap.get(o1);
-                } else {
-                    values1 = new ArrayList<>();
-                    
-                    sorts.forEach(pair -> {
-                        final Function<? super T, Comparable<?>> f = pair.getFirst();
-                        final boolean SortDesc = pair.getSecond() == null ? false : pair.getSecond();
-                        
-                    });
-                }
-                
-                final List<?> values1 = getCachedValues(o1);
-                final List<?> values2 = getCachedValues(o2);
-                
-                for ()
-                
-                return 0; // TODO
-            }
-        });
-       */
-    }
-    
     default Seq<T> prepend(final T value) {
         return Seq.concat(Seq.of(value), Seq.from(this));
     }
@@ -340,6 +293,8 @@ public interface Seq<T> {
     }
     
     default void forEach(final Consumer<? super T> consumer) {
+        Objects.requireNonNull(consumer);
+        
         try (final Stream<T> stream = this.stream()) {
             stream.forEach(consumer);
         }
