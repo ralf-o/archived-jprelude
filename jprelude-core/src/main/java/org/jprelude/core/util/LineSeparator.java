@@ -4,7 +4,8 @@ public enum LineSeparator {
     SYSTEM(System.lineSeparator()),
     LF("\n"),
     CR("\r"),
-    CRLF("\r\n");
+    CRLF("\r\n"),
+    NONE("");
     
     final String value;
     

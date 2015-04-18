@@ -164,8 +164,7 @@ public final class PathLister {
         if (maxDepth <= 0) {
             throw new IllegalArgumentException();
         }
-        
-        
+  
         return new PathLister(path -> PathLister.create().list(path).flatMap(p -> {
             final Seq<Path> ret;
 
