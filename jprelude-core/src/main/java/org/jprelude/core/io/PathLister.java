@@ -1,5 +1,6 @@
 package org.jprelude.core.io;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.DirectoryStream;
@@ -30,6 +31,12 @@ public final class PathLister {
         Objects.requireNonNull(path);
         
         return this.f.apply(path);
+    }
+    
+    public Seq<Path> list(final File file) {
+        Objects.requireNonNull(file);
+ 
+        return this.list(file.toPath());
     }
    
     public static class Builder {
@@ -127,7 +134,7 @@ public final class PathLister {
         }));
     }
     
-    static PathLister create(final IOPredicate<? super Path> pathFilter) {
+    static PathLister create(final IOPredicate< Path> pathFilter) {
         Objects.requireNonNull(pathFilter);
 
         return PathLister.createRecursive(pathFilter, (IOPredicate<Path>) path -> false, 1);
@@ -137,15 +144,15 @@ public final class PathLister {
         return PathLister.createRecursive((IOPredicate<Path>) path -> true);
     }
     
-    static PathLister createRecursive(final IOPredicate<? super Path> pathFilter) {
+    static PathLister createRecursive(final IOPredicate<Path> pathFilter) {
         Objects.requireNonNull(pathFilter);
         
         return PathLister.createRecursive(pathFilter, (IOPredicate<Path>) path -> true); 
     }
     
     static PathLister createRecursive(
-            final IOPredicate<? super Path> pathFilter,
-            final IOPredicate<? super Path> recursionFilter) {
+            final IOPredicate<Path> pathFilter,
+            final IOPredicate<Path> recursionFilter) {
         
         Objects.requireNonNull(pathFilter);
         Objects.requireNonNull(recursionFilter);
@@ -154,8 +161,8 @@ public final class PathLister {
     }
     
     static PathLister createRecursive(
-            final IOPredicate<? super Path> pathFilter,
-            final IOPredicate<? super Path> recursionFilter,
+            final IOPredicate<Path> pathFilter,
+            final IOPredicate<Path> recursionFilter,
             final int maxDepth) {
         
         Objects.requireNonNull(pathFilter);
@@ -166,15 +173,19 @@ public final class PathLister {
         }
   
         return new PathLister(path -> PathLister.create().list(path).flatMap(p -> {
-            final Seq<Path> ret;
+            Seq<Path> ret;
 
             try {
-                final boolean involve = pathFilter.test(p);
+                final boolean involve = pathFilter.test(p); //System.out.println(p.toUri() + " ===> " + involve);
                 final boolean descent = maxDepth > 1 && Files.isDirectory(p) && recursionFilter.test(p);
 
                 ret = descent
                         ? PathLister.createRecursive(pathFilter, recursionFilter, maxDepth - 1).list(p)
                         : (!involve ? Seq.empty() : Seq.of(p));
+                                
+                if (descent && involve) {
+                    ret = ret.prepend(p);
+                }
             } catch (final IOException e) {
                 throw new UncheckedIOException(e.getMessage(), e);
             }

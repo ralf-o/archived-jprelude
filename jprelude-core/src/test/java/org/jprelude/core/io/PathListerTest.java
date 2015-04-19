@@ -1,7 +1,7 @@
 package org.jprelude.core.io;
 
 import java.io.File;
-import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import org.jprelude.core.util.Seq;
 import org.junit.Test;
@@ -9,7 +9,9 @@ import org.junit.Test;
 public class PathListerTest {
     @Test
     public void testSomething() {
-        final Seq<Path> paths = PathLister.createRecursive().list(FileSystems.getDefault().getPath("/home/kenny/Desktop"));
+        final Seq<Path> paths = PathLister
+                .createRecursive(Files::isRegularFile)
+                .list(new File("/home/kenny/Desktop"));
         
         
         
@@ -24,13 +26,13 @@ public class PathListerTest {
                         System.out.println(info.getFullName()+ "   -> " + info.getAge(TimeUnit.HOURS))
                     ));
        */
-        /*
+        System.out.println("-----------");
+       
         PathLister.builder()
                 .fullRecursive()
                 .maxDepth(3)
                 .build()
-                .list(new File("/home/kenny/Desktop").toPath())
-                .forEach(System.out::println);
-       */
+                .list(new File("/home/kenny/Desktop"));
+              //  .forEach(System.out::println);
     }
 }

@@ -59,7 +59,10 @@ public final class CsvMultiExporter<T> {
                     export.getRecordMapper().apply(item).forEach(row -> {
                         printStream.print(format.apply(row));
                         printStream.print(lineFeed);
+                        builder.targetRowCount(idx); // TODO
                     });
+                    
+                    builder.sourceRecordCount(idx);
                 }
 
                 @Override

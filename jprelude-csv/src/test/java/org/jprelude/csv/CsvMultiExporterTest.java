@@ -2,7 +2,6 @@ package org.jprelude.csv;
 
 import java.util.Arrays;
 import org.jprelude.core.io.TextWriter;
-import org.jprelude.core.util.LineSeparator;
 import org.jprelude.core.util.Seq;
 import org.jprelude.csv.base.CsvExporter;
 import org.jprelude.csv.base.CsvFormat;
@@ -19,7 +18,7 @@ public class CsvMultiExporterTest {
                 .format(CsvFormat.builder()
                     .columns("Col1", "Col2", "Col3")
                     .delimiter(',')
-                    .quoteMode(CsvQuoteMode.ALL)
+                    .quoteMode(CsvQuoteMode.MINIMAL)
                     .autoTrim(true)
                     .build())
                 .target(TextWriter.from(System.out))
@@ -32,7 +31,7 @@ public class CsvMultiExporterTest {
         CsvExporter<Integer> export2 = CsvExporter.builder()
                 .format(CsvFormat.builder()
                     .columns("C1", "C2", "C3")
-                    .delimiter(',')
+                    .delimiter(';')
                     .quoteMode(CsvQuoteMode.ALL)
                     .autoTrim(true)
                     .build())
@@ -41,12 +40,21 @@ public class CsvMultiExporterTest {
                     "CA" + n,
                     "CB" + n,
                     "CC" + n
-                ))).build();
+                )))
+                .build();
         
         CsvMultiExporter.<Integer>builder()
                 .addExporter("exp1", export1)
                 .addExporter("exp2", export2)
                 .build()
-                .export(records);
+                .export(records)
+                .ifError(error -> 
+                    System.out.println("ERROR: " + error.getMessage())
+                )
+                .ifSuccess(resultMap ->
+                    System.out.println(String.format(
+                            "SUCCESS: Exported %d recordsets.",
+                            resultMap.get("exp1").getSourceRecordCount()))
+                );
     }
 }
