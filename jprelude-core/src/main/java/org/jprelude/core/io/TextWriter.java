@@ -152,7 +152,7 @@ public final class TextWriter {
         }
     }
     
-    public void writeFullText(final CharSequence text) throws IOException {
+    public void writeFullText(final Object text) throws IOException {
         this.writeLines(Seq.of(text), LineSeparator.NONE);
     }
     

@@ -282,6 +282,10 @@ public interface Seq<T> {
         return this.stream().reduce(start, operator);
     }
     
+    default long length() {
+        return this.stream().collect(Collectors.counting());
+    }
+    
     default Object[] toArray() {
         return this.stream().toArray();
     }

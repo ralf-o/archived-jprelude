@@ -100,6 +100,11 @@ public final class PathLister {
             this.recursionFilterFunction = p1 -> p2 -> true;
             return this;
         }
+        
+        public Builder nonRecursive() {
+            this.recursionFilterFunction = p1 -> p2 -> false;
+            return this;
+        }
 
         public Builder maxDepth(final int maxDepth) {
             if (maxDepth <= 0) {
