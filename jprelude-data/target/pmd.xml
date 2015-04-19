@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pmd version="5.2.3" timestamp="2015-04-17T14:24:01.798">
+<file name="/home/kenny/dev/jprelude/jprelude-csv/src/main/java/org/jprelude/csv/CsvMultiExporter.java">
+<violation beginline="33" endline="33" begincolumn="29" endcolumn="34" rule="UnusedLocalVariable" ruleset="Unused Code" package="org.jprelude.csv" class="CsvMultiExporter" method="export" variable="format" externalInfoUrl="http://pmd.sourceforge.net/pmd-5.2.3/pmd-java/rules/java/unusedcode.html#UnusedLocalVariable" priority="3">
+Avoid unused local variables such as 'format'.
+</violation>
+<violation beginline="40" endline="42" begincolumn="37" endcolumn="21" rule="EmptyIfStmt" ruleset="Empty Code" package="org.jprelude.csv" class="CsvMultiExporter" method="onNext" externalInfoUrl="http://pmd.sourceforge.net/pmd-5.2.3/pmd-java/rules/java/empty.html#EmptyIfStmt" priority="3">
+Avoid empty if statements
+</violation>
+</file>
+</pmd>
