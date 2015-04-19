@@ -117,15 +117,11 @@ public final class TextWriter {
         return this.charset;
     }
 
-    public void write(final Seq<?> lines) throws IOException {
-        this.writeln(lines, null);
-    }
-    
-    public void writeln(final Seq<?> lines) throws IOException  {
-        this.writeln(lines, LineSeparator.SYSTEM);
+    public void writeLines(final Seq<?> lines) throws IOException {
+        this.writeLines(lines, null);
     }
 
-    public void writeln(final Seq<?> lines, LineSeparator lineSeparator) throws IOException {
+    public void writeLines(final Seq<?> lines, LineSeparator lineSeparator) throws IOException {
         boolean isError = false;
         
         try (final PrintStream printStream = this.newPrintStream()) {   
@@ -156,13 +152,17 @@ public final class TextWriter {
         }
     }
     
-    public void write(final IOConsumer<PrintStream> consumer) throws IOException {
-        Objects.requireNonNull(consumer);
+    public void writeFullText(final CharSequence text) throws IOException {
+        this.writeLines(Seq.of(text), LineSeparator.NONE);
+    }
+    
+    public void write(final IOConsumer<PrintStream> delegate) throws IOException {
+        Objects.requireNonNull(delegate);
         PrintStream printStream = null;
         
         try (final PrintStream out = this.newPrintStream()) {
             printStream = out;
-            consumer.accept(out);
+            delegate.accept(out);
         } catch (final Throwable throwable) {System.out.println(throwable + throwable.getMessage());
             this.handleError(throwable);
         }

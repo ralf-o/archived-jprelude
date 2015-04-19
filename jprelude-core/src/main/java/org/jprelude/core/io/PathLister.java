@@ -38,6 +38,12 @@ public final class PathLister {
  
         return this.list(file.toPath());
     }
+    
+    public Seq<Path> list(final String fileName) {
+        Objects.requireNonNull(fileName);
+        
+        return this.list(new File(fileName).toPath());
+    }
    
     public static class Builder {
         Function<Path, IOPredicate<Path>> pathFilterFunction;
@@ -134,23 +140,23 @@ public final class PathLister {
         }));
     }
     
-    static PathLister create(final IOPredicate< Path> pathFilter) {
+    public static PathLister create(final IOPredicate< Path> pathFilter) {
         Objects.requireNonNull(pathFilter);
 
         return PathLister.createRecursive(pathFilter, (IOPredicate<Path>) path -> false, 1);
     }
 
-    static PathLister createRecursive() {
+    public static PathLister createRecursive() {
         return PathLister.createRecursive((IOPredicate<Path>) path -> true);
     }
     
-    static PathLister createRecursive(final IOPredicate<Path> pathFilter) {
+    public static PathLister createRecursive(final IOPredicate<Path> pathFilter) {
         Objects.requireNonNull(pathFilter);
         
         return PathLister.createRecursive(pathFilter, (IOPredicate<Path>) path -> true); 
     }
     
-    static PathLister createRecursive(
+    public static PathLister createRecursive(
             final IOPredicate<Path> pathFilter,
             final IOPredicate<Path> recursionFilter) {
         
@@ -160,7 +166,7 @@ public final class PathLister {
         return PathLister.createRecursive(pathFilter, recursionFilter, Integer.MAX_VALUE);
     }
     
-    static PathLister createRecursive(
+    public static PathLister createRecursive(
             final IOPredicate<Path> pathFilter,
             final IOPredicate<Path> recursionFilter,
             final int maxDepth) {

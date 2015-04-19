@@ -14,10 +14,10 @@ import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+import org.jprelude.core.io.function.IOConsumer;
 import org.jprelude.core.io.function.IOSupplier;
 import org.jprelude.core.util.Mutable;
 import org.jprelude.core.util.Seq;
-import org.jprelude.core.util.function.CheckedConsumer;
 
 public final class TextReader {
     final String sourceName;
@@ -101,7 +101,7 @@ public final class TextReader {
                 true);
     }
 
-    public String readAsString() throws IOException {
+    public String readFullText() throws IOException {
         final CharBuffer charBuffer = CharBuffer.allocate(8096);
         final StringBuilder strBuilder = new StringBuilder();
         final BufferedReader bufferedReader = this.newBufferedReader();
@@ -117,25 +117,7 @@ public final class TextReader {
         return strBuilder.toString();
     }
     
-    public List<String> readAsList() throws IOException {
-        List<String> ret = null;
-        
-        try {
-            ret = this.readAsSeq().collect(Collectors.toList());
-        } catch (final UncheckedIOException exception) {
-            throw exception.getCause();
-        } catch (final Throwable throwable) {
-            throw new IOException(throwable);
-        }
-
-        return ret;
-    }
-    
-    public String[] readAsArray() throws IOException {
-        return (String[]) this.readAsList().toArray();
-    }
-    
-    public Seq<String> readAsSeq() {
+    public Seq<String> readLines() {
         return Seq.from(() -> {
             final BufferedReader bufferedReader;
             
@@ -187,11 +169,11 @@ public final class TextReader {
         });
     }
     
-    public void read(final CheckedConsumer<InputStream> consumer) throws IOException {
-        Objects.requireNonNull(consumer);
+    public void read(final IOConsumer<InputStream> delegate) throws IOException {
+        Objects.requireNonNull(delegate);
         
         try (final InputStream inputStream = this.newInputStream()) {
-            consumer.accept(inputStream);
+            delegate.accept(inputStream);
         } catch (final Throwable throwable) {
             this.handleError(throwable);
         }
@@ -237,7 +219,7 @@ public final class TextReader {
         BufferedReader ret = null;
         
         try {
-            ret = new BufferedReader(new InputStreamReader(this.newInputStream()));
+            ret = new BufferedReader(new InputStreamReader(this.newInputStream(), this.charset));
         } catch (final Throwable throwable) {
             this.handleError(throwable);
         }

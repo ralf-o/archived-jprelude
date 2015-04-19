@@ -286,8 +286,20 @@ public interface Seq<T> {
         return this.stream().toArray();
     }
     
+    default String[] toStringArray() {
+        return (String[]) this.stream()
+                .map(v -> v == null ? null : v.toString())
+                .toArray();
+    }
+    
     default List<T> toList() {
         return this.stream().collect(Collectors.toList());
+    }
+    
+    default List<String> toStringList() {
+        return (List<String>)this.stream()
+                .map(v -> v == null ? null : v.toString())
+                .collect(Collectors.toList());
     }
     
     default void forEach(final Consumer<? super T> consumer) {
