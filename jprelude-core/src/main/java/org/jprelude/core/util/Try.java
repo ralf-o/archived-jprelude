@@ -8,6 +8,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import org.jprelude.core.util.function.CheckedCommand;
+import org.jprelude.core.util.function.CheckedConsumer;
 import org.jprelude.core.util.function.CheckedSupplier;
 
 public interface Try<T> {
@@ -45,16 +46,8 @@ public interface Try<T> {
         
         return this.get();
     }
-      
-    default Try<T> ifErrorThrow() throws Throwable {
-        if (this.isError()) {
-            throw this.getError();
-        }
-        
-        return this;
-    }
     
-    default Try<T> ifErrorThrowUnchecked() {
+        default Try<T> ifErrorFail() {
         if (this.isError()) {
             final Throwable error = this.getError();
             
@@ -67,8 +60,26 @@ public interface Try<T> {
         
         return this;
     }
+
+    default <E extends Throwable> Try<T> ifErrorFail(final Class<T> errorType) throws E {
+        if (this.isError()) {
+            final Throwable error = this.getError();
+            
+            if (error.getClass().isAssignableFrom(errorType)) {
+                throw (E) error;
+            } else if (error instanceof IOException) {
+                throw new UncheckedIOException((IOException) error);
+            } else if (error instanceof RuntimeException) {
+                throw (RuntimeException) error;
+            } else {
+                throw new RuntimeException(error);
+            }
+        }
+        
+        return this;
+    };
     
-    default <E extends Throwable> Try<T> ifCertainError(final Class<E> errorType, final Consumer<Throwable> consumer) {
+    default <E extends Throwable> Try<T> catchError(final Class<E> errorType, final Consumer<Throwable> consumer) {
         Objects.requireNonNull(errorType);
         
         return this.ifError(error -> {
@@ -79,7 +90,7 @@ public interface Try<T> {
         );
     }
     
-    default <E extends Throwable> Try<T> ifCertainErrorThrow(final Class<E> errorType) throws E {
+    default <E extends Throwable> Try<T> ifCertainErrorFail(final Class<E> errorType) throws E {
           Objects.requireNonNull(errorType);
         
         if (!this.isSuccess()) {
@@ -137,8 +148,31 @@ public interface Try<T> {
         return this;
     }
     
+    default <E extends Throwable> Try<T> ifErrorFail(final Function<Throwable, E> errorMapper) throws E {
+        Objects.requireNonNull(errorMapper);
+        
+        if (this.isError()) {
+            throw errorMapper.apply(this.getError());
+        }
+        
+        return this;
+    };
+    
+    default <E> Try<T> ifCertainError(final Class<E> errorType, final Consumer<E> consumer) {
+        if (this.isError()) {
+            final Throwable error = this.getError();
+            
+            if (errorType.isAssignableFrom(error.getClass())) {
+                consumer.accept((E) error);
+            }
+        }
+        
+        return this;
+    }
+    
     static <T> Try<T> of(final T value) {
         return new Try<T>() {
+        
             @Override
             public T get() {
                 return value;

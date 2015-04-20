@@ -14,7 +14,7 @@ public class TextWriterTest {
         
         Try
           .tryToRun(() -> textWriter.writeLines(seq))
-          .ifCertainErrorThrow(IOException.class)
-          .ifErrorThrowUnchecked();
+          .ifCertainErrorFail(IOException.class)
+          .ifErrorFail();
     }
 }

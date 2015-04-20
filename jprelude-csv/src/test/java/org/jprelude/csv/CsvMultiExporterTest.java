@@ -1,5 +1,6 @@
 package org.jprelude.csv;
 
+import java.io.IOException;
 import java.util.Arrays;
 import org.jprelude.core.io.TextWriter;
 import org.jprelude.core.util.Seq;
@@ -11,7 +12,7 @@ import org.junit.Test;
 
 public class CsvMultiExporterTest {
     @Test
-    public void testSomething() {
+    public void testSomething() throws IOException {
         final Seq<Integer> records = Seq.range(1, 10);
         
         CsvExporter<Integer> export1 = CsvExporter.builder()
@@ -51,6 +52,7 @@ public class CsvMultiExporterTest {
                 .ifError(error -> 
                     System.out.println("ERROR: " + error.getMessage())
                 )
+                .ifErrorFail(e -> new IOException("bla", e))
                 .ifSuccess(resultMap ->
                     System.out.println(String.format(
                             "SUCCESS: Exported %d recordsets.",
