@@ -1,6 +1,7 @@
 package org.jprelude.core.io;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -158,16 +159,16 @@ public interface TextReader {
         };
     }
         
-    public static TextReader create(
+    public static TextReader forFile(
             final Path path,
             OpenOption... openOptions) {
         
         Objects.requireNonNull(path);
         
-        return TextReader.create(path, StandardCharsets.UTF_8, openOptions);
+        return TextReader.forFile(path, StandardCharsets.UTF_8, openOptions);
     }
     
-    public static TextReader create(
+    public static TextReader forFile(
             final Path path,
             final Charset charset,
             final OpenOption... openOptions) {
@@ -184,11 +185,11 @@ public interface TextReader {
                 charset);
     }
     
-    public static TextReader create(final InputStream inputStream) {
-        return TextReader.create(inputStream, null);
+    public static TextReader forInputStream(final InputStream inputStream) {
+        return TextReader.forInputStream(inputStream, null);
     }
     
-    public static TextReader create(final InputStream inputStream, final Charset charset) {
+    public static TextReader forInputStream(final InputStream inputStream, final Charset charset) {
         Objects.requireNonNull(inputStream);
         
         final IOSupplier<InputStream> supplier = () -> new InputStream() {
@@ -217,4 +218,13 @@ public interface TextReader {
                 supplier,
                 charset != null ? charset : StandardCharsets.UTF_8);
     }
+    
+    static TextReader forString(final String text) {
+        Objects.requireNonNull(text);
+
+        return TextReader.create(
+                () -> new ByteArrayInputStream(text.getBytes("UTF-8")));
+    }
+    
+    
 }

@@ -21,7 +21,7 @@ public class CsvMultiExporterTest {
                     .quoteMode(CsvQuoteMode.MINIMAL)
                     .autoTrim(true)
                     .build())
-                .target(TextWriter.from(System.out))
+                .target(TextWriter.forOutputStream(System.out))
                 .recordMapper(n -> Seq.of(Arrays.asList(
                     "CellA" + n,
                     "CellB" + n,
@@ -35,7 +35,7 @@ public class CsvMultiExporterTest {
                     .quoteMode(CsvQuoteMode.ALL)
                     .autoTrim(true)
                     .build())
-                .target(TextWriter.from(System.out))
+                .target(TextWriter.forOutputStream(System.out))
                 .recordMapper(n -> Seq.of(Arrays.asList(
                     "CA" + n,
                     "CB" + n,

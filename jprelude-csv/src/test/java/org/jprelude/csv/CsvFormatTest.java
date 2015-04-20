@@ -2,8 +2,8 @@ package org.jprelude.csv;
 
 import org.jprelude.csv.base.CsvQuoteMode;
 import org.jprelude.csv.base.CsvFormat;
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import org.jprelude.core.io.TextReader;
 import org.jprelude.core.io.TextWriter;
@@ -50,7 +50,7 @@ public class CsvFormatTest {
             .recordSeparator(LineSeparator.SYSTEM)
             .quoteMode(CsvQuoteMode.ALL)
             .build()
-            .prepareExportTo(TextWriter.from(new File("/home/kenny/test.juhu")))
+            .prepareExportTo(TextWriter.forFile(Paths.get("/home/kenny/test.juhu")))
             .apply(records.map(n -> 
                 Arrays.asList("   a" + n, "b" + n, "c" + n)))
             .ifErrorThrow()
@@ -79,7 +79,7 @@ public class CsvFormatTest {
             .recordSeparator(LineSeparator.SYSTEM)
             .quoteMode(CsvQuoteMode.ALL)
             .build()
-            .parse(TextReader.from(csvData))   
+            .parse(TextReader.forString(csvData))   
             .forEach(rec -> System.out.println(rec.index() + ": " + rec.get(Column.COLUMN1) + "-" + rec.get(Column.COLUMN2) + "-" + rec.get(Column.COLUMN3)));
     }    
 }

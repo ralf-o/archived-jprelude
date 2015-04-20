@@ -123,16 +123,16 @@ public interface TextWriter {
         };
     }
     
-    static TextWriter create(
+    static TextWriter forFile(
             final Path path,
             final OpenOption... openOptions) {
      
         Objects.requireNonNull(path);
         
-        return TextWriter.create(path, null, openOptions);
+        return TextWriter.forFile(path, null, openOptions);
     }
     
-    static TextWriter create(
+    static TextWriter forFile(
             final Path path,
             final Charset charset,
             final OpenOption... openOptions) {
@@ -149,13 +149,13 @@ public interface TextWriter {
                 charset != null ? charset : StandardCharsets.UTF_8);
     }
     
-    static TextWriter create(final OutputStream outputStream) {
+    static TextWriter forOutputStream(final OutputStream outputStream) {
         Objects.requireNonNull(outputStream);
         
-        return TextWriter.create(outputStream, null);
+        return TextWriter.forOutputStream(outputStream, null);
     }
     
-    static TextWriter create(
+    static TextWriter forOutputStream(
             final OutputStream outputStream,
             final Charset charset) {
             
