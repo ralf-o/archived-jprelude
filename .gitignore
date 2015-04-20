@@ -1,4 +1,2 @@
-/jprelude-webui/vux-production/target/
-/jprelude-webui/webui-production/target/
-/jprelude-webui/webui-widgetset/target/
-/jprelude-webui/webui-ui/target/
+/jprelude-core/target/
+/jprelude-csv/target/
