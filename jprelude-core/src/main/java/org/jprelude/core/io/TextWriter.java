@@ -1,268 +1,192 @@
 package org.jprelude.core.io;
 
 import java.io.BufferedOutputStream;
-import org.jprelude.core.io.function.IOSupplier;
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.io.UncheckedIOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Objects;
-import org.jprelude.core.io.function.IOCommand;
+import org.jprelude.core.io.function.IOBiConsumer;
 import org.jprelude.core.io.function.IOConsumer;
+import org.jprelude.core.io.function.IOSupplier;
 import org.jprelude.core.util.LineSeparator;
 import org.jprelude.core.util.Seq;
 
-public final class TextWriter {
-    final String targetName;
-    final Charset charset;
-    final boolean autoCloseOutputStream;
-    final IOSupplier<OutputStream> outputStreamSupplier;
-    final IOCommand onSuccess;
-    final IOCommand onError;
-    
-    private TextWriter(
-            final String targetName,
-            final IOSupplier<OutputStream> outputStreamSupplier,
-            final Charset charset,
-            final boolean autoCloseOutputStream,
-            final IOCommand onSuccess,
-            final IOCommand onError) {
-        assert outputStreamSupplier != null;
-        assert onSuccess != null;
-        assert onError != null;
-        
-        this.targetName = (targetName == null || targetName.trim().isEmpty() ? null : targetName.trim());
-        this.charset = charset != null ? charset : Charset.defaultCharset();
-        this.autoCloseOutputStream = autoCloseOutputStream;
-        this.outputStreamSupplier = outputStreamSupplier;
-        this.onSuccess = onSuccess;
-        this.onError = onError;
-    }
-    
-    public static TextWriter from(final Path path) {
-        Objects.requireNonNull(path);
-        return TextWriter.from(path, false, Charset.defaultCharset());        
-    }
-    
-    public static TextWriter from(final Path path, final boolean append) {
-        Objects.requireNonNull(path);
-        return TextWriter.from(path, append, Charset.defaultCharset());
-    }
-    
-    public static TextWriter from(final Path path, final Charset charset) {
-        Objects.requireNonNull(path);
-        return TextWriter.from(path, false, charset);        
-    }
-    
-    public static TextWriter from(final Path path, final boolean append, final Charset charset) {
-        Objects.requireNonNull(path);
-        
-        final Charset nonNullCharset = charset != null ? charset : Charset.defaultCharset();
-        
-        final OpenOption[] openOptions = append
-                ? new OpenOption[] { StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.APPEND }
-                : new OpenOption[] { StandardOpenOption.CREATE, StandardOpenOption.WRITE };
-        
-        return new TextWriter(
-                path.toString(),
-                () -> Files.newOutputStream(path, openOptions),
-                charset,
-                true,
-                () -> {},
-                () -> {});
-    }
-    
-    public static TextWriter from(final File file) {
-        Objects.requireNonNull(file);
-        return TextWriter.from(file.toPath(), false, Charset.defaultCharset());        
-    }
+public interface TextWriter {
+    Charset getCharset();
 
-    public static TextWriter from(final File file, final boolean append) {
-        Objects.requireNonNull(file);
-        return TextWriter.from(file.toPath(), append, Charset.defaultCharset());
-    }
-    
-    public static TextWriter from(final File file, final Charset charset) {
-        Objects.requireNonNull(file);
-        return TextWriter.from(file.toPath(), false, charset);        
-    }
-    
-    public static TextWriter from(final File file, final boolean append, final Charset charset) {
-        Objects.requireNonNull(file);
-        return TextWriter.from(file.toPath(), append, charset);
-    }
-    
-    public static TextWriter from(final OutputStream outputStream) {
-        return TextWriter.from(outputStream, null);
-    }
-    
-    public static TextWriter from(final OutputStream outputStream, final Charset charset) {
-        Objects.requireNonNull(outputStream);
-        final Charset nonNullCharset = charset != null ? charset : Charset.defaultCharset();
-        
-        return new TextWriter(
-                "OutputStream", () -> outputStream,
-                charset,
-                false,
-                () -> {},
-                () -> {});
-    }
-       
-    public Charset getCharset() {
-        return this.charset;
-    }
+    OutputStream newOutputStream() throws IOException;
 
-    public void writeLines(final Seq<?> lines) throws IOException {
-        this.writeLines(lines, null);
-    }
-
-    public void writeLines(final Seq<?> lines, LineSeparator lineSeparator) throws IOException {
-        boolean isError = false;
+    default void writeLines(final Seq<?> lines) throws IOException {
+        Objects.requireNonNull(lines);
         
-        try (final PrintStream printStream = this.newPrintStream()) {   
-            if (lineSeparator == null) {
-                Seq.sequential(lines).forEach(line -> {
-                    printStream.print(line == null ? "" : line.toString());
-                });
-            } else {
-                final String sep = lineSeparator.getValue();
+        this.writeLines(lines, LineSeparator.LF);
+    }
+    
+    default void writeLines(final Seq<?> lines, LineSeparator lineSeparator)
+            throws IOException {
+        
+        Objects.requireNonNull(lines);
+ 
+        final String lineSeparatorValue =
+                (lineSeparator == null || lineSeparator == LineSeparator.NONE)
+                ? ""
+                : lineSeparator.value();
+
+
+        this.write(printStream -> Seq.sequential(lines).forEach(line -> {
+            printStream.print(Objects.toString(line, ""));
+            printStream.print(lineSeparatorValue);
+
+            if (printStream.checkError()) {
+                throw new UncheckedIOException(
+                        new IOException(
+                                "Could not write to PrintStream - checkError() returned true"));
+            }
+        }));        
+    }
+    
+    default void writeFullText(final Object text) throws IOException {
+        this.writeLines(Seq.of(Objects.toString(text, "")), LineSeparator.NONE);
+    }
+    
+    
+    default void write(final IOConsumer<PrintStream> delegate)
+            throws IOException {
+        
+        this.write((printStream, charset) -> delegate.accept(printStream));
+    }
+    
+   default void write(final IOBiConsumer<PrintStream, Charset> delegate)
+            throws IOException {
+        
+        Objects.requireNonNull(delegate);
+        
+        final Charset charset = this.getCharset();
+        
+        final Charset nonNullCharset = charset != null
+                ?  charset
+                : StandardCharsets.UTF_8;
+        
+        try (
+                final OutputStream outputStream = this.newOutputStream();
                 
-                Seq.sequential(lines).forEach(line -> {
-                    printStream.print(line == null ? "" : line.toString());
-                    printStream.print(sep);
-                });                
+                final PrintStream printStream = new PrintStream(
+                        new BufferedOutputStream(outputStream),
+                        true,
+                        nonNullCharset.name())) {
+
+            delegate.accept(printStream, charset);
+
+            if (printStream.checkError()) {
+                throw new IOException(
+                        "Could not write to PrintStream - "
+                        + "checkError() returned true");
+            }
+        }
+    }
+
+    static TextWriter create(
+            final IOSupplier<OutputStream> outputStreamSupplier) {
+    
+        Objects.requireNonNull(outputStreamSupplier);
+        
+        return TextWriter.create(outputStreamSupplier, StandardCharsets.UTF_8);
+    }
+   
+    static TextWriter create(
+            final IOSupplier<OutputStream> outputStreamSupplier,
+            final Charset charset) {
+       
+        Objects.requireNonNull(outputStreamSupplier);
+       
+        final Charset nonNullCharset = charset != null
+                ? charset
+                : StandardCharsets.UTF_8;
+        
+        return new TextWriter() {
+            @Override
+            public OutputStream newOutputStream() throws IOException {
+                return outputStreamSupplier.get();
             }
             
-            if (printStream.checkError()) {
-                isError = true;
+            @Override
+            public Charset getCharset() {
+                return nonNullCharset;
             }
-        } catch (final Throwable throwable) {
-            this.handleError(throwable);
-        }
-        
-        if (isError) {
-            this.handleError(null);
-        } else {
-            this.handleSuccess();
-        }
+        };
     }
     
-    public void writeFullText(final Object text) throws IOException {
-        this.writeLines(Seq.of(text), LineSeparator.NONE);
+    static TextWriter create(
+            final Path path,
+            final OpenOption... openOptions) {
+     
+        Objects.requireNonNull(path);
+        
+        return TextWriter.create(path, null, openOptions);
     }
     
-    public void write(final IOConsumer<PrintStream> delegate) throws IOException {
-        Objects.requireNonNull(delegate);
-        PrintStream printStream = null;
+    static TextWriter create(
+            final Path path,
+            final Charset charset,
+            final OpenOption... openOptions) {
         
-        try (final PrintStream out = this.newPrintStream()) {
-            printStream = out;
-            delegate.accept(out);
-        } catch (final Throwable throwable) {System.out.println(throwable + throwable.getMessage());
-            this.handleError(throwable);
-        }
+        Objects.requireNonNull(path);
+       
+        final OpenOption[] options = Seq.of(openOptions)
+                .filter(option -> option != null)
+                .prepend(StandardOpenOption.WRITE)
+                .toArray(OpenOption[]::new);
         
-        assert printStream != null;
-        
-        if (printStream.checkError()) {
-            this.handleError(null);
-        } else {
-            this.onSuccess.execute();
-        }
+        return TextWriter.create(
+                () -> Files.newOutputStream(path, options),
+                charset != null ? charset : StandardCharsets.UTF_8);
     }
     
-    public OutputStream newOutputStream() throws IOException {
-        final OutputStream ret;
+    static TextWriter create(final OutputStream outputStream) {
+        Objects.requireNonNull(outputStream);
         
-        if (this.autoCloseOutputStream) {
-            ret = this.outputStreamSupplier.get();
-        } else {
-            ret = new OutputStream() {
-                private OutputStream outputStream = TextWriter.this.outputStreamSupplier.get();
+        return TextWriter.create(outputStream, null);
+    }
+    
+    static TextWriter create(
+            final OutputStream outputStream,
+            final Charset charset) {
+            
+        Objects.requireNonNull(outputStream);
 
-                @Override
-                public void write(int b) throws IOException {
-                    if (this.outputStream != null) {
-                        this.outputStream.write(b);
-                    } else {
-                        throw new IOException("Output stream is already closed");
-                    }
+        final IOSupplier<OutputStream> supplier = () -> new OutputStream() {
+            private boolean isClosed = false;
+            
+            @Override
+            public void write(int b) throws IOException {
+                if (!isClosed) {
+                    outputStream.write(b);
+                } else {
+                    throw new IOException(
+                            "Output stream is already closed");
                 }
-
-                @Override
-                public void flush() throws IOException {
-                    if (this.outputStream != null) {
-                        this.outputStream.flush();
-                    }
-                }
-
-                @Override
-                public void close() throws IOException {
-                    if (this.outputStream != null) {
-                        final OutputStream outStream = this.outputStream;
-                        this.outputStream = null;
-
-                        if (TextWriter.this.autoCloseOutputStream) {
-                            outStream.close();
-                        }
-                    }
-                }
-            };
-        }
-        
-        return ret;
-    }
-    
-    private PrintStream newPrintStream() throws IOException {
-        return new PrintStream(new BufferedOutputStream(this.newOutputStream()), true, this.charset.name());
-    }
-    
-    private void closePrintStream(final PrintStream printStream) throws IOException {
-        assert printStream != null;
- 
-        printStream.close();
- 
-        if (printStream.checkError()) {
-            this.handleError(null);
-        }
-    }
-    
-    private void handleSuccess() throws IOException {
-        try {
-            this.onSuccess.execute();
-        } catch (final Throwable throwable) {
-            this.handleError(throwable);
-        }
-    }
-    
-    private void handleError(final Throwable cause) throws IOException {
-        try {
-            this.onError.execute();
-        } catch (final Throwable t) {
-        }
-      
-        if (cause == null || cause.getMessage() == null || cause.getMessage().isEmpty()) {
-            final StringBuilder errorMsgBuilder = new StringBuilder();
-
-            errorMsgBuilder.append("Error while writing");
-
-            if (this.targetName != null) {
-                errorMsgBuilder.append(" ");
-                errorMsgBuilder.append(this.targetName);
             }
 
-            throw new IOException(errorMsgBuilder.toString(), cause);            
-        }
+            @Override
+            public void flush() throws IOException {
+                if (!isClosed) {
+                    outputStream.flush();
+                }
+            }
+
+            @Override
+            public void close() throws IOException {
+                isClosed = true;
+            }
+        };
         
-        if (cause instanceof IOException) {
-            throw (IOException) cause;
-        } else {
-            throw new IOException(cause);
-        }
-    }
+        return TextWriter.create(supplier, charset);
+    }            
 }

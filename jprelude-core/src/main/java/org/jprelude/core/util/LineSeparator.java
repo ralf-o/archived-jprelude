@@ -5,6 +5,10 @@ public enum LineSeparator {
     LF("\n"),
     CR("\r"),
     CRLF("\r\n"),
+    NEL("\u0025"),
+    FF("\u000C"),
+    LS("\u2028"),
+    PS("\u2029"),    
     NONE("");
     
     final String value;
@@ -13,7 +17,7 @@ public enum LineSeparator {
         this.value = value;
     }
     
-    public final String getValue() {
+    public final String value() {
         return this.value;
     }
 }

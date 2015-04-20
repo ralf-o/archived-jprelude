@@ -154,7 +154,7 @@ public final class CsvFormat implements Function<List<?>, String> {
         
         CSVFormat formatExport = CSVFormat.DEFAULT
                 .withDelimiter(this.delimiter)
-                .withRecordSeparator(this.recordSeparator.getValue())
+                .withRecordSeparator(this.recordSeparator.value())
                 .withIgnoreSurroundingSpaces(this.autoTrim)
                 .withEscape(this.escapeCharacter)
                 .withQuote(this.quoteCharacter)
@@ -239,7 +239,7 @@ public final class CsvFormat implements Function<List<?>, String> {
                     
                     lines.forEach(line -> {
                         printStream.print(line);
-                        printStream.print(CsvFormat.this.recordSeparator.getValue());
+                        printStream.print(CsvFormat.this.recordSeparator.value());
                     });
 
                     if (printStream.checkError()) {

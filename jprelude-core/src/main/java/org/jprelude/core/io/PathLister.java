@@ -33,18 +33,6 @@ public final class PathLister {
         return this.f.apply(path);
     }
     
-    public Seq<Path> list(final File file) {
-        Objects.requireNonNull(file);
- 
-        return this.list(file.toPath());
-    }
-    
-    public Seq<Path> list(final String fileName) {
-        Objects.requireNonNull(fileName);
-        
-        return this.list(new File(fileName).toPath());
-    }
-   
     public static class Builder {
         Function<Path, IOPredicate<Path>> pathFilterFunction;
         Function<Path, IOPredicate<Path>> recursionFilterFunction; 
@@ -56,14 +44,14 @@ public final class PathLister {
             this.maxDepth = Integer.MAX_VALUE;
         }
         
-        public Builder pathFilter(final IOPredicate<Path> pathFilter) {
+        public Builder filter(final IOPredicate<Path> pathFilter) {
             Objects.requireNonNull(pathFilter);
             
             this.pathFilterFunction = p -> pathFilter;
             return this;
         }
         
-        public Builder pathFilter(final String syntaxAndPattern) {
+        public Builder filter(final String syntaxAndPattern) {
             Objects.requireNonNull(syntaxAndPattern);
             
             this.pathFilterFunction = p1 -> {
@@ -75,7 +63,7 @@ public final class PathLister {
             return this;
         }
         
-        public Builder recursionFilter(final IOPredicate<Path> recursionFilter) {
+        public Builder recursive(final IOPredicate<Path> recursionFilter) {
             Objects.requireNonNull(recursionFilter);
             
             this.recursionFilterFunction =
@@ -84,7 +72,7 @@ public final class PathLister {
             return this;
         }
         
-        public Builder recursionFilter(final String syntaxAndPattern) {
+        public Builder recursive(final String syntaxAndPattern) {
             Objects.requireNonNull(syntaxAndPattern);
             
             this.recursionFilterFunction = p1 -> {
@@ -96,7 +84,7 @@ public final class PathLister {
             return this;
         }
         
-        public Builder fullRecursive() {
+        public Builder recursive() {
             this.recursionFilterFunction = p1 -> p2 -> true;
             return this;
         }

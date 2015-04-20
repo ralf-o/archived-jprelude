@@ -39,7 +39,7 @@ public final class CsvMultiExporter<T> {
             final TextWriter target = export.getTarget();
             final OutputStream outStream = CheckedSupplier.unchecked(() -> target.newOutputStream()).get(); // TODO
             final PrintStream printStream = CheckedSupplier.unchecked(() -> new PrintStream(new BufferedOutputStream(outStream), true, target.getCharset().name())).get();
-            final String lineFeed = format.getRecordSeparator().getValue();
+            final String lineFeed = format.getRecordSeparator().value();
                     
             observers.add(new Observer<T>() {
                 private long idx = -1;

@@ -1,132 +1,82 @@
 package org.jprelude.core.io;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UncheckedIOException;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.OpenOption;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Iterator;
-import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Spliterator;
 import java.util.Spliterators;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+import org.jprelude.core.io.function.IOBiConsumer;
 import org.jprelude.core.io.function.IOConsumer;
 import org.jprelude.core.io.function.IOSupplier;
-import org.jprelude.core.util.Mutable;
 import org.jprelude.core.util.Seq;
 
-public final class TextReader {
-    final String sourceName;
-    final Charset charset;
-    final boolean autoCloseInputStream;
-    final IOSupplier<InputStream> inputStreamSupplier;
+public interface TextReader {
+    InputStream newInputStream() throws IOException;
+    Charset getCharset();
     
-    private TextReader(
-            final String sourceName,
-            final IOSupplier<InputStream> inputStreamSupplier,
-            final Charset charset,
-            final boolean autoCloseInputStream) {
-        assert inputStreamSupplier != null;
-        
-        this.sourceName = (sourceName == null || sourceName.trim().isEmpty() ? null : sourceName.trim());
-        this.charset = charset != null ? charset : Charset.defaultCharset();
-        this.autoCloseInputStream = autoCloseInputStream;
-        this.inputStreamSupplier = inputStreamSupplier;
-    }
-    
-    public static TextReader from(final InputStream inputStream) {
-        Objects.requireNonNull(inputStream);
-        
-        return TextReader.from(inputStream, null);
-    }
-    
-    public static TextReader from(final InputStream inputStream, final Charset charset) {
-        Objects.requireNonNull(inputStream);
-
-        final Mutable<BufferedReader> bufferedReader = Mutable.empty();
-        final Charset nonNullCharset = charset != null ? charset : Charset.defaultCharset();
-        
-        final IOSupplier<InputStream> inputStreamSupplier = () -> inputStream;
-        
-        return new TextReader(
-                "InputStream",
-                inputStreamSupplier,
-                nonNullCharset,
-                false);
-    }    
-    
-    public static TextReader from(final Path path, final Charset charset) {
-        Objects.requireNonNull(path);
-
-        final Mutable<BufferedReader> bufferedReader = Mutable.empty();
-        final Charset nonNullCharset = charset != null ? charset : Charset.defaultCharset();
-        
-        return new TextReader(
-                path.toString(),
-                () -> Files.newInputStream(path),
-                nonNullCharset,
-                true);
-    }
-
-    public static TextReader from(final Path path) {
-        Objects.requireNonNull(path);
-        return TextReader.from(path, Charset.defaultCharset());
-    }
-
-    public static TextReader from(final File file, final Charset charset) {
-       Objects.requireNonNull(file);
-       return TextReader.from(file.toPath(), charset);
-    }
-
-    public static TextReader from(final File file) {
-       Objects.requireNonNull(file);
-       return TextReader.from(file.toPath());
-    }
-    
-    public Charset getCharset() {
-        return this.charset;
-    }
-    
-    public static TextReader from(final String text) {
-        Objects.requireNonNull(text);
-
-        return new TextReader(
-                "String",
-                () -> new ByteArrayInputStream(text.getBytes()),
-                StandardCharsets.UTF_8,
-                true);
-    }
-
-    public String readFullText() throws IOException {
+    default String readFullText() throws IOException {
         final CharBuffer charBuffer = CharBuffer.allocate(8096);
         final StringBuilder strBuilder = new StringBuilder();
-        final BufferedReader bufferedReader = this.newBufferedReader();
-        
-        try {
+                
+        try(
+                final InputStream inputStream = this.newInputStream();
+                final BufferedReader bufferedReader = new BufferedReader(
+                        new InputStreamReader(inputStream, this.getCharset().name()))) {
+                
             while (bufferedReader.read(charBuffer) > 0) {
                strBuilder.append(charBuffer.toString());
             }
-        } catch (final Throwable throwable) {
-            this.handleError(throwable);
         }
          
         return strBuilder.toString();
     }
+
+    default void read(final IOConsumer<InputStream> delegate) throws IOException {
+        this.read((inputStream, charset) -> delegate.accept(inputStream));
+    };
     
-    public Seq<String> readLines() {
+    default void read(final IOBiConsumer<InputStream, Charset> delegate) throws IOException {
+        Objects.requireNonNull(delegate);
+        
+        try (final InputStream inputStream = this.newInputStream()) {
+            delegate.accept(inputStream, this.getCharset());
+        } catch (final Throwable throwable) {
+            if (throwable instanceof UncheckedIOException) {
+                throw (UncheckedIOException) throwable;
+            } else if (throwable instanceof IOException) {
+                throw (IOException) throwable;
+            } else {
+                throw new IOException("Error while reading", throwable);
+            }
+        }       
+    };
+    
+    default Seq<String> readLines() {
         return Seq.from(() -> {
             final BufferedReader bufferedReader;
-            
+
             try {
-                bufferedReader = this.newBufferedReader();
+                final InputStream inputStream = this.newInputStream();
+                
+                bufferedReader = new BufferedReader(new InputStreamReader(
+                        inputStream, this.getCharset()));
             } catch (final IOException e)  {
                 throw new UncheckedIOException(e);
             }
-   
+
             final Iterator<String> iter = new Iterator<String>() {
                 private String nextLine = null;
 
@@ -136,18 +86,26 @@ public final class TextReader {
                         return true;
                     } else {
                         boolean ret = false;
-                        
+
                         try {
                             this.nextLine = bufferedReader.readLine();
                             ret = this.nextLine != null;
                         } catch (final Throwable throwable) {
                             try {
-                                TextReader.this.handleError(throwable);
+                                bufferedReader.close();
                             } catch (final IOException e) {
-                                throw new UncheckedIOException(e);
+                                throwable.addSuppressed(e);
+                            }
+                            
+                            if (throwable instanceof IOException) {
+                                throw new UncheckedIOException((IOException) throwable);
+                            } else if (throwable instanceof RuntimeException) {
+                                throw (RuntimeException) throwable;
+                            } else {
+                                throw new RuntimeException(throwable);
                             }
                         }
-                        
+
                         return ret;
                     }
                 }
@@ -157,94 +115,106 @@ public final class TextReader {
                     if (this.nextLine == null || !this.hasNext()) {
                         throw new NoSuchElementException();
                     }
-                     
+
                     final String line = this.nextLine;
                     this.nextLine = null;
                     return line;
                 }
             };
-            
+
             return StreamSupport.stream(Spliterators.spliteratorUnknownSize(
                     iter, Spliterator.ORDERED | Spliterator.NONNULL), false);
         });
     }
     
-    public void read(final IOConsumer<InputStream> delegate) throws IOException {
-        Objects.requireNonNull(delegate);
+    public static TextReader create(
+            final IOSupplier<InputStream> inputStreamSupplier) {
         
-        try (final InputStream inputStream = this.newInputStream()) {
-            delegate.accept(inputStream);
-        } catch (final Throwable throwable) {
-            this.handleError(throwable);
-        }
-     }
-    
-    public InputStream newInputStream() throws IOException {
-        final InputStream ret;
+        Objects.requireNonNull(inputStreamSupplier);
         
-        if (this.autoCloseInputStream) {
-            ret = this.inputStreamSupplier.get();
-        } else {
-            return new InputStream() {
-                private InputStream inputStream = TextReader.this.inputStreamSupplier.get();
-
-                @Override
-                public int read() throws IOException {
-                    if (this.inputStream == null) {
-                        throw new IOException("Input stream is already closed");
-                    }
-
-                    return this.inputStream.read();
-                }
-
-                @Override
-                public void close() throws IOException {
-                    final InputStream in = this.inputStream;
-
-                    if (in != null) {
-                        this.inputStream = null;
-
-                        if (TextReader.this.autoCloseInputStream) {
-                            in.close();
-                        }
-                    }
-                }
-            };
-        }
-        
-        return ret;
+        return TextReader.create(inputStreamSupplier, null);
     }
     
-    private BufferedReader newBufferedReader() throws IOException {
-        BufferedReader ret = null;
+    public static TextReader create(
+            final IOSupplier<InputStream> inputStreamSupplier,
+            final Charset charset) {
         
-        try {
-            ret = new BufferedReader(new InputStreamReader(this.newInputStream(), this.charset));
-        } catch (final Throwable throwable) {
-            this.handleError(throwable);
-        }
+        Objects.requireNonNull(inputStreamSupplier);
         
-        return ret;
+        final Charset nonNullCharset = charset != null
+                ? charset
+                : StandardCharsets.UTF_8;
+        
+        return new TextReader() {
+            @Override
+            public InputStream newInputStream() throws IOException {
+                return inputStreamSupplier.get();
+            }
+
+            @Override
+            public Charset getCharset() {
+                return nonNullCharset;
+            }
+        };
+    }
+        
+    public static TextReader create(
+            final Path path,
+            OpenOption... openOptions) {
+        
+        Objects.requireNonNull(path);
+        
+        return TextReader.create(path, StandardCharsets.UTF_8, openOptions);
     }
     
-    private void handleError(final Throwable cause) throws IOException {     
-        if (cause != null) {
-            if (cause instanceof IOException) {
-                throw (IOException) cause;
-            } else {
-                throw new IOException(cause);
+    public static TextReader create(
+            final Path path,
+            final Charset charset,
+            final OpenOption... openOptions) {
+        
+        Objects.requireNonNull(path);
+
+        final OpenOption[] options = Seq.of(openOptions)
+            .filter(option -> option != null)
+            .prepend(StandardOpenOption.READ)
+            .toArray(OpenOption[]::new);
+
+        return TextReader.create(
+                () -> Files.newInputStream(path, options),
+                charset);
+    }
+    
+    public static TextReader create(final InputStream inputStream) {
+        return TextReader.create(inputStream, null);
+    }
+    
+    public static TextReader create(final InputStream inputStream, final Charset charset) {
+        Objects.requireNonNull(inputStream);
+        
+        final IOSupplier<InputStream> supplier = () -> new InputStream() {
+            private boolean isClosed = false;
+
+            @Override
+            public int read() throws IOException {
+                final int ret;
+                
+                if (!this.isClosed) {
+                    ret = inputStream.read();
+                } else {
+                    throw new IOException("InputStream is already closed");
+                }
+                
+                return ret;
             }
-        } else {
-            final StringBuilder errorMsgBuilder = new StringBuilder();
-
-            errorMsgBuilder.append("Error while reading");
-
-            if (this.sourceName != null) {
-                errorMsgBuilder.append(" ");
-                errorMsgBuilder.append(this.sourceName);
+            
+            @Override
+            public void close() throws IOException {
+                this.isClosed = true;
             }
-
-            throw new IOException(errorMsgBuilder.toString());
-        }
+        };
+        
+        return TextReader.create(
+                supplier,
+                charset != null ? charset : StandardCharsets.UTF_8);
     }
 }

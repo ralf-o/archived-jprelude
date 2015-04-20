@@ -15,6 +15,7 @@ import java.util.function.BiPredicate;
 import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.IntFunction;
 import java.util.function.Predicate;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -286,13 +287,19 @@ public interface Seq<T> {
         return this.stream().collect(Collectors.counting());
     }
     
-    default Object[] toArray() {
+    default <T> Object[] toArray() {
         return this.stream().toArray();
+    }
+    
+    default <T> T[] toArray(IntFunction<T[]> generator) {
+        Objects.requireNonNull(generator);
+        
+        return this.stream().toArray(generator);
     }
     
     default String[] toStringArray() {
         return (String[]) this.stream()
-                .map(v -> v == null ? null : v.toString())
+                .map(v -> Objects.toString(v, null))
                 .toArray();
     }
     
