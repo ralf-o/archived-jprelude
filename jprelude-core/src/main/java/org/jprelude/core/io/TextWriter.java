@@ -91,7 +91,7 @@ public interface TextWriter {
             }
         }
     }
-
+   
     static TextWriter create(
             final IOSupplier<OutputStream> outputStreamSupplier) {
     

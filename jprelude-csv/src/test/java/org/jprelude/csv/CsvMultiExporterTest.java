@@ -47,7 +47,7 @@ public class CsvMultiExporterTest {
                 .addExporter("exp1", export1)
                 .addExporter("exp2", export2)
                 .build()
-                .export(records)
+                .tryToExport(records)
                 .ifError(error -> 
                     System.out.println("ERROR: " + error.getMessage())
                 )

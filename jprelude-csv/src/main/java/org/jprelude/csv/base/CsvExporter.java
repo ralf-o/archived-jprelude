@@ -46,14 +46,20 @@ public final class CsvExporter<T> {
         return target;
     }
     
-    public Try<CsvExportResult> export(final Seq<T> records) {
+    public Try<CsvExportResult> tryToExport(final Seq<T> records) {
         Objects.requireNonNull(records, "NPE CsvExporter::export(records)");
      
         return CsvMultiExporter.<T>builder()
                 .addExporter("myExport", this)
                 .build()
-                .export(records)
+                .tryToExport(records)
                 .map(resultMap -> resultMap.get("myExport"));
+    }
+    
+    public CsvExportResult export(final Seq<T> records) {
+        Objects.requireNonNull(records);
+        
+        return this.tryToExport(records).orElseThrow();
     }
     
     public static <T> Builder builder() {

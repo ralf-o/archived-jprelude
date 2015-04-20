@@ -1,5 +1,7 @@
 package org.jprelude.core.util;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -28,9 +30,17 @@ public interface Try<T> {
         return this.isSuccess() ? this.get() : other.get() ;
     }
     
-    default T orElseThrow() throws Throwable {
+    default T orElseThrow() {
         if (!this.isSuccess()) {
-            throw this.getError();
+            final Throwable throwable = this.getError();
+            
+            if (throwable instanceof IOException) {
+                throw new UncheckedIOException((IOException) throwable);
+            } else if (throwable instanceof RuntimeException) {
+                throw (RuntimeException) throwable;
+            } else {
+                throw new RuntimeException(throwable);
+            }
         }
         
         return this.get();

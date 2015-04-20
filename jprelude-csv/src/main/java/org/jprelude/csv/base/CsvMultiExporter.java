@@ -26,7 +26,13 @@ public final class CsvMultiExporter<T> {
         this.sourceRecordsObservers = new ArrayList<>(builder.sourceRecordsObservers);
     }
     
-    public Try<Map<String, CsvExportResult>> export(final Seq<T> records) {
+    public Map<String, CsvExportResult> export(final Seq<T> records) {
+        Objects.requireNonNull(records);
+       
+        return this.tryToExport(records).orElseThrow();
+    }
+    
+    public Try<Map<String, CsvExportResult>> tryToExport(final Seq<T> records) {
         Objects.requireNonNull(records, "NPE CsvMultiExporter::export(records)");
         
         final Map<String, CsvExportResult> resultMap  = new HashMap<>();
