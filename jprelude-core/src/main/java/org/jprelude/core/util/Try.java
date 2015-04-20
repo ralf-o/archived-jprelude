@@ -5,6 +5,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import org.jprelude.core.util.function.CheckedCommand;
 import org.jprelude.core.util.function.CheckedSupplier;
 
 public interface Try<T> {
@@ -172,6 +173,15 @@ public interface Try<T> {
                 return false;
             }
         };
+    }
+    
+    static Try<Void> tryToRun(final CheckedCommand command) {
+        Objects.requireNonNull(command);
+        
+        return tryToGet(() -> {
+            command.execute();
+            return null;
+        });
     }
     
     static <T> Try<T> tryToGet(final CheckedSupplier<? extends T> supplier) {
