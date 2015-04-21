@@ -96,11 +96,11 @@ public class CsvFormatTest {
                 + "c345,30x50\n";
         
         CsvValidator validator = CsvValidator.builder()
-                .checkColumn(
+                .validateColumn(
                         "ART_NO",
                         "Must have a length of 4",
                         artNo -> !artNo.isNull())
-                .checkColumn(
+                .validateColumn(
                         "PRICE",
                         "Must be a positive floating number",
                         price -> price.isFloat())

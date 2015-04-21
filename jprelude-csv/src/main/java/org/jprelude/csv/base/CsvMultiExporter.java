@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 import org.jprelude.core.io.TextWriter;
 import org.jprelude.core.util.Mutable;
 import org.jprelude.core.util.Observer;
@@ -46,7 +47,8 @@ public final class CsvMultiExporter<T> {
             final OutputStream outStream = CheckedSupplier.unchecked(() -> target.newOutputStream()).get(); // TODO
             final PrintStream printStream = CheckedSupplier.unchecked(() -> new PrintStream(new BufferedOutputStream(outStream), true, target.getCharset().name())).get();
             final String lineFeed = format.getRecordSeparator().value();
-                    
+            final Function<List<?>, String> csvMapper = format.asMapper();
+            
             observers.add(new Observer<T>() {
                 private long idx = -1;
  
@@ -56,14 +58,14 @@ public final class CsvMultiExporter<T> {
                         final List<CsvColumn> columns = format.getColumns();
                         
                         if (columns.size() > 0) {
-                           final String header = format.apply(Seq.from(columns).map(CsvColumn::getName).toList());
+                           final String header = csvMapper.apply(Seq.from(columns).map(CsvColumn::getName).toList());
                            printStream.print(header);
                            printStream.print(lineFeed);
                         }
                     }
                     
                     export.getRecordMapper().apply(item).forEach(row -> {
-                        printStream.print(format.apply(row));
+                        printStream.print(csvMapper.apply(row));
                         printStream.print(lineFeed);
                         builder.targetRowCount(idx); // TODO
                     });

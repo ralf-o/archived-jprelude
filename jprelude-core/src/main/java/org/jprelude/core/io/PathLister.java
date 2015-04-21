@@ -6,6 +6,7 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
+import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -88,7 +89,7 @@ public final class PathLister {
                 this.pathFilterFunction = p1 -> {
                     final PathMatcher pathMatcher =  p1.getFileSystem().getPathMatcher(syntaxAndPattern);
 
-                    return p2 -> function.apply(p1).test(p2) && pathMatcher.matches(p2);
+                    return p2 ->  function.apply(p1).test(p2) && pathMatcher.matches(p2);
                 };
             }
             

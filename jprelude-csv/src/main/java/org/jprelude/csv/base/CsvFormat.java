@@ -113,7 +113,7 @@ CsvFormat.builder()
 */
 
 
-public final class CsvFormat implements Function<List<?>, String> {
+public final class CsvFormat {
     private final List<CsvColumn> columns;
     private final char delimiter;
     private final LineSeparator recordSeparator;
@@ -201,23 +201,48 @@ public final class CsvFormat implements Function<List<?>, String> {
         return this.quoteCharacter;
     }
     
-    @Override
-    public String apply(final List<?> fields) {
-        Stream stream = StreamUtils.stream(fields);
-        
-        if (this.autoTrim) {
-            stream = stream.map(field -> field == null ? null : field.toString().trim());
-        }
-        
-        return this.apacheCommonsCsvFormatForExport.format(stream.toArray());
-    }
     
+    public Function<List<?>, String> asMapper() {
+        return row -> {
+            Seq seq = Seq.from(row);
+            
+            if (this.autoTrim) {
+                seq = seq.map(field -> field == null ? null : field.toString().trim());
+            }
+            
+            return this.apacheCommonsCsvFormatForExport.format(seq.toArray());
+        }; 
+    }
+
+    public Function<List<?>, String> asMapperAppendingRecordSeparator() {
+        return row -> {
+            Seq seq = Seq.from(row);
+            
+            if (this.autoTrim) {
+                seq = seq.map(field -> field == null ? null : field.toString().trim());
+            }
+            
+            return this.apacheCommonsCsvFormatForExport.format(seq.toArray())  + this.getRecordSeparator();
+        }; 
+    }
+
     public Seq<String> map(final Seq<List<?>> rows) {
-        Seq<String> ret = Seq.sequential(rows).map(this);
+        Seq<String> ret = Seq.sequential(rows).map(this.asMapper());
         
         if (!this.columns.isEmpty()) {
-            final String headline = this.apply(columns.stream().map(CsvColumn::getTitle).collect(Collectors.toList()));
+            final String headline = this.asMapper().apply(columns.stream().map(CsvColumn::getTitle).collect(Collectors.toList()));
             ret = ret.prepend(headline);
+        }
+        
+        return ret;
+    }
+ 
+    public Seq<String> mapAppendingRecordSeparators(final Seq<List<?>> rows) {
+        Seq<String> ret = Seq.sequential(rows).map(this.asMapperAppendingRecordSeparator());
+        
+        if (!this.columns.isEmpty()) {
+            final String headline = this.asMapper().apply(columns.stream().map(CsvColumn::getTitle).collect(Collectors.toList()));
+            ret = ret.prepend(headline + this.getRecordSeparator());
         }
         
         return ret;

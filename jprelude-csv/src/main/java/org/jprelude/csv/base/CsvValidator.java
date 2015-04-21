@@ -44,7 +44,7 @@ public class CsvValidator {
                 
                 violation.append("Column \"");
                 violation.append(columnName);
-                violation.append("\" violates rules \"");
+                violation.append("\" violates rule \"");
                 violation.append(columnRule.getRule());
                 violation.append("\", value is \"");
                 violation.append(shortenedColumnValue);
@@ -135,7 +135,7 @@ public class CsvValidator {
             return new CsvValidator(this.columnRules, this.recordRules);
         }
         
-        public Builder checkColumn(
+        public Builder validateColumn(
                 final String columnName,
                 final String hint,
                 final Predicate<Checker> predicate) {
@@ -148,7 +148,7 @@ public class CsvValidator {
             return this;
         }
         
-        public Builder checkRecord(
+        public Builder validateRecord(
                 final String hint,
                 final Predicate<CsvRecord> predicate) {
         
@@ -170,6 +170,19 @@ public class CsvValidator {
         
         public boolean isNull() {
             return this.val == null;
+        }
+        
+        public boolean isNotNull() {
+            return this.val != null;
+        }
+        
+        public boolean hasLength(final int n) {
+            return (this.val == null && n == 0)
+                    || (this.val != null && this.val.length() == n);
+        }
+        
+        public boolean isGreater(final float x) {
+            return !this.isNull() && this.isFloat() && Float.parseFloat(this.val) > x;
         }
         
         public boolean isInteger() {

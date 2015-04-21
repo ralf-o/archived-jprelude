@@ -141,7 +141,7 @@ public interface TextWriter {
        
         final OpenOption[] options = Seq.of(openOptions)
                 .filter(option -> option != null)
-                .prepend(StandardOpenOption.WRITE)
+                .prependMany(StandardOpenOption.WRITE, StandardOpenOption.CREATE)
                 .toArray(OpenOption[]::new);
         
         return TextWriter.create(
