@@ -59,19 +59,11 @@ public interface Seq<T> {
             );
         });
     }
-    
-    default <U, R> Seq<R> mapFiltered(final Function<T, Optional<R>> f) {
-        return this.map(f).filter(o -> o.isPresent()).map(o -> o.get());
-    }
 
-    default <U, R> Seq<R> mapFiltered(final BiFunction<T, Long, Optional<R>> f) {
-        return this.map((v, i) -> f.apply(v, i)).filter(o -> o.isPresent()).map(o -> o.get());
-    }
- 
     default <R> Seq<R> flatMap(final Function<? super T, ? extends Seq<? extends R>> f) {
         return Seq.from(() -> Seq.this.stream().flatMap(v -> f.apply(v).stream()));
     }
-    
+   
     default <T> Seq<T> flatten(final Seq<Seq<T>> seqs) {
         return Seq.from(seqs).flatMap(Function.identity());
     }
@@ -86,8 +78,8 @@ public interface Seq<T> {
     }
     
     default Seq<T> filter(final BiPredicate<? super T, Long> pred) {
-        final Seq<Long> ints  = Seq.iterate(0L, n -> n + 1);        
-        return this.mapFiltered((v, i) -> pred.test(v, i) ? Optional.of(v) : Optional.empty());
+        final Seq<Long> ints  = Seq.iterate(0L, n -> n + 1);   
+        return this.flatMap((v, i) -> pred.test(v, i) ? Seq.of(v) : Seq.empty());
     }
     
     default Seq<T> reject(final Predicate<? super T> pred) {
@@ -96,7 +88,7 @@ public interface Seq<T> {
     
     default Seq<T> reject(final BiPredicate<? super T, Long> pred) {
         final Seq<Long> ints  = Seq.iterate(0L, n -> n + 1);        
-        return this.mapFiltered((v, i) -> !pred.test(v, i) ? Optional.of(v) : Optional.empty());
+        return this.flatMap((v, i) -> !pred.test(v, i) ? Seq.of(v) : Seq.empty());
     }
     
     default Seq<T> peek(final Consumer<? super T> action) {

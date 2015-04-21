@@ -8,7 +8,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import org.jprelude.core.util.function.CheckedCommand;
-import org.jprelude.core.util.function.CheckedConsumer;
 import org.jprelude.core.util.function.CheckedSupplier;
 
 public interface Try<T> {

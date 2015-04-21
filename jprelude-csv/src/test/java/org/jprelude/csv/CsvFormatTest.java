@@ -9,6 +9,7 @@ import org.jprelude.core.io.TextReader;
 import org.jprelude.core.io.TextWriter;
 import org.jprelude.core.util.LineSeparator;
 import org.jprelude.core.util.Seq;
+import org.jprelude.csv.base.CsvValidator;
 import org.junit.Test;
 
 public class CsvFormatTest {
@@ -16,7 +17,7 @@ public class CsvFormatTest {
         COLUMN1, COLUMN2, COLUMN3;
     }
     
-    @Test
+    //@Test
     public void testApplyOn() throws IOException  {
         final Seq<Integer> records = Seq.range(0, 10);
         
@@ -35,7 +36,7 @@ public class CsvFormatTest {
             .forEach(System.out::println);
     }
 
-    @Test
+    //@Test
     public void testOutputOfSeq() throws Throwable  {
         final Seq<Integer> records = Seq.range(0, 10);
         
@@ -53,12 +54,12 @@ public class CsvFormatTest {
             .prepareExportTo(TextWriter.forFile(Paths.get("/home/kenny/test.juhu")))
             .apply(records.map(n -> 
                 Arrays.asList("   a" + n, "b" + n, "c" + n)))
-            .ifErrorThrow()
+            .ifErrorFail()
             .ifSuccess(result -> System.out.println(String.format(">>>> Exported %d records successfully", result.getSourceRecordCount())));
     }
 
     
-    @Test
+    //@Test
     public void testInput() throws IOException  {
         final Seq<Integer> records = Seq.range(0, 10);
         
@@ -79,7 +80,47 @@ public class CsvFormatTest {
             .recordSeparator(LineSeparator.SYSTEM)
             .quoteMode(CsvQuoteMode.ALL)
             .build()
-            .parse(TextReader.forString(csvData))   
-            .forEach(rec -> System.out.println(rec.index() + ": " + rec.get(Column.COLUMN1) + "-" + rec.get(Column.COLUMN2) + "-" + rec.get(Column.COLUMN3)));
+            .parse(TextReader.forString(csvData))
+            .forEach(rec -> System.out.println(rec.getIndex() + ": " + rec.get(Column.COLUMN1) + "-" + rec.get(Column.COLUMN2) + "-" + rec.get(Column.COLUMN3)));
     }    
+
+
+    @Test
+    public void testInput2() throws IOException  {
+        final Seq<Integer> records = Seq.range(0, 10);
+        
+        final String csvData =
+                "ART_NO,PRICE\n"
+                + "a123,10.99\n"
+                + "b234,2d0.90\n"
+                + "c345,30x50\n";
+        
+        CsvValidator validator = CsvValidator.builder()
+                .checkColumn(
+                        "ART_NO",
+                        "Must have a length of 4",
+                        artNo -> !artNo.isNull())
+                .checkColumn(
+                        "PRICE",
+                        "Must be a positive floating number",
+                        price -> price.isFloat())
+                .build();
+        
+        CsvFormat.builder()
+            .columns(
+                "ART_NO",
+                "PRICE"
+            )
+            .autoTrim(true)
+            .escape(null)
+            .recordSeparator(LineSeparator.SYSTEM)
+            .quoteMode(CsvQuoteMode.ALL)
+            .build()
+            .parse(TextReader.forString(csvData))
+            //.peek(validator.asConsumer())
+            .filter(validator.asFilter())
+             //.forEach(System.out::println);
+            .forEach(rec -> System.out.println(rec.getIndex() + ": " + rec.get("ART_NO") + "-" + rec.get("PRICE") ));
+    }    
+
 }

@@ -1,6 +1,5 @@
 package org.jprelude.core.io;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.DirectoryStream;
@@ -63,6 +62,39 @@ public final class PathLister {
             return this;
         }
         
+        public Builder addFilter(final IOPredicate<Path> pathFilter) {
+            Objects.requireNonNull(pathFilter);
+            
+            if (this.pathFilterFunction == null) {
+                this.filter(pathFilter);
+            } else {
+                final Function<Path, IOPredicate<Path>> function = this.pathFilterFunction;
+                
+                this.pathFilterFunction = p -> p2 -> function.apply(p).test(p2) && pathFilter.test(p2);
+            }
+            
+            return this;
+        }
+        
+        public Builder addFilter(final String syntaxAndPattern) {
+            Objects.requireNonNull(syntaxAndPattern);
+            
+                
+            if (this.pathFilterFunction == null) {
+                this.filter(syntaxAndPattern);
+            } else {
+                final Function<Path, IOPredicate<Path>> function = this.pathFilterFunction;
+                
+                this.pathFilterFunction = p1 -> {
+                    final PathMatcher pathMatcher =  p1.getFileSystem().getPathMatcher(syntaxAndPattern);
+
+                    return p2 -> function.apply(p1).test(p2) && pathMatcher.matches(p2);
+                };
+            }
+            
+            return this;
+        }
+        
         public Builder recursive(final IOPredicate<Path> recursionFilter) {
             Objects.requireNonNull(recursionFilter);
             
@@ -81,6 +113,39 @@ public final class PathLister {
                 return p2 -> pathMatcher.matches(p2) && Files.isDirectory(p2);
             };
                                  
+            return this;
+        }
+        
+        public Builder addRecursionFilter(final IOPredicate<Path> recursionFilter) {
+            Objects.requireNonNull(recursionFilter);
+            
+            if (this.recursionFilterFunction == null) {
+                this.recursive(recursionFilter);
+            } else {
+                final Function<Path, IOPredicate<Path>> function = this.recursionFilterFunction;
+                
+                this.recursionFilterFunction =
+                    p1 -> p2 -> function.apply(p1).test(p2) && recursionFilter.test(p2);     
+            }
+            
+            return this;
+        }
+        
+        public Builder addRecursionFilter(final String syntaxAndPattern) {
+            Objects.requireNonNull(syntaxAndPattern);
+            
+            if (this.recursionFilterFunction == null) {
+                this.recursive(syntaxAndPattern);
+            } else {
+                final Function<Path, IOPredicate<Path>> function = this.recursionFilterFunction;
+
+                this.recursionFilterFunction = p1 -> {
+                     final PathMatcher pathMatcher =  p1.getFileSystem().getPathMatcher(syntaxAndPattern);
+
+                    return p2 -> function.apply(p1).test(p2) && pathMatcher.matches(p2);
+                };
+            }
+            
             return this;
         }
         

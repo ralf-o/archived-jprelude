@@ -2,6 +2,7 @@ package org.jprelude.csv.base;
 
 import org.jprelude.core.util.LineSeparator;
 import com.codepoetics.protonpack.StreamUtils;
+import com.sun.istack.internal.NotNull;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -314,7 +315,7 @@ public final class CsvFormat implements Function<List<?>, String> {
                     if (!this.hasNext()) {
                         throw new NoSuchElementException();
                     } else {
-                        ret = new CsvRecord(this.iterator.next());
+                        ret = new CsvRecord(this.iterator.next(), "source / TODO"); // TODO
                     }
                     
                     return ret;

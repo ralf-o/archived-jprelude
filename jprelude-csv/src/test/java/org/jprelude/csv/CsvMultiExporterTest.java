@@ -2,6 +2,7 @@ package org.jprelude.csv;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.function.Function;
 import org.jprelude.core.io.TextWriter;
 import org.jprelude.core.util.Seq;
 import org.jprelude.csv.base.CsvExporter;
@@ -12,6 +13,11 @@ import org.junit.Test;
 
 public class CsvMultiExporterTest {
     @Test
+    public void test() {
+        System.out.println(Integer.parseInt("65433233"));
+    }
+
+    //@Test
     public void testSomething() throws IOException {
         final Seq<Integer> records = Seq.range(1, 10);
         
