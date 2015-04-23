@@ -16,6 +16,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
@@ -247,6 +248,39 @@ public interface Seq<T> {
         return this.stream().collect(Collectors.counting());
     }
     
+    default Seq<T> distinct() {
+        return (() -> this.stream().distinct());
+    }
+    
+    default <R> Seq<T> distinct(final Function<T, R> f) {
+        Objects.requireNonNull(f);
+        
+        return this.map(item -> {
+                return new Supplier<T>() {
+                    private final R mappedItem = f.apply(item);
+                    
+                    @Override
+                    public T get() {
+                        return item;
+                    }
+
+                    @Override
+                    public boolean equals(final Object obj) {
+                        final R other = f.apply(((Supplier<T>) obj).get());
+
+                        return Objects.equals(this.mappedItem, other);
+                    }
+
+                    @Override
+                    public int hashCode() {
+                        return Objects.hashCode(this.mappedItem);
+                    }
+                };
+            })
+            .distinct()
+            .map(supplier -> supplier.get());
+    }
+    
     default Seq<T> force() {
         // List::size has int as return value, but we want long.
         // So we count the length on our own.
@@ -295,6 +329,11 @@ public interface Seq<T> {
             public long length() {
                 this.forceList();
                 return this.listSize;
+            }
+            
+            @Override
+            public Seq<T> forceOnDemand() {
+                return this;
             }
             
             private void forceList() {

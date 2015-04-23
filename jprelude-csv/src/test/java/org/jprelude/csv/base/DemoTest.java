@@ -20,7 +20,7 @@ public class DemoTest {
     @Test 
     public void testPriceFilesTransformation() {
         final String inputFolder = "/home/kenny/tests/input/prices/";
-        final String inputFilesPattern = "** /prices-????-??-??.csv";    
+        final String inputFilesPattern = "**/prices-????-??-??.csv";    
         final String outputFile = "/home/kenny/tests/output/prices.txt";
         
         final PriceFilesTransformer transformer = new PriceFilesTransformer(
@@ -93,7 +93,7 @@ public class DemoTest {
             CsvImporter<CsvRecord> importer = CsvImporter.<CsvRecord>builder()
                     .format(csvInputFormat)
                     .failOnValidationError(false)
-                   // .validator(inputValidator)
+                    .validator(inputValidator)
                     .mapper(rec -> rec)
                     .build();
 
@@ -109,15 +109,15 @@ public class DemoTest {
                     .addFilter(Files::isRegularFile)
                     .build()
                     .list(this.inputFolder)
-                    ;//.forceOnDemand(); // caches the seq entries on first demand,
-                                      // will not list the diretory a second time then
-                    //.sortedReverse(path -> path.getUri
-System.out.println(inputFiles.toList());
+                    .forceOnDemand() // caches the seq entries on first demand,
+                                     // will not traverse the diretory a second time then
+                    .sorted((p1, p2) -> p1.getFileName().compareTo(p2.getFileName()));
+
             Seq<CsvRecord> recs = inputFiles
                 .peek(path -> observers.forEach(
                         visitor -> visitor.onProcessingFile(path)))
-                .flatMap(path -> importer.parse(TextReader.forFile(path)));
-               // .unique(rec -> rec.get("Artikelnummer"));
+                .flatMap(path -> importer.parse(TextReader.forFile(path)))
+                .distinct(rec -> rec.get("Artikelnummer"));
 
             this.observers.forEach(Observer::onStart);
 
@@ -153,7 +153,7 @@ System.out.println(inputFiles.toList());
 
                 @Override
                 public void onProcessingFile(Path path) {
-                    println.accept("Processing file " + path.toUri() + " ...");
+                    println.accept("Processing  " + path.toUri() + " ...");
                 }
 
                 @Override
