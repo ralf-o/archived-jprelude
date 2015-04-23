@@ -8,8 +8,8 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public class CsvValidator {
-    private List<ColumnConstraint> columnRules;
-    private List<RecordConstraint> recordRules;
+    private final List<ColumnConstraint> columnRules;
+    private final List<RecordConstraint> recordRules;
     
     private CsvValidator(
             final List<ColumnConstraint> columnRules,
@@ -25,13 +25,13 @@ public class CsvValidator {
     public Optional<CsvValidationException> validate(final CsvRecord rec) {
         final Optional<CsvValidationException> ret;
         
-        final StringBuilder violation = new StringBuilder();
         final List<String> violations = new ArrayList<>();
         
         this.columnRules.forEach(columnRule -> {
+            final StringBuilder violation = new StringBuilder();
             final String columnName = columnRule.getColumnName();
             final String columnValue = rec.get(columnName);        
-            final Checker checker = new Checker(columnValue);
+            final CsvField checker = new CsvField(columnValue);
             
             if (!columnRule.getPredicate().test(checker)) {
                 String shortenedColumnValue =
@@ -138,7 +138,7 @@ public class CsvValidator {
         public Builder validateColumn(
                 final String columnName,
                 final String hint,
-                final Predicate<Checker> predicate) {
+                final Predicate<CsvField> predicate) {
             
             Objects.requireNonNull(columnName);
             Objects.requireNonNull(hint);
@@ -160,80 +160,16 @@ public class CsvValidator {
         }
         
     }
-    
-    public static final class Checker {
-        private final String val;
         
-        private Checker(final String value) {
-            this.val = value;
-        }
-        
-        public boolean isNull() {
-            return this.val == null;
-        }
-        
-        public boolean isNotNull() {
-            return this.val != null;
-        }
-        
-        public boolean hasLength(final int n) {
-            return (this.val == null && n == 0)
-                    || (this.val != null && this.val.length() == n);
-        }
-        
-        public boolean isGreater(final float x) {
-            return !this.isNull() && this.isFloat() && Float.parseFloat(this.val) > x;
-        }
-        
-        public boolean isInteger() {
-            boolean ret;
-         
-            try {
-                Integer.parseInt(this.val);
-                ret = true;
-            } catch (final NumberFormatException e) {
-                ret = false;
-            }
-            
-            return ret;
-        }
-
-        public boolean isFloat() {
-            boolean ret;
-         
-            try {
-                Float.parseFloat(this.val);
-                ret = true;
-            } catch (final NumberFormatException e) {
-                ret = false;
-            }
-            
-            return ret;
-        }
-
-        public boolean isDouble() {
-            boolean ret;
-         
-            try {
-                Double.parseDouble(this.val);
-                ret = true;
-            } catch (final NumberFormatException e) {
-                ret = false;
-            }
-            
-            return ret;
-        }
-    }
-    
     private final static class ColumnConstraint {
         private String columnName;
         private String hint;
-        private Predicate<Checker> predicate;
+        private Predicate<CsvField> predicate;
         
         private ColumnConstraint(
                 final String columnName,
                 final String hint,
-                final Predicate<Checker> predicate) {
+                final Predicate<CsvField> predicate) {
             
             assert columnName != null;
             assert hint != null;
@@ -252,7 +188,7 @@ public class CsvValidator {
             return this.hint;
         }
         
-        private Predicate<Checker> getPredicate() {
+        private Predicate<CsvField> getPredicate() {
             return this.predicate;
         }
     }

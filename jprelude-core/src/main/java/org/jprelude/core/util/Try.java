@@ -9,6 +9,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import org.jprelude.core.util.function.CheckedCommand;
 import org.jprelude.core.util.function.CheckedSupplier;
+import org.jprelude.core.util.function.Command;
 
 public interface Try<T> {
     T get();
@@ -134,6 +135,14 @@ public interface Try<T> {
     default Try<T>  ifSuccess(final Consumer<T> consumer) {
         if (this.isSuccess()) {
             consumer.accept(this.get());
+        }
+        
+        return this;
+    }
+    
+    default Try<T>  ifSuccess(final Command command) {
+        if (this.isSuccess()) {
+            command.execute();
         }
         
         return this;

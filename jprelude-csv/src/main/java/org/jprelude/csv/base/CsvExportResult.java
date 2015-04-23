@@ -1,22 +1,16 @@
 package org.jprelude.csv.base;
 
 public final class CsvExportResult {
-    private final long sourceRecordCount;
-    private final long targetRowCount;
+    private final long recordCount;
     
     private CsvExportResult(final Builder builder) {
         assert builder != null;
         
-        this.sourceRecordCount = builder.sourceRecordCount;
-        this.targetRowCount = builder.targetRowCount;
+        this.recordCount = builder.recordCount;
     }
         
-    public long getSourceRecordCount() {
-        return this.sourceRecordCount;
-    }
-    
-    public long getTargetRowCount() {
-        return this.targetRowCount;
+    public long getRecordCount() {
+        return this.recordCount;
     }
     
     public static Builder builder() {
@@ -24,21 +18,14 @@ public final class CsvExportResult {
     }
 
     public static class Builder {
-        private long sourceRecordCount = 0;
-        private long targetRowCount = 0;
+        private long recordCount = 0;
         
         private Builder() {
-            sourceRecordCount = 0;
-            targetRowCount = 0;
+            recordCount = 0;
         }
         
-        public Builder sourceRecordCount(final long sourceRecordCount) {
-            this.sourceRecordCount = sourceRecordCount;
-            return this;
-        }
-        
-        public Builder targetRowCount(final long targetRowCount) {
-            this.targetRowCount = targetRowCount;
+        public Builder recordCount(final long recordCount) {
+            this.recordCount = recordCount;
             return this;
         }
         

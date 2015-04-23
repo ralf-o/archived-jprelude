@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.UncheckedIOException;
+import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -16,24 +17,29 @@ import org.jprelude.core.io.function.IOBiConsumer;
 import org.jprelude.core.io.function.IOConsumer;
 import org.jprelude.core.io.function.IOSupplier;
 import org.jprelude.core.util.LineSeparator;
+import org.jprelude.core.util.Mutable;
 import org.jprelude.core.util.Seq;
 
 public interface TextWriter {
     Charset getCharset();
+    
+    URI getUri();
 
     OutputStream newOutputStream() throws IOException;
 
-    default void writeLines(final Seq<?> lines) throws IOException {
+    default long writeLines(final Seq<?> lines) throws IOException {
         Objects.requireNonNull(lines);
         
-        this.writeLines(lines, LineSeparator.LF);
+        return this.writeLines(lines, LineSeparator.LF);
     }
     
-    default void writeLines(final Seq<?> lines, LineSeparator lineSeparator)
+    default long writeLines(final Seq<?> lines, LineSeparator lineSeparator)
             throws IOException {
         
         Objects.requireNonNull(lines);
  
+        final Mutable<Long> counter = Mutable.of(0L);
+        
         final String lineSeparatorValue =
                 (lineSeparator == null || lineSeparator == LineSeparator.NONE)
                 ? ""
@@ -49,7 +55,11 @@ public interface TextWriter {
                         new IOException(
                                 "Could not write to PrintStream - checkError() returned true"));
             }
-        }));        
+            
+            counter.update(n -> n + 1);
+        }));    
+        
+        return counter.get();
     }
     
     default void writeFullText(final Object text) throws IOException {
@@ -97,12 +107,13 @@ public interface TextWriter {
     
         Objects.requireNonNull(outputStreamSupplier);
         
-        return TextWriter.create(outputStreamSupplier, StandardCharsets.UTF_8);
+        return TextWriter.create(outputStreamSupplier, StandardCharsets.UTF_8, null);
     }
    
     static TextWriter create(
             final IOSupplier<OutputStream> outputStreamSupplier,
-            final Charset charset) {
+            final Charset charset,
+            final URI uri) {
        
         Objects.requireNonNull(outputStreamSupplier);
        
@@ -114,6 +125,11 @@ public interface TextWriter {
             @Override
             public OutputStream newOutputStream() throws IOException {
                 return outputStreamSupplier.get();
+            }
+            
+            @Override
+            public URI getUri() {
+                return uri;
             }
             
             @Override
@@ -146,7 +162,8 @@ public interface TextWriter {
         
         return TextWriter.create(
                 () -> Files.newOutputStream(path, options),
-                charset != null ? charset : StandardCharsets.UTF_8);
+                charset != null ? charset : StandardCharsets.UTF_8,
+                path.toUri());
     }
     
     static TextWriter forOutputStream(final OutputStream outputStream) {
@@ -187,6 +204,6 @@ public interface TextWriter {
             }
         };
         
-        return TextWriter.create(supplier, charset);
+        return TextWriter.create(supplier, charset, null);
     }            
 }

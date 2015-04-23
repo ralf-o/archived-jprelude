@@ -1,178 +1,191 @@
 package org.jprelude.csv.base;
 
-import java.util.ArrayList;
+import java.io.BufferedOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.io.UncheckedIOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import org.jprelude.core.io.TextWriter;
-import org.jprelude.core.util.Observer;
+import org.jprelude.core.util.LineSeparator;
 import org.jprelude.core.util.Seq;
 import org.jprelude.core.util.Try;
 
-public final class CsvExporter<T> {
+public class CsvExporter<T> {
     private final CsvFormat format;
-    private final Function<? super T, ? extends Seq<List<?>>> recordMapper;
-    private final TextWriter target;
-    private final List<Observer<? super T>> sourceRecordsObservers;
-    private final List<Observer<? super String>> targetRowsObservers;
+    private final Function<T, Seq<List<?>>> multiMapper;
     
     private CsvExporter(final Builder<T> builder) {
-        assert builder != null;
         
-        if (builder.recordMapper == null) {
-            throw new IllegalArgumentException("Builder of CsvExporter does not provide record mapper");
-        }
-        
-        if (builder.target == null) {
-            throw new IllegalArgumentException("Builder of CsvExporter does not provide text writer");
-        }
+        assert builder.format != null;
+        assert builder.multiMapper != null;
         
         this.format = builder.format;
-        this.recordMapper =  builder.recordMapper;
-        this.target = builder.target;
-        this.sourceRecordsObservers = builder.sourceRecordsObservers;
-        this.targetRowsObservers = builder.targetRowsObservers;    
+        this.multiMapper = builder.multiMapper;
     }
     
     public CsvFormat getFormat() {
         return this.format;
     }
     
-    public Function<? super T, ? extends Seq<List<?>>> getRecordMapper() {
-        return this.recordMapper;
-    }
-    
-    public TextWriter getTarget() {
-        return target;
-    }
-    
-    public Try<CsvExportResult> tryToExport(final Seq<T> records) {
-        Objects.requireNonNull(records, "NPE CsvExporter::export(records)");
-     
-        return CsvMultiExporter.<T>builder()
-                .addExporter("myExport", this)
-                .build()
-                .tryToExport(records)
-                .map(resultMap -> resultMap.get("myExport"));
-    }
-    
-    public CsvExportResult export(final Seq<T> records) {
-        Objects.requireNonNull(records);
+    public CsvExportResult export(final Seq<T> entities, final TextWriter target) {
+        Objects.requireNonNull(entities);
+        Objects.requireNonNull(target);
         
-        return this.tryToExport(records).orElseThrow();
+        final Map<CsvExporter<T>, TextWriter> exporterMap = new HashMap<>();
+        exporterMap.put(this, target);
+        
+        return CsvExporter.export(entities, exporterMap).get(this);
     }
     
-    public static <T> Builder builder() {
+    public Try<CsvExportResult> tryToExport(final Seq<T> entities, final TextWriter target) {
+        return Try.tryToGet(() -> this.export(entities, target));
+    }
+    
+    public static <T>  Map<CsvExporter<T>, CsvExportResult> export(
+            final Seq<T> entities,
+            final Map<CsvExporter<T>, TextWriter> exporterMap) {
+        
+        final Map<CsvExporter<T>, CsvExportResult> ret = new HashMap<>();
+        
+        Throwable error = null;
+        
+        final List<CsvExporter<T>> nonNullExporters = Seq
+                .from(exporterMap.keySet())
+                .rejectNulls()
+                .toList();
+                
+        final Map<CsvExporter, PrintStream> printStreamMap = new HashMap<>(); 
+        final Map<CsvExporter, CsvExportResult.Builder> resultBuilderMap = new HashMap<>();
+        
+        try {
+            for (final CsvExporter exporter : nonNullExporters) {
+                final TextWriter target = exporterMap.get(exporter);
+                
+                if (target == null) {
+                    continue;
+                }
+                
+                printStreamMap.put(exporter,
+                        new PrintStream(
+                                new BufferedOutputStream(target.newOutputStream()),
+                                true,
+                                target.getCharset().name()));
+            }
+        } catch (final IOException e) {
+            error = e;
+        }
+        
+        if (error == null) {
+            try {
+                entities.sequential().forEach((entity, n) -> {
+                    nonNullExporters.forEach(exporter -> {
+                        final PrintStream printStream = printStreamMap.get(exporter);
+                        final Function<List<?>, String> mapper = exporter.format.asMapper();
+                        final String recordSeparator = exporter.format.getRecordSeparator().value();
+                        
+                        if (n == 0L) {
+                            final List<?> row = Seq.from(exporter.format.getColumns())
+                                    .map(col -> col.getName()).toList();
+                            
+                            printStream.print(mapper.apply(row));
+                            printStream.print(recordSeparator);
+                        } else {
+                            Seq<List<?>> rows = exporter.multiMapper.apply(entity);
+                            
+                            rows.forEach(row -> {
+                                printStream.print(mapper.apply(row));
+                                printStream.print(recordSeparator);
+                            });
+                        }
+                        
+                        if (printStream.checkError()) {
+                            throw new UncheckedIOException(
+                                    new IOException("Could not write to PrintStream - checkError() return true"));
+                        }
+                    });
+                });
+            } catch (final Throwable throwable) {
+                error = throwable;
+            }
+        }
+
+        for (final PrintStream printStream : printStreamMap.values()) {
+            try {
+                printStream.close();
+            } catch (final Throwable throwable) {
+                  if (error == null) {
+                    error = throwable;
+                } else {
+                    error.addSuppressed(throwable);
+                }
+            }          
+        }
+        
+        if (error instanceof RuntimeException) {
+            throw (RuntimeException) error;
+        } else if (error instanceof IOException) {
+            throw new UncheckedIOException((IOException) error);
+        } else if (error != null) {
+            throw new RuntimeException(error);
+        }
+        
+        resultBuilderMap.forEach(
+                (exporter, builder) -> ret.put(exporter, builder.build()));
+        
+        return ret;
+    }
+    
+    public static <T> Try<Map<CsvExporter<T>, CsvExportResult>> tryToExport(
+            final Seq<T> entities,
+            final Map<CsvExporter<T>, TextWriter> exporterMap) {
+        
+        Objects.nonNull(entities);
+        Objects.nonNull(exporterMap);
+        
+        return Try.tryToGet(() -> CsvExporter.export(entities, exporterMap));
+    }
+    
+    
+    public static <T> Builder<T> builder() {
         return new Builder<>();
     }
     
-    public static <T> Builder<T> builder(final CsvExporter<T> prototype) {
-        final Builder<T> builder = CsvExporter.builder();
-        builder.format = prototype.format;
-        builder.recordMapper = prototype.recordMapper;
-        builder.target =  prototype.target;
-        return builder;
-    }
-    
-    public static class Builder<T> implements Cloneable {
+    public static class Builder<T> {
         private CsvFormat format;
-        private Function<? super T, ? extends Seq<List<?>>> recordMapper;
-        private TextWriter target;
-        private List<Observer<? super T>> sourceRecordsObservers;
-        private List<Observer<? super String>> targetRowsObservers;
-                
+        private Function<T, Seq<List<?>>> multiMapper;
+
         private Builder() {
-            this.format = CsvFormat.builder().build();
-            this.recordMapper = null;
-            this.target =  null;
-            this.sourceRecordsObservers = new ArrayList<>();
-            this.targetRowsObservers = new ArrayList<>();
+            this.format = null;
+            this.multiMapper = null;
         }
         
-        public Builder format(final CsvFormat format) {
+        public Builder<T> format(final CsvFormat format) {
             Objects.requireNonNull(format);
             
             this.format = format;
             return this;
         }
-                
-        public Builder recordMapper(final Function<? super T, ? extends Seq<List<?>>> recordMapper) {
-            this.recordMapper = recordMapper;
-            return this;
-        }
         
-        public Builder target(final TextWriter target) {
-            this.target = target;
-            return this;
-        }
-        
-        public Builder sourceRecordsObserver(final Observer<? super T> observer) {
-            return this.sourceRecordsObservers(observer);
-        }
-        
-        public Builder sourceRecordsObservers(final Observer<? super T>... observers) {
-            this.sourceRecordsObservers(Seq.of(observers).toList());
-            return this;
-        }
-        
-        public Builder sourceRecordsObservers(final Iterable<Observer<? super T>> observers) {
-            this.sourceRecordsObservers.clear();
+        public Builder<T> mapper(final Function<T, List<?>> mapper) {
+            Objects.requireNonNull(mapper);
             
-            if (observers != null) {
-                observers.forEach(observer -> this.addSourceRecordsObserver(observer));
-            }
+            this.multiMapper = entity -> Seq.of(mapper.apply(entity));
+            return this;
+        }
+        
+        public Builder<T> multiMapper(final Function<T, Seq<List<?>>> multiMapper) {
+            Objects.requireNonNull(multiMapper);
             
+            this.multiMapper = multiMapper;
             return this;
         }
         
-        public Builder addSourceRecordsObserver(final Observer<? super T> observer) {
-            if (observer != null) {
-                this.sourceRecordsObservers.add(observer);
-            }
-            
-            return this;
-        }
-        
-        public Builder targetRowsObserver(final Observer<? super String> observer) {
-            this.targetRowsObservers(observer);
-            return this;
-        }
-
-        public Builder targetRowsObservers(final Observer<? super String>... observers) {
-            this.targetRowsObservers(Seq.of(observers).toList());
-            return this;
-        }
-        
-        public Builder targetRowsObservers(final Iterable<Observer<? super String>> observers) {
-            this.targetRowsObservers.clear();
-            
-            if (observers != null) {
-                observers.forEach(observer -> this.addTargetRowsObserver(observer));
-            }
-            
-            return this;
-        }
-        
-        public Builder addTargetRowsObserver(final Observer<? super String> observer) {
-            if (observer != null) {
-                this.targetRowsObservers.add(observer);
-            }
-            
-            return this;
-        }
-        
-        public CsvExporter build() {
-            return new CsvExporter(this);
-        }
-        
-        public Builder<T> copy() {
-            final Builder<T> ret = new Builder();
-            ret.format = this.format;
-            ret.recordMapper = this.recordMapper;
-            ret.target = this.target;
-            ret.sourceRecordsObservers = this.sourceRecordsObservers;
-            ret.targetRowsObservers = this.targetRowsObservers;
-            return ret;
+        public CsvExporter<T> build() {
+            return new CsvExporter<>(this);
         }
     }
 }

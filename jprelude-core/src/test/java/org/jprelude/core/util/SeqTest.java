@@ -1,8 +1,7 @@
 package org.jprelude.core.util;
 
 import java.util.Arrays;
-import org.jprelude.core.util.Observer;
-import org.jprelude.core.util.Seq;
+import java.util.Observer;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -48,26 +47,5 @@ public class SeqTest {
         final String[] expected = {"0: a1", "1: b2", "2: c3"};
  
         Assert.assertArrayEquals(result.toArray(), expected);
-    }
-    
-    @Test
-    public void testMethodIterate() {
-        Seq.iterate(0, 1, (n, m) -> n + m).take(20).forEach(System.out::println);
-        
-        Observer<Integer> obs = Observer.<Integer>builder()
-            .onNextx((item, idx) -> {
-                if ((Long) idx == 0) {
-                    System.out.print(1);
-                } else if (((Long) idx + 1) % 100 == 0) {
-                    System.out.print((Long) idx + 1);
-                } else if (((Long) idx + 1) % 10 == 0) {
-                    System.out.print(".");
-                }
-            })
-            .onComplete(idx -> System.out.println(((Long) idx + 1) % 100 != 0 ? (Long) idx + 1 : ""))
-            .onError(error -> System.out.println(" ERROR"))
-            .build();
-        
-        Seq.range(1, 242).forEach(obs);
     }
 }

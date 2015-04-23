@@ -3,12 +3,11 @@ package org.jprelude.core.util;
 import com.codepoetics.protonpack.Indexed;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.Spliterator;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
@@ -91,6 +90,10 @@ public interface Seq<T> {
         return this.flatMap((v, i) -> !pred.test(v, i) ? Seq.of(v) : Seq.empty());
     }
     
+    default Seq<T> rejectNulls() {
+        return this.reject(item -> item == null);
+    }
+    
     default Seq<T> peek(final Consumer<? super T> action) {
         final Function<? super T, T> f = (v) -> {
             action.accept(v);
@@ -100,43 +103,8 @@ public interface Seq<T> {
         return Seq.from((() -> this.stream().map(f)));
     }
     
-    
     default Seq<T> peek(final BiConsumer<? super T, Long> consumer) {
         return this.map((v, idx) -> {consumer.accept(v, idx); return v;});
-    }
-    
-    default Seq<T> peek(final Observer<? super T> observer) {
-        Objects.requireNonNull(observer);
-        
-        return () -> {
-            final Stream<T> stream = this.stream();
-            final Spliterator<T> spliterator = stream.spliterator();
-            
-            final Spliterator<T> wrapper = new Spliterator<T> () {
-                @Override
-                public boolean tryAdvance(Consumer<? super T> action) {
-                    return spliterator.tryAdvance(action);
-                }
-
-                @Override
-                public Spliterator<T> trySplit() {
-                    return spliterator.trySplit();
-                }
-
-                @Override
-                public long estimateSize() {
-                    return spliterator.estimateSize();
-                }
-
-                @Override
-                public int characteristics() {
-                    return spliterator.characteristics();
-                }
-            };
-            
-            
-            return StreamSupport.stream(spliterator, stream.isParallel());
-        };
     }
     
     default Seq<T> take(final int n) {
@@ -279,6 +247,70 @@ public interface Seq<T> {
         return this.stream().collect(Collectors.counting());
     }
     
+    default Seq<T> force() {
+        // List::size has int as return value, but we want long.
+        // So we count the length on our own.
+        final Mutable<Long> length = Mutable.of(0L);
+        
+        final List<T> list = this
+                .sequential()
+                .peek((item, idx) -> length.set(idx + 1))
+                .toList();
+        
+        return new Seq<T>() {
+            @Override
+            public Stream<T> stream() {
+                return list.stream();
+            }
+            
+            @Override
+            public long length() {
+                return length.get();
+            }
+            
+            @Override
+            public Seq<T> force() {
+                return this;
+            }
+
+            @Override
+            public Seq<T> forceOnDemand() {
+                return this;
+            }
+        };
+    }
+
+    default Seq<T> forceOnDemand() {
+        return new Seq<T>() {
+            private List<T> list;
+            private long listSize;
+            
+            @Override
+            public Stream<T> stream() {
+                this.forceList();
+                return this.list.stream();
+            }
+            
+            @Override
+            public long length() {
+                this.forceList();
+                return this.listSize;
+            }
+            
+            private void forceList() {
+                final Mutable<Long> counter = Mutable.of(0L);
+                
+                if (this.list == null) {
+                    this.list = Seq.this
+                            .peek((item, idx) -> counter.set(idx))
+                            .toList();
+                    
+                    this.listSize = counter.get() + 1;
+                }
+            }
+        };
+    }
+
     default <T> Object[] toArray() {
         return this.stream().toArray();
     }
@@ -311,27 +343,7 @@ public interface Seq<T> {
         try (final Stream<T> stream = this.stream()) {
             stream.forEach(consumer);
         }
-    }
-    
-    default void forEach(final Observer<? super T>... observers) {
-        if (observers != null)  {
-            this.forEach(Arrays.asList(observers));
-        }
-    }
-        
-    default void forEach(final List<Observer<? super T>> observers) {
-        final List<Observer<? super T>> observerList = Seq.from(observers).filter(observer -> observer != null).toList();
-    
-        if (!observerList.isEmpty()) {
-            try {
-                this.forEach(item -> observerList.forEach(observer -> observer.onNext(item)));
-                observerList.forEach(observer -> observer.onComplete()); // TODO
-            } catch (final Throwable throwable) {
-                observerList.forEach(observer -> observer.onError(throwable));
-            }
-        }
-    }
-    
+    }    
     
     default void forEach(final BiConsumer<? super T, Long> action) {
         final Seq<Long> nums  = Seq.iterate(0L, n -> n + 1);

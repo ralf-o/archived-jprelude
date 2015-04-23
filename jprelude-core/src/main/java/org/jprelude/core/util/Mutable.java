@@ -79,8 +79,8 @@ public interface Mutable<T>  extends Supplier<T> {
              private T val = value;
 
             @Override
-            public void set(final T value) {
-                this.val = value;
+            public void set(final T newValue) {
+                this.val = newValue;
             }
 
             @Override

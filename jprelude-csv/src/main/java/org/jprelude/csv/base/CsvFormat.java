@@ -1,8 +1,6 @@
 package org.jprelude.csv.base;
 
 import org.jprelude.core.util.LineSeparator;
-import com.codepoetics.protonpack.StreamUtils;
-import com.sun.istack.internal.NotNull;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -18,7 +16,6 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -203,166 +200,43 @@ public final class CsvFormat {
     
     
     public Function<List<?>, String> asMapper() {
-        return row -> {
-            Seq seq = Seq.from(row);
-            
-            if (this.autoTrim) {
-                seq = seq.map(field -> field == null ? null : field.toString().trim());
-            }
-            
-            return this.apacheCommonsCsvFormatForExport.format(seq.toArray());
-        }; 
+        return this.asMapper(false);
     }
 
-    public Function<List<?>, String> asMapperAppendingRecordSeparator() {
+    public Function<List<?>, String> asMapper(final boolean appendRecordSeparator) {
         return row -> {
             Seq seq = Seq.from(row);
             
             if (this.autoTrim) {
                 seq = seq.map(field -> field == null ? null : field.toString().trim());
             }
+
+            String ret = this.apacheCommonsCsvFormatForExport.format(seq.toArray());
             
-            return this.apacheCommonsCsvFormatForExport.format(seq.toArray())  + this.getRecordSeparator();
+            if (appendRecordSeparator) {
+               ret = ret + this.getRecordSeparator();
+            }
+            
+            return ret;
         }; 
     }
 
     public Seq<String> map(final Seq<List<?>> rows) {
-        Seq<String> ret = Seq.sequential(rows).map(this.asMapper());
-        
-        if (!this.columns.isEmpty()) {
-            final String headline = this.asMapper().apply(columns.stream().map(CsvColumn::getTitle).collect(Collectors.toList()));
-            ret = ret.prepend(headline);
-        }
-        
-        return ret;
+        return this.map(rows, false);
     }
  
-    public Seq<String> mapAppendingRecordSeparators(final Seq<List<?>> rows) {
-        Seq<String> ret = Seq.sequential(rows).map(this.asMapperAppendingRecordSeparator());
+    public Seq<String> map(final Seq<List<?>> rows, final boolean appendRecordSeparator) {
+        Seq<String> ret = Seq.sequential(rows).map(this.asMapper(appendRecordSeparator));
         
         if (!this.columns.isEmpty()) {
-            final String headline = this.asMapper().apply(columns.stream().map(CsvColumn::getTitle).collect(Collectors.toList()));
+            final String headline = this.asMapper(appendRecordSeparator)
+                    .apply(columns.stream().map(CsvColumn::getName)
+                    .collect(Collectors.toList()));
+            
             ret = ret.prepend(headline + this.getRecordSeparator());
         }
         
         return ret;
-    }
-
-    public CheckedFunction<Seq<List<?>>, Try<CsvExportResult>> prepareExportTo(final TextWriter textWriter) {
-        Objects.requireNonNull(textWriter);
-        
-        return (CheckedFunction<Seq<List<?>>, Try<CsvExportResult>>) records -> {
-            Try<CsvExportResult> ret;
-            final Mutable<Long> recordCount = Mutable.of(0L);
-            
-            final Seq<String> lines = CsvFormat.this
-                    .map(Seq.sequential(records))
-                    .peek((rec, idx) -> recordCount.set(idx));
-            
-            try {
-                textWriter.write(outputStream -> {
-                    final PrintStream printStream = new PrintStream(new BufferedOutputStream(outputStream));
-                    
-                    lines.forEach(line -> {
-                        printStream.print(line);
-                        printStream.print(CsvFormat.this.recordSeparator.value());
-                    });
-
-                    if (printStream.checkError()) {
-                        throw new IOException();
-                    }
-                });
-
-                ret = Try.of(CsvExportResult.builder()
-                    .sourceRecordCount(recordCount.get())
-                    .targetRowCount(recordCount.get())
-                    .build());
-            } catch (final Throwable throwable) {
-                ret = Try.error(throwable);
-            }
-            
-            return ret;
-        };
-    }
-    
-    public CheckedFunction<TextWriter, Try<CsvExportResult>> prepareExportOf(final Seq<List<?>> records) {
-        return writer -> this.prepareExportTo(writer).apply(records);
-    }
-    
-    public Seq<CsvRecord> parse(final TextReader textReader) {
-        return Seq.from(() ->
-            {
-            return new Iterator<CsvRecord>() {
-                private boolean initialized = false;
-                private boolean completed = false;
-                private BufferedReader reader =  null;
-                private CSVParser parser = null;
-                private Iterator<CSVRecord> iterator = null;
-
-                @Override
-                public boolean hasNext() {
-                    final boolean ret;
-                    
-                    if (this.completed) {
-                        ret = false;
-                    } else {
-                        try {
-                            if (!this.initialized) {
-                                this.reader = new BufferedReader(new InputStreamReader(textReader.newInputStream(), textReader.getCharset()));
-                                this.parser = new CSVParser(this.reader, CsvFormat.this.apacheCommonsCsvFormatForImport);
-                                this.iterator = this.parser.iterator();
-                                this.initialized = true;
-                            }
-
-                            ret = this.iterator.hasNext();
-
-                            if (!ret) {
-                                this.completed = true;
-                                this.reader.close();
-                                this.parser.close();
-                            }
-                        } catch (final IOException e) {
-                            try {
-                                this.close();
-                            } finally {
-                                throw new UncheckedIOException(e); 
-                            }
-                        }
-                    }
-                    
-                    return ret;
-                }
-
-                @Override
-                public CsvRecord next() {
-                    final CsvRecord ret;
-                    
-                    if (!this.hasNext()) {
-                        throw new NoSuchElementException();
-                    } else {
-                        ret = new CsvRecord(this.iterator.next(), "source / TODO"); // TODO
-                    }
-                    
-                    return ret;
-                }
-                
-                private void close() throws IOException {
-                    final Reader theReader = this.reader;
-                    final CSVParser theParser = this.parser;
-                   
-                    this.completed = true;
-                    this.reader = null;
-                    this.parser = null;
-                    this.iterator = null;
-                    
-                    try {
-                        theReader.close();
-                    } finally {
-                        theParser.close();
-                    }
-                }
-            };
-        });
     }
 
     public static Builder builder() {
@@ -385,7 +259,7 @@ public final class CsvFormat {
         private Builder() {
             this.columns = new ArrayList<>();
             this.delimiter = ',';
-            this.recordSeparator = LineSeparator.SYSTEM;
+            this.recordSeparator = LineSeparator.LF;
             this.autoTrim = false;
             this.escapeCharacter = null;
             this.quoteCharacter = '"';

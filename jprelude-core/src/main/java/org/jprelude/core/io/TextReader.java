@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UncheckedIOException;
+import java.net.URI;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -27,6 +28,7 @@ import org.jprelude.core.util.Seq;
 public interface TextReader {
     InputStream newInputStream() throws IOException;
     Charset getCharset();
+    URI getUri();
     
     default String readFullText() throws IOException {
         final CharBuffer charBuffer = CharBuffer.allocate(8096);
@@ -129,16 +131,9 @@ public interface TextReader {
     }
     
     public static TextReader create(
-            final IOSupplier<InputStream> inputStreamSupplier) {
-        
-        Objects.requireNonNull(inputStreamSupplier);
-        
-        return TextReader.create(inputStreamSupplier, null);
-    }
-    
-    public static TextReader create(
             final IOSupplier<InputStream> inputStreamSupplier,
-            final Charset charset) {
+            final Charset charset,
+            final URI uri) {
         
         Objects.requireNonNull(inputStreamSupplier);
         
@@ -155,6 +150,11 @@ public interface TextReader {
             @Override
             public Charset getCharset() {
                 return nonNullCharset;
+            }
+            
+            @Override
+            public URI getUri() {
+                return uri;
             }
         };
     }
@@ -182,7 +182,8 @@ public interface TextReader {
 
         return TextReader.create(
                 () -> Files.newInputStream(path, options),
-                charset);
+                charset,
+                path.toUri());
     }
     
     public static TextReader forInputStream(final InputStream inputStream) {
@@ -216,14 +217,17 @@ public interface TextReader {
         
         return TextReader.create(
                 supplier,
-                charset != null ? charset : StandardCharsets.UTF_8);
+                charset != null ? charset : StandardCharsets.UTF_8,
+                null);
     }
     
     static TextReader forString(final String text) {
         Objects.requireNonNull(text);
 
         return TextReader.create(
-                () -> new ByteArrayInputStream(text.getBytes("UTF-8")));
+                () -> new ByteArrayInputStream(text.getBytes("UTF-8")),
+                StandardCharsets.UTF_8,
+                null);
     }
     
     
