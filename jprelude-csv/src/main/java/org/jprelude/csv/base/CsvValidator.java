@@ -158,7 +158,6 @@ public class CsvValidator {
             this.recordRules.add(new RecordConstraint(hint, predicate));
             return this;
         }
-        
     }
         
     private final static class ColumnConstraint {

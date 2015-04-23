@@ -123,11 +123,11 @@ public class DemoTest {
                 .peek(path -> observers.forEach(
                         visitor -> visitor.onProcessingFile(path)))
                 .flatMap(path -> importer.parse(TextReader.forFile(path)))
-                .distinct(rec -> rec.get("Artikelnummer"));
+              ;//  .distinct(rec -> rec.get("Artikelnummer"));
 
             this.observers.forEach(Observer::onStart);
 
-            exporter.tryToExport(recs, target)
+            exporter.tryToExport(recs.sequential(), target)
                     .ifSuccess(() -> this.observers.forEach(obs -> obs.onSuccess(inputFiles)))
                     .ifError(error -> this.observers.forEach(obs -> obs.onError(error)));
         }
@@ -205,7 +205,11 @@ public class DemoTest {
                     final Writer writer = new StringWriter();
                     final PrintWriter printWriter = new PrintWriter(writer);
                     t.printStackTrace(printWriter);
-                    println.accept(writer.toString());
+                    final String stackTrace = writer.toString();
+                    println.accept("");
+                    println.accept("Stack trace:");
+                    println.accept("");
+                    Seq.of(stackTrace.split("(\n|\r\n)")).forEach(println);
                     println.accept("");
 
                     println.accept(
