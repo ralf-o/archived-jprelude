@@ -141,6 +141,27 @@ public interface Seq<T> {
         return () -> this.stream().sorted(comparator);
     }
     
+    default <R extends Comparable<?>> Seq<T> sorted(
+            final Function<T, R> f,
+            final SortDirection sortDirection) {
+        
+        Objects.requireNonNull(f);
+        
+        return this.sorted((o1, o2) -> {
+            final int c;
+
+            if (o1 == null && o2 == null || o1 == o2) {
+                c = 0;
+            } else if (o1 == null) {
+                c = -((Comparable) o2).compareTo(null);
+            } else {
+                c = ((Comparable) o1).compareTo(o2);
+            }
+            
+            return (sortDirection == SortDirection.ASCENDING  ? c : -c);
+        });
+    }
+    
     default Seq<T> prepend(final T value) {
         return Seq.concat(Seq.of(value), Seq.from(this));
     }

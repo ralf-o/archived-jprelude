@@ -14,6 +14,7 @@ import org.jprelude.core.io.PathLister;
 import org.jprelude.core.io.TextReader;
 import org.jprelude.core.io.TextWriter;
 import org.jprelude.core.util.Seq;
+import org.jprelude.core.util.SortDirection;
 import org.junit.Test;
 
 public class DemoTest {
@@ -26,9 +27,14 @@ public class DemoTest {
         final PriceFilesTransformer transformer = new PriceFilesTransformer(
                 Paths.get(inputFolder),
                 inputFilesPattern,
-                Paths.get(outputFile),
+                TextWriter.forFile(Paths.get(outputFile)),
+                //TextWriter.forOutputStream(System.out),
+                
+                //TextWriter.forFile(Paths.get("/dev/null")),
+                
                 false,
-                System.out::println);
+                System.out::println
+                );
         
         transformer.run();
     }
@@ -36,25 +42,25 @@ public class DemoTest {
     public static class PriceFilesTransformer {
         private final Path inputFolder;
         private final String inputFilesPattern;
-        private final Path outputFile;
+        private final TextWriter target;
         private final boolean failOnDataViolation;
         private final List<Observer> observers;
 
         public PriceFilesTransformer(
                  final Path inputFolder,
                  final String inputFilesPattern,
-                 final Path outputFile,
+                 final TextWriter target,
                  final boolean failOnDataViolation,
                  final Consumer<String> infoTextConsumer,
                  final Observer... observers) {
 
             Objects.requireNonNull(inputFolder);
             Objects.requireNonNull(inputFilesPattern);
-            Objects.requireNonNull(outputFile);
+            Objects.requireNonNull(target);
 
             this.inputFolder = inputFolder;
             this.inputFilesPattern = inputFilesPattern;
-            this.outputFile = outputFile;
+            this.target = target;
             this.failOnDataViolation = failOnDataViolation;
 
             this.observers = Seq
@@ -109,9 +115,9 @@ public class DemoTest {
                     .addFilter(Files::isRegularFile)
                     .build()
                     .list(this.inputFolder)
-                    .forceOnDemand() // caches the seq entries on first demand,
+                    .forceOnDemand() // caches the path entries on first demand (not now!),
                                      // will not traverse the diretory a second time then
-                    .sorted((p1, p2) -> p1.getFileName().compareTo(p2.getFileName()));
+                    .sorted(Path::getFileName, SortDirection.DESCENDING);
 
             Seq<CsvRecord> recs = inputFiles
                 .peek(path -> observers.forEach(
@@ -121,7 +127,7 @@ public class DemoTest {
 
             this.observers.forEach(Observer::onStart);
 
-            exporter.tryToExport(recs, TextWriter.forFile(outputFile))
+            exporter.tryToExport(recs, target)
                     .ifSuccess(() -> this.observers.forEach(obs -> obs.onSuccess(inputFiles)))
                     .ifError(error -> this.observers.forEach(obs -> obs.onError(error)));
         }
@@ -147,7 +153,7 @@ public class DemoTest {
                     println.accept("");
                     println.accept("Input folder: " + PriceFilesTransformer.this.inputFolder);
                     println.accept("Input files pattern: " + PriceFilesTransformer.this.inputFilesPattern);
-                    println.accept("Output file: " + PriceFilesTransformer.this.outputFile);
+                    println.accept("Output file: " + PriceFilesTransformer.this.target);
                     println.accept("");
                 }
 

@@ -112,11 +112,15 @@ public class CsvImporter<T> {
                             this.parser.close();
                         }
                     } catch (final IOException e) {
+                        final RuntimeException re = new UncheckedIOException(e);
+                        
                         try {
                             this.close();
-                        } finally {
-                            throw new UncheckedIOException(e); 
+                        } catch (final Throwable throwable) {
+                            re.addSuppressed(throwable);
                         }
+                        
+                        throw re;
                     }
                 }
 
@@ -171,7 +175,7 @@ public class CsvImporter<T> {
                 if (maybeError.isPresent()) {
                     final CsvValidationException error = maybeError.get();
                     
-                    if (this.onValidationError != null) {System.out.println("xxx");
+                    if (this.onValidationError != null) {
                         this.onValidationError.accept(rec, error);
                     }
                    

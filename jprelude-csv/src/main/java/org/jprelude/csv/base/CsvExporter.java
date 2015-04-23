@@ -93,14 +93,15 @@ public class CsvExporter<T> {
                             
                             printStream.print(mapper.apply(row));
                             printStream.print(recordSeparator);
-                        } else {
-                            Seq<List<?>> rows = exporter.multiMapper.apply(entity);
-                            
-                            rows.forEach(row -> {
-                                printStream.print(mapper.apply(row));
-                                printStream.print(recordSeparator);
-                            });
                         }
+                        
+                        Seq<List<?>> rows = exporter.multiMapper.apply(entity);
+
+                        rows.forEach(row -> {
+                            printStream.print(mapper.apply(row));
+                            printStream.print(recordSeparator);
+                        });
+
                         
                         if (printStream.checkError()) {
                             throw new UncheckedIOException(
