@@ -4,7 +4,7 @@ import java.util.Objects;
 
 @FunctionalInterface
 public interface CheckedTriConsumer<T1, T2, T3> {
-    void accept(T1 v1, T2 v2, T3 v3) throws Throwable;
+    void accept(T1 v1, T2 v2, T3 v3) throws Exception;
    
     default TriConsumer<T1, T2, T3> unchecked() {
         return (v1, v2, v3) -> {

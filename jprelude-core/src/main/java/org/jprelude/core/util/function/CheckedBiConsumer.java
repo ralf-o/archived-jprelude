@@ -6,7 +6,7 @@ import java.util.function.Consumer;
 
 @FunctionalInterface
 public interface CheckedBiConsumer<T1, T2> {
-    void accept(T1 v1, T2 v2) throws Throwable;
+    void accept(T1 v1, T2 v2) throws Exception;
    
     default BiConsumer<T1, T2> unchecked() {
         return (v1, v2) -> {

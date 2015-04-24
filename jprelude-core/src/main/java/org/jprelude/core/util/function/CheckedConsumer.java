@@ -7,7 +7,7 @@ import java.util.function.Consumer;
 
 @FunctionalInterface
 public interface CheckedConsumer<T> {
-    void accept(T t) throws Throwable;
+    void accept(T t) throws Exception;
    
     default Consumer<T> unchecked() {
         return value -> {

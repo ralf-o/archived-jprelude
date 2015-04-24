@@ -6,7 +6,7 @@ import java.util.function.Function;
 
 @FunctionalInterface
 public interface CheckedBiFunction<T1, T2, R> {
-    R apply(T1 v1, T2 v2) throws Throwable;
+    R apply(T1 v1, T2 v2) throws Exception;
    
     default BiFunction<T1, T2, R> unchecked() {
         return (v1, v2) -> {

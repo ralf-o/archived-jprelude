@@ -8,7 +8,29 @@ import java.util.function.Predicate;
 
 @FunctionalInterface
 public interface CheckedPredicate<T> {
-    boolean test(T t) throws Throwable;
+    boolean test(T t) throws Exception;
+
+    default CheckedPredicate<T> and(final CheckedPredicate<? super T> other) {
+        Objects.requireNonNull(other);
+        return t -> this.test(t) && other.test(t);
+    }
+
+    default CheckedPredicate<T> negate() {
+        return t -> !this.test(t);
+    }
+
+    default CheckedPredicate<T> or(CheckedPredicate<? super T> other) {
+        Objects.requireNonNull(other);
+        return t -> this.test(t) || other.test(t);
+    }
+    
+    static <T> CheckedPredicate<T> isEqual(final Object targetRef) {
+        Objects.nonNull(targetRef);
+        
+        return (null == targetRef)
+                ? Objects::isNull
+                : object -> targetRef.equals(object);
+    }
 
     default Predicate<T> unchecked() {
         return value -> {

@@ -4,7 +4,7 @@ import java.util.Objects;
 
 @FunctionalInterface
 public interface CheckedTriFunction <T1, T2, T3, R> {
-    R apply(T1 v1, T2 v2, T3 v3) throws Throwable;
+    R apply(T1 v1, T2 v2, T3 v3) throws Exception;
    
     default TriFunction<T1, T2, T3, R> unchecked() {
         return (v1, v2, v3) -> {

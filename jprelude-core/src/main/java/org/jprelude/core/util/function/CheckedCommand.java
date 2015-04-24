@@ -6,7 +6,7 @@ import java.util.Objects;
 
 @FunctionalInterface
 public interface CheckedCommand {
-    void execute() throws Throwable;
+    void execute() throws Exception;
     
     default Command unchecked() {
         return () -> {

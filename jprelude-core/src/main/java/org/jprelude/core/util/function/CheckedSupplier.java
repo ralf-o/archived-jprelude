@@ -7,7 +7,7 @@ import java.util.function.Supplier;
 
 @FunctionalInterface
 public interface CheckedSupplier<T> {
-    T get() throws Throwable;
+    T get() throws Exception;
     
     default Supplier<T> unchecked() {
          return () -> {

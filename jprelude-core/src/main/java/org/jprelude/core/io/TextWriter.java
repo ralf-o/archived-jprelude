@@ -26,16 +26,16 @@ public interface TextWriter {
 
     URI getUri();
 
-    OutputStream newOutputStream() throws Throwable;
+    OutputStream newOutputStream() throws Exception;
 
-    default long writeLines(final Seq<?> lines) throws Throwable {
+    default long writeLines(final Seq<?> lines) throws Exception {
         Objects.requireNonNull(lines);
 
         return this.writeLines(lines, LineSeparator.LF);
     }
 
     default long writeLines(final Seq<?> lines, LineSeparator lineSeparator)
-            throws Throwable {
+            throws Exception {
 
         Objects.requireNonNull(lines);
 
@@ -62,18 +62,18 @@ public interface TextWriter {
         return counter.get();
     }
 
-    default void writeFullText(final Object text) throws Throwable {
+    default void writeFullText(final Object text) throws Exception {
         this.writeLines(Seq.of(Objects.toString(text, "")), LineSeparator.NONE);
     }
 
     default void write(final CheckedConsumer<PrintStream> delegate)
-            throws Throwable {
+            throws Exception {
 
         this.write((printStream, charset) -> delegate.accept(printStream));
     }
 
     default void write(final CheckedBiConsumer<PrintStream, Charset> delegate)
-            throws Throwable {
+            throws Exception {
 
         Objects.requireNonNull(delegate);
 
@@ -93,9 +93,9 @@ public interface TextWriter {
             delegate.accept(printStream, charset);
 
             if (printStream.checkError()) {
-                throw new Throwable(
-                        "Could not write to PrintStream - "
-                        + "checkError() returned true");
+                throw new UncheckedIOException(
+                        new IOException("Could not write to PrintStream - "
+                        + "checkError() returned true"));
             }
         }
     }
@@ -121,7 +121,7 @@ public interface TextWriter {
 
         return new TextWriter() {
             @Override
-            public OutputStream newOutputStream() throws Throwable {
+            public OutputStream newOutputStream() throws Exception {
                 return outputStreamSupplier.get();
             }
 

@@ -7,7 +7,7 @@ import java.util.function.Function;
 
 @FunctionalInterface
 public interface CheckedFunction<T, R> {
-    R apply(T t) throws Throwable;
+    R apply(T t) throws Exception;
     
     default Function<T, R> unchecked() {
         return value -> {

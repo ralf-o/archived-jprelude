@@ -1,13 +1,13 @@
 package org.jprelude.core.util;
 
+import java.io.IOException;
 import java.util.Arrays;
-import java.util.Observer;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class SeqTest {
     @Test
-    public void testFactories() {
+    public void testFactories() throws IOException {
        Seq.of(1, 2, 3).toList().equals(Arrays.asList(1, 2, 3));
     }
     
