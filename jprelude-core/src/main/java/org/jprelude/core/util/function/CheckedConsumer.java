@@ -23,6 +23,15 @@ public interface CheckedConsumer<T> {
         };
     }
 
+    default CheckedConsumer<T> andThen(final CheckedConsumer<? super T> after) {
+        Objects.requireNonNull(after);
+        
+        return v -> {
+            accept(v);
+            after.accept(v);
+        };
+    }
+
     static <T> Consumer<T> unchecked(final CheckedConsumer<T> consumer) {
         Objects.requireNonNull(consumer);
         

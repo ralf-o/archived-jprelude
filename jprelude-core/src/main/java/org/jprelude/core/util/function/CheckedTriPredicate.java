@@ -3,7 +3,7 @@ package org.jprelude.core.util.function;
 import java.util.Objects;
 
 @FunctionalInterface
-public interface CheckedTriPredicate<T2, T2, T3> {
+public interface CheckedTriPredicate<T1, T2, T3> {
     boolean test(T1 v1, T2 v2, T3 v3) throws Throwable;
    
     default TriPredicate<T1, T2, T3> unchecked() {

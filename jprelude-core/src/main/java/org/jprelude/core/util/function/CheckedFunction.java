@@ -32,5 +32,21 @@ public interface CheckedFunction<T, R> {
         
         return function.unchecked();
     }
+
+    default <U> CheckedFunction<U, R> compose(CheckedFunction<? super U, ? extends T> before) {
+        Objects.requireNonNull(before);
+        
+        return u -> apply(before.apply(u));
+    }
+
+    default <U> CheckedFunction<T, U> andThen(Function<? super R, ? extends U> after) {
+        Objects.requireNonNull(after);
+        
+        return t -> after.apply(this.apply(t));
+    }
+
+    static <T> CheckedFunction<T, T> identity() {
+        return v -> v;
+    }
 }
 

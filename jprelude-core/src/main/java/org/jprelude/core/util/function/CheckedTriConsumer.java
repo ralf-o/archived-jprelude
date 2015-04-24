@@ -18,6 +18,15 @@ public interface CheckedTriConsumer<T1, T2, T3> {
         };
     }
 
+    default CheckedTriConsumer<T1, T2, T3> andThen(final CheckedTriConsumer<? super T1, ? super T2, ? super T3> after) {
+        Objects.requireNonNull(after);
+        
+        return (v1, v2,v3) -> {
+            accept(v1, v2, v3);
+            after.accept(v1, v2, v3);
+        };
+    }
+
     static <T1, T2, T3> TriConsumer<T1, T2, T3> unchecked(
             final CheckedTriConsumer<T1, T2, T3> triConsumer) {
         

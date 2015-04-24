@@ -2,6 +2,7 @@ package org.jprelude.core.util.function;
 
 import java.util.Objects;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
 @FunctionalInterface
 public interface CheckedBiFunction<T1, T2, R> {
@@ -23,6 +24,13 @@ public interface CheckedBiFunction<T1, T2, R> {
         };
     }
 
+    default <U> CheckedBiFunction<T1, T2, U> andThen(CheckedFunction<? super R, ? extends U> after) {
+        Objects.requireNonNull(after);
+        
+        return (t1, t2) -> after.apply(apply(t1, t2));
+    }
+
+    
     static <T1, T2, R> BiFunction<T1, T2, R> unchecked(
             final CheckedBiFunction<T1, T2, R> biFunction) {
         

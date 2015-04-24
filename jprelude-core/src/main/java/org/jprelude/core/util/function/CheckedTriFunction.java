@@ -22,6 +22,14 @@ public interface CheckedTriFunction <T1, T2, T3, R> {
         };
     }
 
+    default <U> CheckedTriFunction<T1, T2, T3, U> andThen(
+            final CheckedFunction<? super R, ? extends U> after) {
+        
+        Objects.requireNonNull(after);
+        
+        return (t1, t2, t3) -> after.apply(apply(t1, t2, t3));
+    }
+
     static <T1, T2, T3, R> TriFunction<T1, T2, T3, R> unchecked(
             final CheckedTriFunction<T1, T2, T3, R> triFunction) {
         
