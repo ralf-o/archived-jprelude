@@ -24,6 +24,7 @@ import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import org.jprelude.core.util.function.CheckedConsumer;
 import org.jprelude.core.util.function.TriFunction;
 import org.jprelude.core.util.tuple.Pair;
 import org.jprelude.core.util.tuple.Triple;
@@ -220,12 +221,10 @@ public interface Seq<T> {
         return () -> this.stream().sorted(comparator);
     }
     
-    default <R extends Comparable<?>> Seq<T> sorted(
-            final Function<T, R> f,
-            final SortDirection sortDirection) {
+    default <R extends Comparable<?>> Seq<T> sortedAsc(
+            final Function<T, R> f) {
         
         Objects.requireNonNull(f);
-        Objects.requireNonNull(sortDirection);
         
         return this.sorted((o1, o2) -> {
             final int c;
@@ -238,7 +237,27 @@ public interface Seq<T> {
                 c = ((Comparable) o1).compareTo(o2);
             }
             
-            return (sortDirection == SortDirection.ASCENDING  ? c : -c);
+            return c;
+        });
+    }
+    
+    default <R extends Comparable<?>> Seq<T> sortedDesc(
+            final Function<T, R> f) {
+        
+        Objects.requireNonNull(f);
+        
+        return this.sorted((o1, o2) -> {
+            final int c;
+
+            if (o1 == null && o2 == null || o1 == o2) {
+                c = 0;
+            } else if (o1 == null) {
+                c = -((Comparable) o2).compareTo(null);
+            } else {
+                c = ((Comparable) o1).compareTo(o2);
+            }
+            
+            return -c;
         });
     }
 
@@ -478,9 +497,6 @@ public interface Seq<T> {
         
         this.stream().forEachOrdered(action);
     }
-
-    
-    
     
     default Object[] toArray() {
         return this.stream().toArray();
