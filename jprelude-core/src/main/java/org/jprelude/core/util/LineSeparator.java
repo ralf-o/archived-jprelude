@@ -5,10 +5,7 @@ public enum LineSeparator {
     LF("\n"),
     CR("\r"),
     CRLF("\r\n"),
-    NEL("\u0025"),
-    FF("\u000C"),
-    LS("\u2028"),
-    PS("\u2029"),    
+    LFCR("\n\r"),
     NONE("");
     
     final String value;

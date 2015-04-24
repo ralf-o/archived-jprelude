@@ -10,9 +10,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import org.jprelude.core.io.TextWriter;
-import org.jprelude.core.util.LineSeparator;
 import org.jprelude.core.util.Seq;
-import org.jprelude.core.util.Try;
 
 public class CsvExporter<T> {
     private final CsvFormat format;
@@ -40,11 +38,7 @@ public class CsvExporter<T> {
         
         return CsvExporter.export(entities, exporterMap).get(this);
     }
-    
-    public Try<CsvExportResult> tryToExport(final Seq<T> entities, final TextWriter target) {
-        return Try.tryToGet(() -> this.export(entities, target));
-    }
-    
+        
     public static <T>  Map<CsvExporter<T>, CsvExportResult> export(
             final Seq<T> entities,
             final Map<CsvExporter<T>, TextWriter> exporterMap) {
@@ -139,17 +133,6 @@ public class CsvExporter<T> {
         
         return ret;
     }
-    
-    public static <T> Try<Map<CsvExporter<T>, CsvExportResult>> tryToExport(
-            final Seq<T> entities,
-            final Map<CsvExporter<T>, TextWriter> exporterMap) {
-        
-        Objects.nonNull(entities);
-        Objects.nonNull(exporterMap);
-        
-        return Try.tryToGet(() -> CsvExporter.export(entities, exporterMap));
-    }
-    
     
     public static <T> Builder<T> builder() {
         return new Builder<>();

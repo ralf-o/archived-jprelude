@@ -15,8 +15,6 @@ import java.nio.file.StandardOpenOption;
 import java.util.Objects;
 import org.jprelude.core.util.LineSeparator;
 import org.jprelude.core.util.Seq;
-import org.jprelude.core.util.function.CheckedBiConsumer;
-import org.jprelude.core.util.function.CheckedConsumer;
 import org.jprelude.core.util.function.CheckedSupplier;
 
 public interface TextWriter {
@@ -66,40 +64,6 @@ public interface TextWriter {
 
     default void writeFullText(final Object text) throws IOException {
         this.writeLines(Seq.of(Objects.toString(text, "")), LineSeparator.NONE);
-    }
-
-    default void write(final CheckedConsumer<PrintStream, IOException> delegate)
-            throws IOException {
-
-        this.write((printStream, charset) -> delegate.accept(printStream));
-    }
-
-    default void write(final CheckedBiConsumer<PrintStream, Charset, IOException> delegate)
-            throws IOException {
-
-        Objects.requireNonNull(delegate);
-
-        final Charset charset = this.getCharset();
-
-        final Charset nonNullCharset = charset != null
-                ? charset
-                : StandardCharsets.UTF_8;
-
-        try (
-                final OutputStream outputStream = this.newOutputStream();
-                final PrintStream printStream = new PrintStream(
-                        new BufferedOutputStream(outputStream),
-                        true,
-                        nonNullCharset.name())) {
-
-            delegate.accept(printStream, charset);
-
-            if (printStream.checkError()) {
-                throw new UncheckedIOException(
-                        new IOException("Could not write to PrintStream - "
-                        + "checkError() returned true"));
-            }
-        }
     }
 
     static TextWriter create(

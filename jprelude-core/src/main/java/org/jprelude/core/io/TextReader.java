@@ -21,8 +21,6 @@ import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.StreamSupport;
 import org.jprelude.core.util.Seq;
-import org.jprelude.core.util.function.CheckedBiConsumer;
-import org.jprelude.core.util.function.CheckedConsumer;
 import org.jprelude.core.util.function.CheckedSupplier;
 
 public interface TextReader {
@@ -47,26 +45,6 @@ public interface TextReader {
         return strBuilder.toString();
     }
 
-    default void read(final CheckedConsumer<InputStream, IOException> delegate) throws Exception {
-        this.read((inputStream, charset) -> delegate.accept(inputStream));
-    };
-    
-    default void read(final CheckedBiConsumer<InputStream, Charset, IOException> delegate) throws Exception {
-        Objects.requireNonNull(delegate);
-        
-        try (final InputStream inputStream = this.newInputStream()) {
-            delegate.accept(inputStream, this.getCharset());
-        } catch (final Throwable throwable) {
-            if (throwable instanceof UncheckedIOException) {
-                throw (UncheckedIOException) throwable;
-            } else if (throwable instanceof IOException) {
-                throw (IOException) throwable;
-            } else {
-                throw new IOException("Error while reading", throwable);
-            }
-        }       
-    };
-    
     default Seq<String> readLines() {
         return Seq.from(() -> {
             final BufferedReader bufferedReader;
