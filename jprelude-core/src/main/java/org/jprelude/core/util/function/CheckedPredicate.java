@@ -7,39 +7,38 @@ import java.util.Objects;
 import java.util.function.Predicate;
 
 @FunctionalInterface
-public interface CheckedPredicate<T> {
-    boolean test(T t) throws Exception;
+public interface CheckedPredicate<T, E extends Exception> {
+    boolean test(T t) throws E;
 
-    default CheckedPredicate<T> and(final CheckedPredicate<? super T> other) {
+    default CheckedPredicate<T, E> and(final CheckedPredicate<? super T, ? extends E> other) {
         Objects.requireNonNull(other);
         return t -> this.test(t) && other.test(t);
     }
 
-    default CheckedPredicate<T> negate() {
+    default CheckedPredicate<T, E> negate() {
         return t -> !this.test(t);
     }
 
-    default CheckedPredicate<T> or(CheckedPredicate<? super T> other) {
+    default CheckedPredicate<T, E> or(CheckedPredicate<? super T, ? extends E> other) {
         Objects.requireNonNull(other);
         return t -> this.test(t) || other.test(t);
     }
     
-    static <T> CheckedPredicate<T> isEqual(final Object targetRef) {
+    /*
+    static <T> CheckedPredicate<T, E> isEqual(final Object targetRef) {
         Objects.nonNull(targetRef);
         
         return (null == targetRef)
                 ? Objects::isNull
                 : object -> targetRef.equals(object);
     }
-
+*/
     default Predicate<T> unchecked() {
         return value -> {
             boolean ret;
             
             try {
                 ret = CheckedPredicate.this.test(value);
-            } catch (final IOException e) {
-                throw new UncheckedIOException(e);
             } catch (final RuntimeException e) {
                 throw e;
             } catch (final Throwable throwable) {
@@ -50,7 +49,7 @@ public interface CheckedPredicate<T> {
         };
     }
     
-    static <T> Predicate<T> unchecked(final CheckedPredicate<T> predicate) {
+    static <T> Predicate<T> unchecked(final CheckedPredicate<T, ?> predicate) {
         Objects.requireNonNull(predicate);
         
         return predicate.unchecked();

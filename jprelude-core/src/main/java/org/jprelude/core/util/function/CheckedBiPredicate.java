@@ -3,22 +3,22 @@ package org.jprelude.core.util.function;
 import java.util.Objects;
 import java.util.function.BiPredicate;
 
-public interface CheckedBiPredicate<T1, T2> {
-    boolean test(T1 t1, T2 t2) throws Exception;
+public interface CheckedBiPredicate<T1, T2, E extends Exception> {
+    boolean test(T1 t1, T2 t2) throws E;
 
-    default CheckedBiPredicate<T1, T2> and(
-            final CheckedBiPredicate<? super T1, ? super T2> other) {
+    default CheckedBiPredicate<T1, T2, E> and(
+            final CheckedBiPredicate<? super T1, ? super T2, ? extends E> other) {
         
         Objects.requireNonNull(other);
         return (T1 t1, T2 t2) -> test(t1, t2) && other.test(t1, t2);
     }
 
-    default CheckedBiPredicate<T1, T2> negate() {
+    default CheckedBiPredicate<T1, T2, E> negate() {
         return (t1, t2) -> !test(t1, t2);
     }
 
-    default CheckedBiPredicate<T1, T2> or(
-            final CheckedBiPredicate<? super T1, ? super T2> other) {
+    default CheckedBiPredicate<T1, T2, E> or(
+            final CheckedBiPredicate<? super T1, ? super T2, ? extends E> other) {
         
         Objects.requireNonNull(other);
         return (T1 t1, T2 t2) -> test(t1, t2) || other.test(t1, t2);
@@ -41,7 +41,7 @@ public interface CheckedBiPredicate<T1, T2> {
     }
 
     static <T1, T2> BiPredicate<T1, T2> unchecked(
-            final CheckedBiPredicate<T1, T2> pred) {
+            final CheckedBiPredicate<T1, T2, ?> pred) {
         
         Objects.requireNonNull(pred);
         

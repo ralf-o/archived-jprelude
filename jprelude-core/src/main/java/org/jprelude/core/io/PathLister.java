@@ -33,8 +33,8 @@ public final class PathLister {
     }
     
     public static class Builder {
-        Function<Path, CheckedPredicate<Path>> pathFilterFunction;
-        Function<Path, CheckedPredicate<Path>> recursionFilterFunction; 
+        Function<Path, CheckedPredicate<Path, IOException>> pathFilterFunction;
+        Function<Path, CheckedPredicate<Path, IOException>> recursionFilterFunction; 
         int maxDepth = Integer.MAX_VALUE;
         
         public Builder() {
@@ -43,7 +43,7 @@ public final class PathLister {
             this.maxDepth = Integer.MAX_VALUE;
         }
         
-        public Builder filter(final CheckedPredicate<Path> pathFilter) {
+        public Builder filter(final CheckedPredicate<Path, IOException> pathFilter) {
             Objects.requireNonNull(pathFilter);
             
             this.pathFilterFunction = p -> pathFilter;
@@ -62,13 +62,13 @@ public final class PathLister {
             return this;
         }
         
-        public Builder addFilter(final CheckedPredicate<Path> pathFilter) {
+        public Builder addFilter(final CheckedPredicate<Path, IOException> pathFilter) {
             Objects.requireNonNull(pathFilter);
             
             if (this.pathFilterFunction == null) {
                 this.filter(pathFilter);
             } else {
-                final Function<Path, CheckedPredicate<Path>> function = this.pathFilterFunction;
+                final Function<Path, CheckedPredicate<Path, IOException>> function = this.pathFilterFunction;
                 
                 this.pathFilterFunction = p -> p2 -> function.apply(p).test(p2) && pathFilter.test(p2);
             }
@@ -83,7 +83,7 @@ public final class PathLister {
             if (this.pathFilterFunction == null) {
                 this.filter(syntaxAndPattern);
             } else {
-                final Function<Path, CheckedPredicate<Path>> function = this.pathFilterFunction;
+                final Function<Path, CheckedPredicate<Path, IOException>> function = this.pathFilterFunction;
                 
                 this.pathFilterFunction = p1 -> {
                     final PathMatcher pathMatcher =  p1.getFileSystem().getPathMatcher(syntaxAndPattern);
@@ -95,7 +95,7 @@ public final class PathLister {
             return this;
         }
         
-        public Builder recursive(final CheckedPredicate<Path> recursionFilter) {
+        public Builder recursive(final CheckedPredicate<Path, IOException> recursionFilter) {
             Objects.requireNonNull(recursionFilter);
             
             this.recursionFilterFunction =
@@ -116,13 +116,13 @@ public final class PathLister {
             return this;
         }
         
-        public Builder addRecursionFilter(final CheckedPredicate<Path> recursionFilter) {
+        public Builder addRecursionFilter(final CheckedPredicate<Path, IOException> recursionFilter) {
             Objects.requireNonNull(recursionFilter);
             
             if (this.recursionFilterFunction == null) {
                 this.recursive(recursionFilter);
             } else {
-                final Function<Path, CheckedPredicate<Path>> function = this.recursionFilterFunction;
+                final Function<Path, CheckedPredicate<Path, IOException>> function = this.recursionFilterFunction;
                 
                 this.recursionFilterFunction =
                     p1 -> p2 -> function.apply(p1).test(p2) && recursionFilter.test(p2);     
@@ -137,7 +137,7 @@ public final class PathLister {
             if (this.recursionFilterFunction == null) {
                 this.recursive(syntaxAndPattern);
             } else {
-                final Function<Path, CheckedPredicate<Path>> function = this.recursionFilterFunction;
+                final Function<Path, CheckedPredicate<Path, IOException>> function = this.recursionFilterFunction;
 
                 this.recursionFilterFunction = p1 -> {
                      final PathMatcher pathMatcher =  p1.getFileSystem().getPathMatcher(syntaxAndPattern);
@@ -198,25 +198,25 @@ public final class PathLister {
         }));
     }
     
-    public static PathLister create(final CheckedPredicate< Path> pathFilter) {
+    public static PathLister create(final CheckedPredicate< Path, IOException> pathFilter) {
         Objects.requireNonNull(pathFilter);
 
-        return PathLister.createRecursive(pathFilter, (CheckedPredicate<Path>) path -> false, 1);
+        return PathLister.createRecursive(pathFilter, (CheckedPredicate<Path, IOException>) path -> false, 1);
     }
 
     public static PathLister createRecursive() {
-        return PathLister.createRecursive((CheckedPredicate<Path>) path -> true);
+        return PathLister.createRecursive((CheckedPredicate<Path, IOException>) path -> true);
     }
     
-    public static PathLister createRecursive(final CheckedPredicate<Path> pathFilter) {
+    public static PathLister createRecursive(final CheckedPredicate<Path, IOException> pathFilter) {
         Objects.requireNonNull(pathFilter);
         
-        return PathLister.createRecursive(pathFilter, (CheckedPredicate<Path>) path -> true); 
+        return PathLister.createRecursive(pathFilter, (CheckedPredicate<Path, IOException>) path -> true); 
     }
     
     public static PathLister createRecursive(
-            final CheckedPredicate<Path> pathFilter,
-            final CheckedPredicate<Path> recursionFilter) {
+            final CheckedPredicate<Path, IOException> pathFilter,
+            final CheckedPredicate<Path, IOException> recursionFilter) {
         
         Objects.requireNonNull(pathFilter);
         Objects.requireNonNull(recursionFilter);
@@ -225,8 +225,8 @@ public final class PathLister {
     }
     
     public static PathLister createRecursive(
-            final CheckedPredicate<Path> pathFilter,
-            final CheckedPredicate<Path> recursionFilter,
+            final CheckedPredicate<Path, IOException> pathFilter,
+            final CheckedPredicate<Path, IOException> recursionFilter,
             final int maxDepth) {
         
         Objects.requireNonNull(pathFilter);

@@ -26,16 +26,16 @@ public interface TextWriter {
 
     URI getUri();
 
-    OutputStream newOutputStream() throws Exception;
+    OutputStream newOutputStream() throws IOException;
 
-    default long writeLines(final Seq<?> lines) throws Exception {
+    default long writeLines(final Seq<?> lines) throws IOException {
         Objects.requireNonNull(lines);
 
         return this.writeLines(lines, LineSeparator.LF);
     }
 
     default long writeLines(final Seq<?> lines, LineSeparator lineSeparator)
-            throws Exception {
+            throws IOException {
 
         Objects.requireNonNull(lines);
 
@@ -62,18 +62,18 @@ public interface TextWriter {
         return counter.get();
     }
 
-    default void writeFullText(final Object text) throws Exception {
+    default void writeFullText(final Object text) throws IOException {
         this.writeLines(Seq.of(Objects.toString(text, "")), LineSeparator.NONE);
     }
 
-    default void write(final CheckedConsumer<PrintStream> delegate)
-            throws Exception {
+    default void write(final CheckedConsumer<PrintStream, IOException> delegate)
+            throws IOException {
 
         this.write((printStream, charset) -> delegate.accept(printStream));
     }
 
-    default void write(final CheckedBiConsumer<PrintStream, Charset> delegate)
-            throws Exception {
+    default void write(final CheckedBiConsumer<PrintStream, Charset, IOException> delegate)
+            throws IOException {
 
         Objects.requireNonNull(delegate);
 
@@ -101,7 +101,7 @@ public interface TextWriter {
     }
 
     static TextWriter create(
-            final CheckedSupplier<OutputStream> outputStreamSupplier) {
+            final CheckedSupplier<OutputStream, IOException> outputStreamSupplier) {
 
         Objects.requireNonNull(outputStreamSupplier);
 
@@ -109,7 +109,7 @@ public interface TextWriter {
     }
 
     static TextWriter create(
-            final CheckedSupplier<OutputStream> outputStreamSupplier,
+            final CheckedSupplier<OutputStream, IOException> outputStreamSupplier,
             final Charset charset,
             final URI uri) {
 
@@ -121,7 +121,7 @@ public interface TextWriter {
 
         return new TextWriter() {
             @Override
-            public OutputStream newOutputStream() throws Exception {
+            public OutputStream newOutputStream() throws IOException {
                 return outputStreamSupplier.get();
             }
 
@@ -176,7 +176,7 @@ public interface TextWriter {
 
         Objects.requireNonNull(outputStream);
 
-        final CheckedSupplier<OutputStream> supplier = () -> new OutputStream() {
+        final CheckedSupplier<OutputStream, IOException> supplier = () -> new OutputStream() {
             private boolean isClosed = false;
 
             @Override

@@ -1,13 +1,11 @@
 package org.jprelude.core.util.function;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.Objects;
 import java.util.function.Supplier;
 
 @FunctionalInterface
-public interface CheckedSupplier<T> {
-    T get() throws Exception;
+public interface CheckedSupplier<T, E extends Exception> {
+    T get() throws E;
     
     default Supplier<T> unchecked() {
          return () -> {
@@ -15,8 +13,6 @@ public interface CheckedSupplier<T> {
 
             try {
                 ret = CheckedSupplier.this.get();
-            } catch (final IOException e) {
-                throw new UncheckedIOException(e);
             } catch (final RuntimeException e) {
                 throw e;
             } catch (final Throwable throwable) {
@@ -27,7 +23,7 @@ public interface CheckedSupplier<T> {
         };
     }
     
-    static <T> Supplier<T> unchecked(final CheckedSupplier<T> supplier) {
+    static <T> Supplier<T> unchecked(final CheckedSupplier<T, ?> supplier) {
         Objects.requireNonNull(supplier);
         
         return supplier.unchecked();

@@ -47,11 +47,11 @@ public interface TextReader {
         return strBuilder.toString();
     }
 
-    default void read(final CheckedConsumer<InputStream> delegate) throws Exception {
+    default void read(final CheckedConsumer<InputStream, IOException> delegate) throws Exception {
         this.read((inputStream, charset) -> delegate.accept(inputStream));
     };
     
-    default void read(final CheckedBiConsumer<InputStream, Charset> delegate) throws Exception {
+    default void read(final CheckedBiConsumer<InputStream, Charset, IOException> delegate) throws Exception {
         Objects.requireNonNull(delegate);
         
         try (final InputStream inputStream = this.newInputStream()) {
@@ -135,7 +135,7 @@ public interface TextReader {
     }
     
     public static TextReader create(
-            final CheckedSupplier<InputStream> inputStreamSupplier,
+            final CheckedSupplier<InputStream, IOException> inputStreamSupplier,
             final Charset charset,
             final URI uri) {
         
@@ -207,7 +207,7 @@ public interface TextReader {
     public static TextReader forInputStream(final InputStream inputStream, final Charset charset) {
         Objects.requireNonNull(inputStream);
         
-        final CheckedSupplier<InputStream> supplier = () -> new InputStream() {
+        final CheckedSupplier<InputStream, IOException> supplier = () -> new InputStream() {
             private boolean isClosed = false;
 
             @Override

@@ -2,11 +2,10 @@ package org.jprelude.core.util.function;
 
 import java.util.Objects;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 @FunctionalInterface
-public interface CheckedBiConsumer<T1, T2> {
-    void accept(T1 v1, T2 v2) throws Exception;
+public interface CheckedBiConsumer<T1, T2, E extends Exception> {
+    void accept(T1 v1, T2 v2) throws E;
    
     default BiConsumer<T1, T2> unchecked() {
         return (v1, v2) -> {
@@ -20,7 +19,7 @@ public interface CheckedBiConsumer<T1, T2> {
         };
     }
 
-    default CheckedBiConsumer<T1, T2> andThen(final CheckedBiConsumer<? super T1, ? super T2> after) {
+    default CheckedBiConsumer<T1, T2, E> andThen(final CheckedBiConsumer<? super T1, ? super T2, E> after) {
         Objects.requireNonNull(after);
         
         return (v1, v2) -> {
@@ -29,8 +28,8 @@ public interface CheckedBiConsumer<T1, T2> {
         };
     }
 
-    static <T1, T2> BiConsumer<T1, T2> unchecked(
-            final CheckedBiConsumer<T1, T2> consumer) {
+    static <T1, T2, E extends Exception> BiConsumer<T1, T2> unchecked(
+            final CheckedBiConsumer<T1, T2, E> consumer) {
         
         Objects.requireNonNull(consumer);
         

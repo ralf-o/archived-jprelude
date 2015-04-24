@@ -3,8 +3,8 @@ package org.jprelude.core.util.function;
 import java.util.Objects;
 
 @FunctionalInterface
-public interface CheckedTriConsumer<T1, T2, T3> {
-    void accept(T1 v1, T2 v2, T3 v3) throws Exception;
+public interface CheckedTriConsumer<T1, T2, T3, E extends Exception> {
+    void accept(T1 v1, T2 v2, T3 v3) throws E;
    
     default TriConsumer<T1, T2, T3> unchecked() {
         return (v1, v2, v3) -> {
@@ -12,13 +12,13 @@ public interface CheckedTriConsumer<T1, T2, T3> {
                 CheckedTriConsumer.this.accept(v1, v2, v3);
             } catch (final RuntimeException e) {
                 throw e;
-            } catch (final Throwable throwable) {
-                throw new RuntimeException(throwable);
+            } catch (final Exception e) {
+                throw new RuntimeException(e);
             }
         };
     }
 
-    default CheckedTriConsumer<T1, T2, T3> andThen(final CheckedTriConsumer<? super T1, ? super T2, ? super T3> after) {
+    default CheckedTriConsumer<T1, T2, T3, E> andThen(final CheckedTriConsumer<? super T1, ? super T2, ? super T3, ? extends E> after) {
         Objects.requireNonNull(after);
         
         return (v1, v2,v3) -> {
@@ -28,10 +28,10 @@ public interface CheckedTriConsumer<T1, T2, T3> {
     }
 
     static <T1, T2, T3> TriConsumer<T1, T2, T3> unchecked(
-            final CheckedTriConsumer<T1, T2, T3> triConsumer) {
+            final CheckedTriConsumer<T1, T2, T3, ?> consumer) {
         
-        Objects.requireNonNull(triConsumer);
+        Objects.requireNonNull(consumer);
         
-        return triConsumer.unchecked();
+        return consumer.unchecked();
     }
 }

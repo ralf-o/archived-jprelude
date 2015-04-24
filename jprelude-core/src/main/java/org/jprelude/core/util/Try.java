@@ -236,7 +236,7 @@ public interface Try<T> {
         });
     }
     
-    static <T> Try<T> tryToGet(final CheckedSupplier<? extends T> supplier) {
+    static <T> Try<T> tryToGet(final CheckedSupplier<? extends T, ?> supplier) {
         Try<T> ret;
         
         try {
