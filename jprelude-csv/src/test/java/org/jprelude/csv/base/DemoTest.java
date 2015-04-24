@@ -14,7 +14,6 @@ import org.jprelude.core.io.PathLister;
 import org.jprelude.core.io.TextReader;
 import org.jprelude.core.io.TextWriter;
 import org.jprelude.core.util.Seq;
-import org.jprelude.core.util.SortDirection;
 import org.junit.Test;
 
 public class DemoTest {
@@ -117,7 +116,7 @@ public class DemoTest {
                     .list(this.inputFolder)
                     .forceOnDemand() // caches the path entries on first demand (not now!),
                                      // will not traverse the diretory a second time then
-                    .sorted(Path::getFileName, SortDirection.DESCENDING);
+                    .sortedDesc(Path::getFileName);
 
             Seq<CsvRecord> recs = inputFiles
                 .peek(path -> observers.forEach(
@@ -127,9 +126,13 @@ public class DemoTest {
 
             this.observers.forEach(Observer::onStart);
 
-            exporter.tryToExport(recs.sequential(), target)
-                    .ifSuccess(() -> this.observers.forEach(obs -> obs.onSuccess(inputFiles)))
-                    .ifError(error -> this.observers.forEach(obs -> obs.onError(error)));
+            try {
+                exporter.export(recs.sequential(), target);
+                System.out.println();
+                this.observers.forEach(obs -> obs.onSuccess(inputFiles));
+            } catch (final Exception e) {
+                this.observers.forEach(obs -> obs.onError(e));
+            }
         }
 
         public static interface Observer {
@@ -193,7 +196,7 @@ public class DemoTest {
                     println.accept("");
                     
                     println.accept("Success: "
-                                + inputFiles.length()
+                                + inputFiles.count()
                                 + " price file(s) have been transformed.");
                 }
 

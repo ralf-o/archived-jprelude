@@ -11,6 +11,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -26,7 +27,7 @@ public class CsvImporter<T> {
         private final boolean failOnValidationError;
         private final Consumer<CsvRecord> onValidationSuccess;
         private final BiConsumer<? super CsvRecord, ? super CsvValidationException> onValidationError;
-        private CheckedFunction<? super CsvRecord, ? extends Seq<T>> multiMapper;
+        private Function<? super CsvRecord, ? extends Seq<T>> multiMapper;
         private final CSVFormat apacheCsvFormat;
              
             
@@ -161,11 +162,11 @@ public class CsvImporter<T> {
         
         if (this.validator == null) {
             if (this.onValidationSuccess == null) {
-                ret = records.flatMap(this.multiMapper.unchecked());            
+                ret = records.flatMap(this.multiMapper);            
             } else {
                 ret = records
                         .peek(this.onValidationSuccess)
-                        .flatMap(this.multiMapper.unchecked());
+                        .flatMap(this.multiMapper);
             }
         } else {
             ret = records.filter(rec -> {
@@ -188,7 +189,7 @@ public class CsvImporter<T> {
                 
                 return !maybeError.isPresent();
             })
-            .flatMap(this.multiMapper.unchecked());
+            .flatMap(this.multiMapper);
         }
         
         return ret;
@@ -204,7 +205,7 @@ public class CsvImporter<T> {
         private boolean failOnValidationError;
         private Consumer<CsvRecord> onValidationSuccess;
         private BiConsumer<CsvRecord, CsvValidationException> onValidationError;
-        private CheckedFunction<? super CsvRecord, ? extends Seq<T>> multiMapper;
+        private Function<? super CsvRecord, ? extends Seq<T>> multiMapper;
         
         private Builder() {
             this.format = null;
@@ -268,7 +269,7 @@ public class CsvImporter<T> {
             return this;
         }
         
-        public Builder<T> multiMapper(final CheckedFunction<? super CsvRecord, ? extends Seq<T>> multiMapper) {
+        public Builder<T> multiMapper(final Function<? super CsvRecord, ? extends Seq<T>> multiMapper) {
             Objects.requireNonNull(multiMapper);
             
             this.multiMapper = multiMapper;
@@ -276,7 +277,7 @@ public class CsvImporter<T> {
         }
 
         
-        public Builder<T> mapper(final CheckedFunction<? super CsvRecord, ? extends T> mapper) {
+        public Builder<T> mapper(final Function<? super CsvRecord, ? extends T> mapper) {
             Objects.requireNonNull(mapper);
             
             this.multiMapper = rec -> Seq.of(mapper.apply(rec));

@@ -24,11 +24,11 @@ import org.jprelude.core.util.Seq;
 import org.jprelude.core.util.function.CheckedSupplier;
 
 public interface TextReader {
-    InputStream newInputStream() throws Exception;
+    InputStream newInputStream() throws IOException;
     Charset getCharset();
     URI getUri();
     
-    default String readFullText() throws Exception {
+    default String readFullText() throws IOException {
         final CharBuffer charBuffer = CharBuffer.allocate(8096);
         final StringBuilder strBuilder = new StringBuilder();
                 
@@ -125,7 +125,7 @@ public interface TextReader {
         
         return new TextReader() {
             @Override
-            public InputStream newInputStream() throws Exception {
+            public InputStream newInputStream() throws IOException {
                 final InputStream ret;
                 
                 try {
