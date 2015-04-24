@@ -6,13 +6,12 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
-import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-import org.jprelude.core.io.function.IOPredicate;
 import org.jprelude.core.util.Seq;
+import org.jprelude.core.util.function.CheckedPredicate;
 
 public final class PathLister {
     final Function<Path, Seq<Path>> f;
@@ -34,8 +33,8 @@ public final class PathLister {
     }
     
     public static class Builder {
-        Function<Path, IOPredicate<Path>> pathFilterFunction;
-        Function<Path, IOPredicate<Path>> recursionFilterFunction; 
+        Function<Path, CheckedPredicate<Path>> pathFilterFunction;
+        Function<Path, CheckedPredicate<Path>> recursionFilterFunction; 
         int maxDepth = Integer.MAX_VALUE;
         
         public Builder() {
@@ -44,7 +43,7 @@ public final class PathLister {
             this.maxDepth = Integer.MAX_VALUE;
         }
         
-        public Builder filter(final IOPredicate<Path> pathFilter) {
+        public Builder filter(final CheckedPredicate<Path> pathFilter) {
             Objects.requireNonNull(pathFilter);
             
             this.pathFilterFunction = p -> pathFilter;
@@ -63,13 +62,13 @@ public final class PathLister {
             return this;
         }
         
-        public Builder addFilter(final IOPredicate<Path> pathFilter) {
+        public Builder addFilter(final CheckedPredicate<Path> pathFilter) {
             Objects.requireNonNull(pathFilter);
             
             if (this.pathFilterFunction == null) {
                 this.filter(pathFilter);
             } else {
-                final Function<Path, IOPredicate<Path>> function = this.pathFilterFunction;
+                final Function<Path, CheckedPredicate<Path>> function = this.pathFilterFunction;
                 
                 this.pathFilterFunction = p -> p2 -> function.apply(p).test(p2) && pathFilter.test(p2);
             }
@@ -84,7 +83,7 @@ public final class PathLister {
             if (this.pathFilterFunction == null) {
                 this.filter(syntaxAndPattern);
             } else {
-                final Function<Path, IOPredicate<Path>> function = this.pathFilterFunction;
+                final Function<Path, CheckedPredicate<Path>> function = this.pathFilterFunction;
                 
                 this.pathFilterFunction = p1 -> {
                     final PathMatcher pathMatcher =  p1.getFileSystem().getPathMatcher(syntaxAndPattern);
@@ -96,7 +95,7 @@ public final class PathLister {
             return this;
         }
         
-        public Builder recursive(final IOPredicate<Path> recursionFilter) {
+        public Builder recursive(final CheckedPredicate<Path> recursionFilter) {
             Objects.requireNonNull(recursionFilter);
             
             this.recursionFilterFunction =
@@ -117,13 +116,13 @@ public final class PathLister {
             return this;
         }
         
-        public Builder addRecursionFilter(final IOPredicate<Path> recursionFilter) {
+        public Builder addRecursionFilter(final CheckedPredicate<Path> recursionFilter) {
             Objects.requireNonNull(recursionFilter);
             
             if (this.recursionFilterFunction == null) {
                 this.recursive(recursionFilter);
             } else {
-                final Function<Path, IOPredicate<Path>> function = this.recursionFilterFunction;
+                final Function<Path, CheckedPredicate<Path>> function = this.recursionFilterFunction;
                 
                 this.recursionFilterFunction =
                     p1 -> p2 -> function.apply(p1).test(p2) && recursionFilter.test(p2);     
@@ -138,7 +137,7 @@ public final class PathLister {
             if (this.recursionFilterFunction == null) {
                 this.recursive(syntaxAndPattern);
             } else {
-                final Function<Path, IOPredicate<Path>> function = this.recursionFilterFunction;
+                final Function<Path, CheckedPredicate<Path>> function = this.recursionFilterFunction;
 
                 this.recursionFilterFunction = p1 -> {
                      final PathMatcher pathMatcher =  p1.getFileSystem().getPathMatcher(syntaxAndPattern);
@@ -199,25 +198,25 @@ public final class PathLister {
         }));
     }
     
-    public static PathLister create(final IOPredicate< Path> pathFilter) {
+    public static PathLister create(final CheckedPredicate< Path> pathFilter) {
         Objects.requireNonNull(pathFilter);
 
-        return PathLister.createRecursive(pathFilter, (IOPredicate<Path>) path -> false, 1);
+        return PathLister.createRecursive(pathFilter, (CheckedPredicate<Path>) path -> false, 1);
     }
 
     public static PathLister createRecursive() {
-        return PathLister.createRecursive((IOPredicate<Path>) path -> true);
+        return PathLister.createRecursive((CheckedPredicate<Path>) path -> true);
     }
     
-    public static PathLister createRecursive(final IOPredicate<Path> pathFilter) {
+    public static PathLister createRecursive(final CheckedPredicate<Path> pathFilter) {
         Objects.requireNonNull(pathFilter);
         
-        return PathLister.createRecursive(pathFilter, (IOPredicate<Path>) path -> true); 
+        return PathLister.createRecursive(pathFilter, (CheckedPredicate<Path>) path -> true); 
     }
     
     public static PathLister createRecursive(
-            final IOPredicate<Path> pathFilter,
-            final IOPredicate<Path> recursionFilter) {
+            final CheckedPredicate<Path> pathFilter,
+            final CheckedPredicate<Path> recursionFilter) {
         
         Objects.requireNonNull(pathFilter);
         Objects.requireNonNull(recursionFilter);
@@ -226,8 +225,8 @@ public final class PathLister {
     }
     
     public static PathLister createRecursive(
-            final IOPredicate<Path> pathFilter,
-            final IOPredicate<Path> recursionFilter,
+            final CheckedPredicate<Path> pathFilter,
+            final CheckedPredicate<Path> recursionFilter,
             final int maxDepth) {
         
         Objects.requireNonNull(pathFilter);
@@ -241,7 +240,7 @@ public final class PathLister {
             Seq<Path> ret;
 
             try {
-                final boolean involve = pathFilter.test(p); //System.out.println(p.toUri() + " ===> " + involve);
+                final boolean involve = pathFilter.test(p);
                 final boolean descent = maxDepth > 1 && Files.isDirectory(p) && recursionFilter.test(p);
 
                 ret = descent
@@ -252,7 +251,11 @@ public final class PathLister {
                     ret = ret.prepend(p);
                 }
             } catch (final IOException e) {
-                throw new UncheckedIOException(e.getMessage(), e);
+                throw new UncheckedIOException(e);
+            } catch (final RuntimeException e) {
+                throw e;
+            } catch (final Throwable e) {
+                throw new RuntimeException(e);
             }
 
             return ret;

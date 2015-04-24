@@ -20,17 +20,17 @@ import java.util.Objects;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.StreamSupport;
-import org.jprelude.core.io.function.IOBiConsumer;
-import org.jprelude.core.io.function.IOConsumer;
-import org.jprelude.core.io.function.IOSupplier;
 import org.jprelude.core.util.Seq;
+import org.jprelude.core.util.function.CheckedBiConsumer;
+import org.jprelude.core.util.function.CheckedConsumer;
+import org.jprelude.core.util.function.CheckedSupplier;
 
 public interface TextReader {
-    InputStream newInputStream() throws IOException;
+    InputStream newInputStream() throws Exception;
     Charset getCharset();
     URI getUri();
     
-    default String readFullText() throws IOException {
+    default String readFullText() throws Exception {
         final CharBuffer charBuffer = CharBuffer.allocate(8096);
         final StringBuilder strBuilder = new StringBuilder();
                 
@@ -47,11 +47,11 @@ public interface TextReader {
         return strBuilder.toString();
     }
 
-    default void read(final IOConsumer<InputStream> delegate) throws IOException {
+    default void read(final CheckedConsumer<InputStream> delegate) throws Exception {
         this.read((inputStream, charset) -> delegate.accept(inputStream));
     };
     
-    default void read(final IOBiConsumer<InputStream, Charset> delegate) throws IOException {
+    default void read(final CheckedBiConsumer<InputStream, Charset> delegate) throws Exception {
         Objects.requireNonNull(delegate);
         
         try (final InputStream inputStream = this.newInputStream()) {
@@ -76,8 +76,12 @@ public interface TextReader {
                 
                 bufferedReader = new BufferedReader(new InputStreamReader(
                         inputStream, this.getCharset()));
-            } catch (final IOException e)  {
+            } catch (final IOException e) {
                 throw new UncheckedIOException(e);
+            } catch (final RuntimeException e) {
+                throw (RuntimeException) e;
+            } catch (final Throwable e) {
+                throw  new RuntimeException(e);
             }
 
             final Iterator<String> iter = new Iterator<String>() {
@@ -131,7 +135,7 @@ public interface TextReader {
     }
     
     public static TextReader create(
-            final IOSupplier<InputStream> inputStreamSupplier,
+            final CheckedSupplier<InputStream> inputStreamSupplier,
             final Charset charset,
             final URI uri) {
         
@@ -143,8 +147,18 @@ public interface TextReader {
         
         return new TextReader() {
             @Override
-            public InputStream newInputStream() throws IOException {
-                return inputStreamSupplier.get();
+            public InputStream newInputStream() throws Exception {
+                final InputStream ret;
+                
+                try {
+                    ret = inputStreamSupplier.get();
+                } catch (final Exception e) {
+                    throw e;
+                } catch (final Throwable e) {
+                    throw new RuntimeException(e);
+                }
+                
+                return ret;
             }
 
             @Override
@@ -193,7 +207,7 @@ public interface TextReader {
     public static TextReader forInputStream(final InputStream inputStream, final Charset charset) {
         Objects.requireNonNull(inputStream);
         
-        final IOSupplier<InputStream> supplier = () -> new InputStream() {
+        final CheckedSupplier<InputStream> supplier = () -> new InputStream() {
             private boolean isClosed = false;
 
             @Override
