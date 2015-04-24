@@ -1,31 +1,15 @@
 package org.jprelude.csv.base;
 
 import org.jprelude.core.util.LineSeparator;
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
-import java.io.Reader;
-import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.csv.QuoteMode;
-import org.jprelude.core.io.TextReader;
-import org.jprelude.core.io.TextWriter;
-import org.jprelude.core.util.Mutable;
 import org.jprelude.core.util.Seq;
-import org.jprelude.core.util.Try;
-import org.jprelude.core.util.function.CheckedFunction;
 
 
 /*

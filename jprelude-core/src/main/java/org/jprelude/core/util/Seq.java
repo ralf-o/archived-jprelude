@@ -1,6 +1,7 @@
 package org.jprelude.core.util;
 
 import com.codepoetics.protonpack.Indexed;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
@@ -24,7 +25,6 @@ import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-import org.jprelude.core.util.function.CheckedConsumer;
 import org.jprelude.core.util.function.TriFunction;
 import org.jprelude.core.util.tuple.Pair;
 import org.jprelude.core.util.tuple.Triple;
@@ -278,23 +278,14 @@ public interface Seq<T> {
         return this.map((v, idx) -> {action.accept(v, idx); return v;});
     }
     
-    
-    default T reduce(final T identity, final BiFunction<T, T, T> accumulator) {
-        Objects.requireNonNull(accumulator);
-    
-        final BinaryOperator<T> operator = (v1, v2) -> accumulator.apply(v1, v2);
-        return this.stream().reduce(identity, operator);
-    }
-    
      default Seq<T> force() {
         // List::size has int as return value, but we want long.
         // So we count the length on our own.
-        final Mutable<Long> length = Mutable.of(0L);
+        final List<T> list = new ArrayList();
         
-        final List<T> list = this
-                .sequential()
-                .peek((item, idx) -> length.set(idx + 1))
-                .toList();
+        final long listSize = this.sequential()
+                .peek(item -> list.add(item))
+                .count();
         
         return new Seq<T>() {
             @Override
@@ -304,7 +295,7 @@ public interface Seq<T> {
             
             @Override
             public long count() {
-                return length.get();
+                return listSize;
             }
             
             @Override
@@ -342,14 +333,12 @@ public interface Seq<T> {
             }
             
             private void forceList() {
-                final Mutable<Long> counter = Mutable.of(0L);
-                
                 if (this.list == null) {
-                    this.list = Seq.this
-                            .peek((item, idx) -> counter.set(idx))
-                            .toList();
-                    
-                    this.listSize = counter.get() + 1;
+                    this.list = new ArrayList(); 
+                            
+                    this.listSize = Seq.this.sequential()
+                            .peek(item -> this.list.add(item))
+                            .count();
                 }
             }
         };
@@ -393,6 +382,12 @@ public interface Seq<T> {
     
     default Seq<T> tail() {
         return this.skip(1);
+    }
+    
+    default T reduce(final T identity, final BiFunction<T, T, T> accumulator) {
+        Objects.requireNonNull(accumulator);
+        final BinaryOperator<T> operator = (v1, v2) -> accumulator.apply(v1, v2);
+        return this.stream().reduce(identity, operator);
     }
     
     default Optional<T> reduce(final BiFunction<T, T, T> accumulator) {

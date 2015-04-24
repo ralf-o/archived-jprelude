@@ -14,14 +14,12 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Objects;
 import org.jprelude.core.util.LineSeparator;
-import org.jprelude.core.util.Mutable;
 import org.jprelude.core.util.Seq;
 import org.jprelude.core.util.function.CheckedBiConsumer;
 import org.jprelude.core.util.function.CheckedConsumer;
 import org.jprelude.core.util.function.CheckedSupplier;
 
 public interface TextWriter {
-
     Charset getCharset();
 
     URI getUri();
@@ -38,28 +36,32 @@ public interface TextWriter {
             throws IOException {
 
         Objects.requireNonNull(lines);
-
-        final Mutable<Long> counter = Mutable.of(0L);
-
+        final long ret;
+   
         final String lineSeparatorValue
                 = (lineSeparator == null || lineSeparator == LineSeparator.NONE)
                         ? ""
                         : lineSeparator.value();
 
-        this.write(printStream -> Seq.sequential(lines).forEach(line -> {
-            printStream.print(Objects.toString(line, ""));
-            printStream.print(lineSeparatorValue);
+        try (final PrintStream printStream = new PrintStream(
+                    new BufferedOutputStream((this.newOutputStream())),
+                    true,
+                    this.getCharset().name())) {
+     
+            ret = Seq.sequential(lines)
+                    .peek(line -> {
+                        printStream.print(line);
+                        printStream.print(lineSeparatorValue);
 
-            if (printStream.checkError()) {
-                throw new UncheckedIOException(
-                        new IOException(
-                                "Could not write to PrintStream - checkError() returned true"));
-            }
-
-            counter.update(n -> n + 1);
-        }));
-
-        return counter.get();
+                        if (printStream.checkError()) {
+                            throw new UncheckedIOException(new IOException(
+                                    "Could not write to PrintStream - checkError() returned true"));
+                        }
+                    })
+                    .count();      
+        }
+        
+        return ret;
     }
 
     default void writeFullText(final Object text) throws IOException {
