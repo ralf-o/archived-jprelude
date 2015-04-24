@@ -14,8 +14,8 @@ public interface CheckedTriFunction <T1, T2, T3, R, E extends Exception> {
                 ret = CheckedTriFunction.this.apply(v1, v2, v3);
             } catch (final RuntimeException e) {
                 throw e;
-            } catch (final Throwable throwable) {
-                throw new RuntimeException(throwable);
+            } catch (final Exception e) {
+                throw new RuntimeException(e);
             }
             
             return ret;

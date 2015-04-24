@@ -13,7 +13,7 @@ public interface CheckedConsumer<T, E extends Exception> {
                 CheckedConsumer.this.accept(value);
             } catch (final RuntimeException e) {
                 throw e;
-            } catch (final Throwable e) {
+            } catch (final Exception e) {
                 throw new RuntimeException(e);
             }
         };

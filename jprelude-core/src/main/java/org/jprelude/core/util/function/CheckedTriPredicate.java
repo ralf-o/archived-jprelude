@@ -33,8 +33,8 @@ public interface CheckedTriPredicate<T1, T2, T3, E extends Exception> {
                 ret = CheckedTriPredicate.this.test(t1, t2, t3);
             } catch (final RuntimeException e) {
                 throw e;
-            } catch (final Throwable throwable) {
-                throw new RuntimeException(throwable);
+            } catch (final Exception e) {
+                throw new RuntimeException(e);
             }
             
             return ret;

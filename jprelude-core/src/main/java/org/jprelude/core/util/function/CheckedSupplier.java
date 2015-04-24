@@ -15,8 +15,8 @@ public interface CheckedSupplier<T, E extends Exception> {
                 ret = CheckedSupplier.this.get();
             } catch (final RuntimeException e) {
                 throw e;
-            } catch (final Throwable throwable) {
-                throw new RuntimeException(throwable);
+            } catch (final Exception e) {
+                throw new RuntimeException(e);
             }
 
             return ret;

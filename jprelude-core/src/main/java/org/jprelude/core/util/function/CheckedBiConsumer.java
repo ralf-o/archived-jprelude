@@ -13,8 +13,8 @@ public interface CheckedBiConsumer<T1, T2, E extends Exception> {
                 CheckedBiConsumer.this.accept(v1, v2);
             } catch (final RuntimeException e) {
                 throw e;
-            } catch (final Throwable throwable) {
-                throw new RuntimeException(throwable);
+            } catch (final Exception e) {
+                throw new RuntimeException(e);
             }
         };
     }

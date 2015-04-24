@@ -15,8 +15,8 @@ public interface CheckedFunction<T, R, E extends Exception> {
                 ret =this.apply(value);
             } catch (final RuntimeException e) {
                 throw e;
-            } catch (final Throwable throwable) {
-                throw new RuntimeException(throwable);
+            } catch (final Exception e) {
+                throw new RuntimeException(e);
             }
             
             return ret;
