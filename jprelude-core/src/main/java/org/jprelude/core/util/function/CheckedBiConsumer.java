@@ -1,10 +1,7 @@
 package org.jprelude.core.util.function;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.Objects;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 @FunctionalInterface
 public interface CheckedBiConsumer<T1, T2> {

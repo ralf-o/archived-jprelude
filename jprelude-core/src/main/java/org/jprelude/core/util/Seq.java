@@ -28,6 +28,7 @@ import org.jprelude.core.util.function.TriFunction;
 import org.jprelude.core.util.tuple.Pair;
 import org.jprelude.core.util.tuple.Triple;
 
+@FunctionalInterface
 public interface Seq<T> {
     Stream<T> stream();
         
