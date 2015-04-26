@@ -9,100 +9,106 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import org.jprelude.core.util.Seq;
+import org.jprelude.core.util.function.CheckedPredicate;
 
 public interface PathSelector {
+
     Seq<Path> list(final Path path);
-    
+
     public static Builder builder() {
         return new Builder();
     }
-    
+
     public final static class Builder {
+
         private boolean recursive;
         private int maxDepth;
         private LinkOption[] linkOptions;
-        private final List<Predicate<PathEntry>> includes;
-        private final List<Predicate<PathEntry>> excludes;
-        private final List<Predicate<PathEntry>> recursionRestrictions;
-        
+        private final List<CheckedPredicate<? super PathEntry, IOException>> includes;
+        private final List<CheckedPredicate<? super PathEntry, IOException>> excludes;
+        private final List<CheckedPredicate<? super PathEntry, IOException>> recursionRestrictions;
+
         private Builder() {
             this.maxDepth = Integer.MAX_VALUE;
             this.recursive = false;
-            this.linkOptions = new LinkOption[] {};
+            this.linkOptions = new LinkOption[]{};
             this.includes = new ArrayList<>();
             this.excludes = new ArrayList<>();
             this.recursionRestrictions = new ArrayList<>();
         }
-        
+
         public Builder recursive() {
             this.recursive = true;
             return this;
         }
 
-        public Builder recursive(final Predicate<PathEntry> recursionRestriction) {
+        public Builder recursive(final CheckedPredicate<? super PathEntry, IOException> recursionRestriction) {
             this.recursive = true;
-            
+
             if (recursionRestriction != null) {
                 this.recursionRestrictions.add(recursionRestriction);
             }
-            
+
             return this;
         }
-        
+
         public Builder maxDepth(final int maxDepth) {
             if (maxDepth <= 0) {
                 throw new IllegalArgumentException(
                         "IAE PathSelector.Builder.maxDepth(maxDepth)");
             }
-            
+
             this.maxDepth = maxDepth;
             return this;
         }
-        
+
         public Builder dontFollowSymbolicLinks() {
-            this.linkOptions = new LinkOption[] { LinkOption.NOFOLLOW_LINKS };
-            return this;
-        }
-        
-        public Builder include(final Predicate<PathEntry>... preds) {
-            Objects.requireNonNull(preds);
-            
-            Seq.from(preds)
-                    .rejectNulls()
-                    .forEach(pred -> this.includes.add(pred));
-            
+            this.linkOptions = new LinkOption[]{LinkOption.NOFOLLOW_LINKS};
             return this;
         }
 
-        public Builder exclude(final Predicate<PathEntry>... preds) {
+        public Builder include(final CheckedPredicate<? super PathEntry, IOException>... preds) {
             Objects.requireNonNull(preds);
-            
+
+            Seq.from(preds)
+                    .rejectNulls()
+                    .forEach(pred -> this.includes.add(pred));
+
+            return this;
+        }
+
+        public Builder exclude(final CheckedPredicate<? super PathEntry, IOException>... preds) {
+            Objects.requireNonNull(preds);
+
             Seq.from(preds)
                     .rejectNulls()
                     .forEach(pred -> this.excludes.add(pred));
-            
+
             return this;
         }
-        
-        public Builder restrictRecursion(final Predicate<PathEntry>... preds) {
+
+        public Builder restrictRecursion(final CheckedPredicate<? super PathEntry, IOException>... preds) {
             Objects.requireNonNull(preds);
-            
-            Seq.from(preds)
+
+            final List<CheckedPredicate<? super PathEntry, IOException>> filteredPreds = Seq.of(preds)
                     .rejectNulls()
-                    .forEach(pred -> this.recursionRestrictions.add(pred));
-            
+                    .toList();
+
+            this.recursionRestrictions.add(
+                    pathEntry -> filteredPreds.stream().anyMatch(
+                            CheckedPredicate.unchecked(pred -> pred.test(pathEntry))));
+
             return this;
         }
-        
+
         public Builder include(final String... patterns) {
             Seq.of(patterns)
                     .rejectNulls()
                     .forEach(pattern -> this.include(p -> p.matches(pattern)));
-            
+
             return this;
         }
 
@@ -110,12 +116,12 @@ public interface PathSelector {
             Seq.of(patterns)
                     .rejectNulls()
                     .forEach(pattern -> this.exclude(p -> p.matches(pattern)));
-            
+
             return this;
         }
 
         public Builder includeAllRegularFiles() {
-            this.include(PathEntry::isRegularFile);            
+            this.include(PathEntry::isRegularFile);
             return this;
         }
 
@@ -123,18 +129,18 @@ public interface PathSelector {
             this.include(PathEntry::isDirectory);
             return this;
         }
-        
+
         public Builder includeAllSymbolicLinks() {
             this.include(PathEntry::isSymbolicLink);
             return this;
         }
-   
+
         public Builder includeRegularFiles(final String... patterns) {
             Seq.of(patterns)
                     .rejectNulls()
                     .forEach(pattern -> this.include(
-                            p -> p.isRegularFile() && p.matches(pattern)));
-            
+                                    p -> p.isRegularFile() && p.matches(pattern)));
+
             return this;
         }
 
@@ -142,22 +148,22 @@ public interface PathSelector {
             Seq.of(patterns)
                     .rejectNulls()
                     .forEach(pattern -> this.include(
-                            p -> p.isDirectory() && p.matches(pattern)));
-            
+                                    p -> p.isDirectory() && p.matches(pattern)));
+
             return this;
         }
 
-         public Builder includeSymbolicLinks(final String... patterns) {
+        public Builder includeSymbolicLinks(final String... patterns) {
             Seq.of(patterns)
                     .rejectNulls()
                     .forEach(pattern -> this.include(
-                            p -> p.isSymbolicLink() && p.matches(pattern)));
-            
+                                    p -> p.isSymbolicLink() && p.matches(pattern)));
+
             return this;
         }
-       
+
         public Builder excludeAllRegularFiles() {
-            this.exclude(PathEntry::isRegularFile);            
+            this.exclude(PathEntry::isRegularFile);
             return this;
         }
 
@@ -165,7 +171,7 @@ public interface PathSelector {
             this.exclude(PathEntry::isDirectory);
             return this;
         }
-        
+
         public Builder excludeAllSymbolicLinks() {
             this.exclude(PathEntry::isSymbolicLink);
             return this;
@@ -175,8 +181,8 @@ public interface PathSelector {
             Seq.of(patterns)
                     .rejectNulls()
                     .forEach(pattern -> this.exclude(
-                            p -> p.isRegularFile() && p.matches(pattern)));
-            
+                                    p -> p.isRegularFile() && p.matches(pattern)));
+
             return this;
         }
 
@@ -184,62 +190,88 @@ public interface PathSelector {
             Seq.of(patterns)
                     .rejectNulls()
                     .forEach(pattern -> this.exclude(
-                            p -> p.isDirectory() && p.matches(pattern)));
-            
+                                    p -> p.isDirectory() && p.matches(pattern)));
+
             return this;
         }
 
-         public Builder excludeSymbolicLinks(final String... patterns) {
+        public Builder excludeSymbolicLinks(final String... patterns) {
             Seq.of(patterns)
                     .rejectNulls()
                     .forEach(pattern -> this.exclude(
-                            p -> p.isSymbolicLink() && p.matches(pattern)));
-            
+                                    p -> p.isSymbolicLink() && p.matches(pattern)));
+
             return this;
         }
-        
+
+        public Builder restrictRecursion(final String... patterns) {
+            final List<String> filteredPatterns = Seq.of(patterns)
+                    .rejectNulls()
+                    .toList();
+
+            this.recursionRestrictions.add(
+                    pathEntry -> filteredPatterns.stream().anyMatch(
+                            pattern -> pathEntry.matches(pattern)));
+
+            return this;
+        }
+
+        public Builder excludeFromRecursion(final String... patterns) {
+            Seq.of(patterns)
+                    .rejectNulls()
+                    .forEach(pattern -> this.restrictRecursion(
+                                    path -> !path.matches(pattern)));
+
+            return this;
+        }
+
         public PathSelector build() {
             return new PathSelector() {
                 final boolean recursive = Builder.this.recursive;
                 final int maxDepth = Builder.this.maxDepth;
                 final LinkOption[] linkOptions = Builder.this.linkOptions;
-                final List<Predicate<? super PathEntry>> includes = new ArrayList<>(Builder.this.includes);
-                final List<Predicate<? super PathEntry>> excludes = new ArrayList<>(Builder.this.excludes);
-                
-                final List<Predicate<? super PathEntry>> recursionRestrictions =
-                        new ArrayList<>(Builder.this.recursionRestrictions);
-                
+                final List<CheckedPredicate<? super PathEntry, IOException>> includes = new ArrayList<>(Builder.this.includes);
+                final List<CheckedPredicate<? super PathEntry, IOException>> excludes = new ArrayList<>(Builder.this.excludes);
+
+                final List<CheckedPredicate<? super PathEntry, IOException>> recursionRestrictions
+                        = new ArrayList<>(Builder.this.recursionRestrictions);
+
                 @Override
                 public Seq<Path> list(final Path path) {
-                    Objects.requireNonNull(path);   
-                    
+                    Objects.requireNonNull(path);
+
                     return this.listDirectoryFilteredAndRecursive(
-                        Builder.createPathEntry(path, linkOptions),
-                        maxDepth).map(PathEntry::getPath);
+                            Builder.createPathEntry(path, linkOptions),
+                            maxDepth).map(PathEntry::path);
                 }
 
                 private Seq<PathEntry> listDirectoryFilteredAndRecursive(
                         final PathEntry pathEntry,
                         final int maxDepth) {
-                    
+
                     assert pathEntry != null;
-                    
-                    return this.listDirectoryUnfilteredAndNonrecursive(pathEntry.getPath()).flatMap(subPath -> {
+
+                    return this.listDirectoryUnfilteredAndNonrecursive(pathEntry.path()).flatMap(subPath -> {
                         Seq<PathEntry> ret;
                         final PathEntry subPathEntry = Builder.createPathEntry(subPath);
-                    
+
                         try {
-                            final boolean involve =
-                                    !excludes.stream().anyMatch(pred -> pred.test(subPathEntry))
-                                    && includes.stream().anyMatch(pred -> pred.test(subPathEntry));
+                            final boolean involve
+                                    = !excludes.stream().anyMatch(
+                                            CheckedPredicate.unchecked(
+                                                    pred -> pred.test(subPathEntry)))
+                                    && includes.stream().anyMatch(
+                                            CheckedPredicate.unchecked(
+                                                    pred -> pred.test(subPathEntry)));
 
-
-                            final boolean descent =
-                                    this.recursive
+                            final boolean descent
+                                    = this.recursive
                                     && maxDepth > 1
                                     && subPathEntry.isDirectory()
                                     && !recursionRestrictions.stream()
-                                            .anyMatch(pred -> !pred.test(subPathEntry));
+                                    .anyMatch(
+                                            CheckedPredicate.unchecked(
+                                                    pred -> !pred.test(subPathEntry)));
 
                             ret = descent
                                     ? this.listDirectoryFilteredAndRecursive(
@@ -259,12 +291,12 @@ public interface PathSelector {
                         return ret;
                     });
                 }
-                
+
                 private Seq<Path> listDirectoryUnfilteredAndNonrecursive(
                         final Path path) {
-                    
+
                     assert path != null;
-                    
+
                     return Seq.from(() -> {
                         final Stream<Path> ret;
 
@@ -276,12 +308,12 @@ public interface PathSelector {
                             throw new UncheckedIOException(e);
                         }
 
-                        return ret;                
+                        return ret;
                     });
                 }
             };
         }
-                
+
         private static PathEntry createPathEntry(final Path path, final LinkOption... linkOptions) {
             Objects.requireNonNull(path);
 
@@ -293,7 +325,7 @@ public interface PathSelector {
                 private PathEntry byName = null;
 
                 @Override
-                public Path getPath() {
+                public Path path() {
                     return path;
                 }
 
@@ -311,7 +343,7 @@ public interface PathSelector {
                     } else {
                         ret = this.byName = new PathEntry() {
                             @Override
-                            public Path getPath() {
+                            public Path path() {
                                 return path.getFileName();
                             }
 
