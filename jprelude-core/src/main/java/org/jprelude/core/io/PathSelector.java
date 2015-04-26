@@ -3,12 +3,17 @@ package org.jprelude.core.io;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.DirectoryStream;
+import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.PathMatcher;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import org.jprelude.core.util.Seq;
@@ -335,6 +340,11 @@ public interface PathSelector {
             };
         }
 
+        
+        private static Map<FileSystem, Map<String, PathMatcher>> patternMatcherCache =
+                new ConcurrentHashMap<>();
+
+ 
         private static PathEntry createPathEntry(final Path path, final LinkOption... linkOptions) {
             Objects.requireNonNull(path);
 
@@ -344,7 +354,7 @@ public interface PathSelector {
 
             return new PathEntry() {
                 private PathEntry byName = null;
-
+                
                 @Override
                 public Path getPath() {
                     return path;
@@ -354,29 +364,62 @@ public interface PathSelector {
                 public LinkOption[] getDefaultLinkOptions() {
                     return filteredLinkOptions;
                 }
-
+                
+                @Override
+                public boolean matches(final String... patterns) {
+                    return Seq.of(patterns)
+                            .rejectNulls()
+                            .anyMatch(pattern -> this.checkMatching(
+                                    path, pattern)); 
+                }
+                
+                private boolean checkMatching(final Path path, final String pattern) {
+                    assert path != null;
+                    
+                    final FileSystem fileSystem = path.getFileSystem();
+                    
+                    final Map<String, PathMatcher> map = Builder
+                            .patternMatcherCache
+                            .computeIfAbsent(fileSystem, fs ->
+                                new LinkedHashMap<String, PathMatcher>(201, 0.75f, true) {
+                                    @Override
+                                    protected boolean removeEldestEntry(final Map.Entry<String, PathMatcher> eldest) {
+                                        return size() > 200;
+                                    }                                    
+                                });
+                
+                    final PathMatcher pathMatcher = map.computeIfAbsent(
+                            pattern,
+                            pat -> {
+                                final String syntaxAndPattern =
+                                        pattern.matches("^[a-zA-z][a-zA-Z0-9]*\\:$")
+                                        ? pattern
+                                        : "glob:" + pattern;
+                                
+                                return fileSystem
+                                        .getPathMatcher(syntaxAndPattern);
+                            });
+                    
+                    return pathMatcher.matches(path);
+                }
+                
                 @Override
                 public PathEntry byName() {
-                    final PathEntry ret;
+                    return this.pathEntryByName;
+                }
 
-                    if (this.byName != null) {
-                        ret = this.byName;
-                    } else {
-                        ret = this.byName = new PathEntry() {
-                            @Override
-                            public Path getPath() {
-                                return path.getFileName();
-                            }
-
-                            @Override
-                            public LinkOption[] getDefaultLinkOptions() {
-                                return linkOptions;
-                            }
-                        };
+                private final PathEntry pathEntryByName = new PathEntry() {
+                    @Override
+                    public Path getPath() {
+                        return path.getFileName();
                     }
 
-                    return ret;
-                }
+                    @Override
+                    public LinkOption[] getDefaultLinkOptions() {
+                        return linkOptions;
+                    }
+
+                };
             };
         }
     }

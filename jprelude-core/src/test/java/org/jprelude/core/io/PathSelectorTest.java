@@ -11,7 +11,7 @@ public class PathSelectorTest {
     public void testSomething() {  
        final Seq<Path> files = PathSelector.builder()
                .recursive(dir -> !dir.matches("**/*report*"))               
-               .include(file -> file.isRegularFile() && file.getModifiedTime() != null)
+               .include(file -> file.isRegularFile() && file.matches("**/*.java") &&  file.getModifiedTime() != null)
                //.maxDepth(3)
                //.exclude(file -> file.byName().matches("*tmp*"))
                .exclude(file -> file.getElapsedTimeCreation(ChronoUnit.HOURS) >= 1)
