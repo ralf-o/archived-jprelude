@@ -3,14 +3,13 @@ package org.jprelude.csv.base;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
-import org.jprelude.core.io.PathLister;
+import org.jprelude.core.io.PathSelector;
 import org.jprelude.core.io.TextReader;
 import org.jprelude.core.io.TextWriter;
 import org.jprelude.core.util.Seq;
@@ -109,14 +108,14 @@ public class DemoTest {
                             rec.get("Preis/Einheit")))
                     .build();
 
-            Seq<Path> inputFiles = PathLister.builder()
-                    .addFilter("glob:" + this.inputFilesPattern)
-                    .addFilter(Files::isRegularFile)
+            Seq<Path> inputFiles = PathSelector.builder()
+                    .includeRegularFiles(this.inputFilesPattern)
                     .build()
                     .list(this.inputFolder)
                     .forceOnDemand() // caches the path entries on first demand (not now!),
                                      // will not traverse the diretory a second time then
-                    .sortedDesc(Path::getFileName);
+                    .sortedAsc(path -> path.getFileName());
+                    //.sortedDesc(Path::getFileName);
 
             Seq<CsvRecord> recs = inputFiles
                 .peek(path -> observers.forEach(

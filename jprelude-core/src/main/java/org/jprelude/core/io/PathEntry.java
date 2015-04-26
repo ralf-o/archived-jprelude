@@ -12,47 +12,47 @@ import java.util.Objects;
 import org.jprelude.core.util.Seq;
 
 public interface PathEntry {
-    Path path();
+    Path getPath();
 
     LinkOption[] getDefaultLinkOptions();
     
     default boolean isRegularFile() {
-        return Files.isRegularFile(this.path(), this.getDefaultLinkOptions());
+        return Files.isRegularFile(this.getPath(), this.getDefaultLinkOptions());
     }
     
     default boolean isDirectory() {
-        return Files.isDirectory(this.path(), this.getDefaultLinkOptions());
+        return Files.isDirectory(this.getPath(), this.getDefaultLinkOptions());
     }
     
     default boolean isSymbolicLink() {
-        return Files.isSymbolicLink((this.path()));
+        return Files.isSymbolicLink((this.getPath()));
     }
     
     default boolean isHidden() throws IOException {
-        return Files.isHidden(this.path());
+        return Files.isHidden(this.getPath());
     }
     
     default boolean isExecutable() {
-        return Files.isExecutable(this.path());
+        return Files.isExecutable(this.getPath());
     }
     
     default boolean isReadable()  {
-        return Files.isReadable(this.path());
+        return Files.isReadable(this.getPath());
     }
 
     default boolean isWritable()  {
-        return Files.isWritable(this.path());
+        return Files.isWritable(this.getPath());
     }
 
     default boolean exists()  {
-        return Files.exists(this.path(), this.getDefaultLinkOptions());
+        return Files.exists(this.getPath(), this.getDefaultLinkOptions());
     }
       
     default PathEntry byName() {
         return new PathEntry() {
             @Override
-            public Path path() {
-                return PathEntry.this.path().getFileName();
+            public Path getPath() {
+                return PathEntry.this.getPath().getFileName();
             }
 
             @Override
@@ -63,7 +63,7 @@ public interface PathEntry {
     }
     
     default boolean matches(final String... patterns) {
-        final Path path = this.path();
+        final Path path = this.getPath();
         
         return Seq.of(patterns)
                 .rejectNulls()
@@ -73,64 +73,64 @@ public interface PathEntry {
                                 .matches(path)); 
     }
     
-    default FileTime creationTime() throws IOException {
-        return this.path()
+    default FileTime getCreationTime() throws IOException {
+        return this.getPath()
                 .getFileSystem()
                 .provider()
-                .readAttributes(this.path(),
+                .readAttributes(this.getPath(),
                         BasicFileAttributes.class,
                         this.getDefaultLinkOptions())
                 .creationTime();
     }
 
-    default FileTime modifiedTime() throws IOException {
-        return this.path()
+    default FileTime getModifiedTime() throws IOException {
+        return this.getPath()
                 .getFileSystem()
                 .provider()
-                .readAttributes(this.path(),
+                .readAttributes(this.getPath(),
                         BasicFileAttributes.class,
                         this.getDefaultLinkOptions())
                 .lastModifiedTime();
     }
 
-    default FileTime lastAccessTime() throws IOException {
-        return this.path()
+    default FileTime getLastAccessTime() throws IOException {
+        return this.getPath()
                 .getFileSystem()
                 .provider()
-                .readAttributes(this.path(),
+                .readAttributes(this.getPath(),
                         BasicFileAttributes.class,
                         this.getDefaultLinkOptions())
                 .lastAccessTime();
     }
     
-    default long elapsedTimeCreation(final TemporalUnit unit) throws IOException {
+    default long getElapsedTimeCreation(final TemporalUnit unit) throws IOException {
         Objects.requireNonNull(unit);
         
-        return unit.between(this.creationTime().toInstant(), Instant.now());
+        return unit.between(this.getCreationTime().toInstant(), Instant.now());
     }
     
-    default long elapsedTimeModified(final TemporalUnit unit) throws IOException {
+    default long getElapsedTimeModified(final TemporalUnit unit) throws IOException {
         Objects.requireNonNull(unit);
         
-        return unit.between(this.modifiedTime().toInstant(), Instant.now());
+        return unit.between(this.getModifiedTime().toInstant(), Instant.now());
     }
     
-    default long elapsedTimeLastAccess(final TemporalUnit unit) throws IOException {
+    default long getElapsedTimeLastAccess(final TemporalUnit unit) throws IOException {
         Objects.requireNonNull(unit);
         
-        return unit.between(this.lastAccessTime().toInstant(), Instant.now());
+        return unit.between(this.getLastAccessTime().toInstant(), Instant.now());
     }
     
     default boolean isAbsolute() {
-        return this.path().isAbsolute();
+        return this.getPath().isAbsolute();
     }
 
     default boolean startsWith(final String other) {
-        return this.path().startsWith(other);
+        return this.getPath().startsWith(other);
     }
 
-    default String fileName(final String other) {
-        return this.path().getFileName().toString();
+    default String getFileName() {
+        return this.getPath().getFileName().toString();
     }
 
 }

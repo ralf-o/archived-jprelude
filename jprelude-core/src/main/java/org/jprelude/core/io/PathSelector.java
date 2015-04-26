@@ -21,9 +21,20 @@ public interface PathSelector {
     public static Builder builder() {
         return new Builder();
     }
+   
+    public static Builder builder(final Builder prototype) {
+        final Builder ret = new Builder();
+        
+        ret.recursive = prototype.recursive;
+        ret.maxDepth = prototype.maxDepth;
+        ret.linkOptions = Seq.of(prototype.linkOptions).toArray(LinkOption[]::new);
+        ret.includes.addAll(prototype.includes);
+        ret.excludes.addAll(prototype.excludes);
+        ret.recursionRestrictions.addAll(prototype.recursionRestrictions);
+        return ret;
+    }
 
     public final static class Builder {
-
         private boolean recursive;
         private int maxDepth;
         private LinkOption[] linkOptions;
@@ -62,6 +73,11 @@ public interface PathSelector {
             }
 
             this.maxDepth = maxDepth;
+            return this;
+        }
+        
+        public Builder unlimitedDepth() {
+            this.maxDepth = Integer.MAX_VALUE;
             return this;
         }
 
@@ -117,6 +133,11 @@ public interface PathSelector {
                     .rejectNulls()
                     .forEach(pattern -> this.exclude(p -> p.matches(pattern)));
 
+            return this;
+        }
+        
+        public Builder includeAll() {
+            this.include(p -> true);
             return this;
         }
 
@@ -242,7 +263,7 @@ public interface PathSelector {
 
                     return this.listDirectoryFilteredAndRecursive(
                             Builder.createPathEntry(path, linkOptions),
-                            maxDepth).map(PathEntry::path);
+                            maxDepth).map(PathEntry::getPath);
                 }
 
                 private Seq<PathEntry> listDirectoryFilteredAndRecursive(
@@ -251,7 +272,7 @@ public interface PathSelector {
 
                     assert pathEntry != null;
 
-                    return this.listDirectoryUnfilteredAndNonrecursive(pathEntry.path()).flatMap(subPath -> {
+                    return this.listDirectoryUnfilteredAndNonrecursive(pathEntry.getPath()).flatMap(subPath -> {
                         Seq<PathEntry> ret;
                         final PathEntry subPathEntry = Builder.createPathEntry(subPath);
 
@@ -325,7 +346,7 @@ public interface PathSelector {
                 private PathEntry byName = null;
 
                 @Override
-                public Path path() {
+                public Path getPath() {
                     return path;
                 }
 
@@ -343,7 +364,7 @@ public interface PathSelector {
                     } else {
                         ret = this.byName = new PathEntry() {
                             @Override
-                            public Path path() {
+                            public Path getPath() {
                                 return path.getFileName();
                             }
 
