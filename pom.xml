@@ -13,5 +13,7 @@
     <modules>
         <module>jprelude-core</module>
         <module>jprelude-csv</module>
+        <module>experimental/datene</module>
+        <module>experimental/jprelude-dataexport</module>
     </modules>
 </project>

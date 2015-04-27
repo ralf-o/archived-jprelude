@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import org.jprelude.core.util.Seq;
@@ -36,6 +37,7 @@ public interface PathSelector {
         ret.includes.addAll(prototype.includes);
         ret.excludes.addAll(prototype.excludes);
         ret.recursionRestrictions.addAll(prototype.recursionRestrictions);
+        ret.skipInaccessibleSubdirectories = prototype.skipInaccessibleSubdirectories;
         return ret;
     }
 
@@ -46,7 +48,8 @@ public interface PathSelector {
         private final List<CheckedPredicate<? super PathEntry, IOException>> includes;
         private final List<CheckedPredicate<? super PathEntry, IOException>> excludes;
         private final List<CheckedPredicate<? super PathEntry, IOException>> recursionRestrictions;
-
+        private boolean skipInaccessibleSubdirectories;
+        
         private Builder() {
             this.maxDepth = Integer.MAX_VALUE;
             this.recursive = false;
@@ -54,6 +57,7 @@ public interface PathSelector {
             this.includes = new ArrayList<>();
             this.excludes = new ArrayList<>();
             this.recursionRestrictions = new ArrayList<>();
+            this.skipInaccessibleSubdirectories = false;
         }
 
         public Builder recursive() {
@@ -250,6 +254,11 @@ public interface PathSelector {
 
             return this;
         }
+        
+        public Builder skipInaccessableSubdirectories(final boolean skipInaccessibleSubdirectories) {
+            this.skipInaccessibleSubdirectories = skipInaccessibleSubdirectories;
+            return this;
+        }
 
         public PathSelector build() {
             return new PathSelector() {
@@ -277,7 +286,7 @@ public interface PathSelector {
 
                     assert pathEntry != null;
 
-                    return this.listDirectoryUnfilteredAndNonrecursive(pathEntry.getPath()).flatMap(subPath -> {
+                    return this.listDirectoryUnfilteredAndNonrecursive(pathEntry.getPath(), true).flatMap(subPath -> {
                         Seq<PathEntry> ret;
                         final PathEntry subPathEntry = Builder.createPathEntry(subPath);
 
@@ -319,17 +328,24 @@ public interface PathSelector {
                 }
 
                 private Seq<Path> listDirectoryUnfilteredAndNonrecursive(
-                        final Path path) {
+                        final Path path,
+                        final boolean isRoot) {
 
                     assert path != null;
 
                     return Seq.from(() -> {
-                        final Stream<Path> ret;
+                        Stream<Path> ret;
 
                         try {
                             final DirectoryStream<Path> dirStream = Files.newDirectoryStream(path, file -> true);
 
                             ret = StreamSupport.stream(dirStream.spliterator(), false);
+                        } catch (final SecurityException e) {
+                            if (!isRoot && Builder.this.skipInaccessibleSubdirectories) {
+                                ret = Stream.empty();
+                            } else {
+                                throw e;
+                            }
                         } catch (final IOException e) {
                             throw new UncheckedIOException(e);
                         }

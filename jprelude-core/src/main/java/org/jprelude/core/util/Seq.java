@@ -551,10 +551,16 @@ public interface Seq<T> {
     }
 
     
-        static <T> Seq<T> from(final Seq<T> seq) {
+    static <T> Seq<T> from(final Seq<T> seq) {
         return seq == null
                 ? Seq.empty()
                 : seq;
+    }
+    
+    static <T> Seq<T> from(final Supplier<Seq<T>> seqSupplier) {
+        return seqSupplier == null
+                ? Seq.empty()
+                : Seq.from(() -> seqSupplier.get().stream());
     }
     
     static <T> Seq<T> from(final Iterable<T> iterable) {

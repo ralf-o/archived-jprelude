@@ -1,2 +1,5 @@
 /jprelude-core/target/
 /jprelude-csv/target/
+/experimental/dataexport/nbproject/private/
+/experimental/jprelude-dataexport/nbproject/private/
+/experimental/jprelude-dataexport/target/
