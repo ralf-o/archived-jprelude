@@ -337,9 +337,12 @@ public interface PathSelector {
                         Stream<Path> ret;
 
                         try {
-                            final DirectoryStream<Path> dirStream = Files.newDirectoryStream(path, file -> true);
-
-                            ret = StreamSupport.stream(dirStream.spliterator(), false);
+                            if (!Files.isReadable(path)) {
+                                ret = Stream.empty();
+                            } else {
+                                final DirectoryStream<Path> dirStream = Files.newDirectoryStream(path, file -> true);
+                                ret = StreamSupport.stream(dirStream.spliterator(), false);
+                            }                            
                         } catch (final SecurityException e) {
                             if (!isRoot && Builder.this.excludeUnreadableDirectoriesFromRecursion) {
                                 ret = Stream.empty();
