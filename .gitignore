@@ -1,5 +1,8 @@
 /jprelude-core/target/
+/jprelude-core/nbproject/private/
 /jprelude-csv/target/
-/experimental/dataexport/nbproject/private/
+/jprelude-csv/nbproject/private/
 /experimental/jprelude-dataexport/nbproject/private/
 /experimental/jprelude-dataexport/target/
+/experimental/jprelude-webui/nbproject/private/
+/experimental/jprelude-webui/target/
