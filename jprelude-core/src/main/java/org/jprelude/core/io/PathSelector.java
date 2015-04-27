@@ -37,7 +37,7 @@ public interface PathSelector {
         ret.includes.addAll(prototype.includes);
         ret.excludes.addAll(prototype.excludes);
         ret.recursionRestrictions.addAll(prototype.recursionRestrictions);
-        ret.skipInaccessibleSubdirectories = prototype.skipInaccessibleSubdirectories;
+        ret.excludeUnreadableDirectoriesFromRecursion = prototype.excludeUnreadableDirectoriesFromRecursion;
         return ret;
     }
 
@@ -48,7 +48,7 @@ public interface PathSelector {
         private final List<CheckedPredicate<? super PathEntry, IOException>> includes;
         private final List<CheckedPredicate<? super PathEntry, IOException>> excludes;
         private final List<CheckedPredicate<? super PathEntry, IOException>> recursionRestrictions;
-        private boolean skipInaccessibleSubdirectories;
+        private boolean excludeUnreadableDirectoriesFromRecursion;
         
         private Builder() {
             this.maxDepth = Integer.MAX_VALUE;
@@ -57,7 +57,7 @@ public interface PathSelector {
             this.includes = new ArrayList<>();
             this.excludes = new ArrayList<>();
             this.recursionRestrictions = new ArrayList<>();
-            this.skipInaccessibleSubdirectories = false;
+            this.excludeUnreadableDirectoriesFromRecursion = false;
         }
 
         public Builder recursive() {
@@ -255,8 +255,8 @@ public interface PathSelector {
             return this;
         }
         
-        public Builder skipInaccessableSubdirectories(final boolean skipInaccessibleSubdirectories) {
-            this.skipInaccessibleSubdirectories = skipInaccessibleSubdirectories;
+        public Builder excludeInaccessibleDirectoriesFromRecursion(final boolean excludeUnreadableDirectoriesFromRecursion) {
+            this.excludeUnreadableDirectoriesFromRecursion = excludeUnreadableDirectoriesFromRecursion;
             return this;
         }
 
@@ -341,7 +341,7 @@ public interface PathSelector {
 
                             ret = StreamSupport.stream(dirStream.spliterator(), false);
                         } catch (final SecurityException e) {
-                            if (!isRoot && Builder.this.skipInaccessibleSubdirectories) {
+                            if (!isRoot && Builder.this.excludeUnreadableDirectoriesFromRecursion) {
                                 ret = Stream.empty();
                             } else {
                                 throw e;

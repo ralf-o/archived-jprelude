@@ -15,7 +15,7 @@ public class PathSelectorTest {
                //.maxDepth(3)
                //.exclude(file -> file.byName().matches("*tmp*"))
                .exclude(file -> file.getElapsedTimeCreation(ChronoUnit.HOURS) >= 1)
-               .skipInaccessableSubdirectories(true)
+               .excludeInaccessibleDirectoriesFromRecursion(true)
                .build()
                .list(Paths.get("./"));
        files.forEach(System.out::println);
