@@ -22,18 +22,28 @@ import com.vaadin.server.FontAwesome
 import com.vaadin.ui.Alignment
 import org.jprelude.experimental.webui.widget.ToolBar
 import org.jprelude.experimental.webui.widget.ToolBar
+import com.vaadin.ui.HorizontalLayout
+import org.jprelude.experimental.webui.widget.Sidebar
 
 
 @Theme("webui")
 class WebUI extends UI {
   override def init(request: VaadinRequest) = {
-    val content: VerticalLayout = new VerticalLayout
-    this.setContent(content)
+    val masterContent = new HorizontalLayout
+    masterContent.setSizeFull()
+    
+    masterContent addStyleName "masterview"
+    
+    val content = new VerticalLayout
+  
+    masterContent addComponent ((new Sidebar).render)
+    masterContent addComponent content
+    this.setContent(masterContent)
     content.setSizeFull()
     content.setSpacing(true)
     content.setMargin(true)
+    masterContent.setExpandRatio(content, 1)
 
-   
 
     
     val dataTable = DataTable(
