@@ -11,7 +11,7 @@ class FilterBox(
     ) extends Widget {
   
   def render: Component = {
-    var content = new VerticalLayout
+    val content = new VerticalLayout
     
     for (section <- sections) {
       val labSectionHeader = new Label(section.title)

@@ -16,6 +16,7 @@ import com.vaadin.ui.Button.ClickListener
 import com.vaadin.ui.Button.ClickEvent
 import com.vaadin.ui.Window
 import com.vaadin.event.ShortcutAction.KeyCode
+import com.vaadin.ui.Panel
 
 class ToolBar(
     
@@ -28,7 +29,7 @@ class ToolBar(
       content addComponent hboxb
       
        var headline = new Label()
-      headline.setValue("<label class=\"v-label-h1\" style=\"margin-right: 2em\">Products</label>")
+      headline.setValue("<label class=\"v-label-h1\" style=\"margin-right: 2em\">Orders</label>")
       headline.setContentMode(ContentMode.HTML)
       headline.setWidthUndefined()
       hboxb addComponent headline
@@ -77,15 +78,17 @@ class ToolBar(
         submenu1.addItem("Export filtered to CSV", null);
         submenu1.addItem("Export filtered to ODT Spreadsheet", null);
         submenu1.addItem("Export filtered to Excel Spreadsheet", null);
-submenu1.setVisible(false)
+
         val submenu2 = dropdown.addItem("Export all", null)
         submenu2.addItem("Export all to XML", null);
         submenu2.addItem("Export all to CSV", null);
         submenu2.addItem("Export all to ODT Spreadsheet", null);
         submenu2.addItem("Export all to Excel Spreadsheet", null);
-submenu2.setVisible(false)
+
         hbox1 addComponent split
 
+        val filterLayout = new VerticalLayout
+        
         val advancedFilter = new Button("Advanced Filter")
 
         advancedFilter setIcon(FontAwesome.FILTER)
@@ -94,27 +97,7 @@ submenu2.setVisible(false)
             override def buttonClick(event: ClickEvent) {
               System.out.println("xxx")
               
-            val notificationsWindow = new Window();
-            notificationsWindow.setWidth("300px");
-            notificationsWindow.addStyleName("notifications");
-            notificationsWindow.setClosable(false);
-            notificationsWindow.setResizable(false);
-            notificationsWindow.setDraggable(false);
-            //notificationsWindow.setCloseShortcut(KeyCode.ESCAPE, null);
-            //notificationsWindow.setContent(notificationsLayout);
-            
-             if (!notificationsWindow.isAttached()) {
-            notificationsWindow.setPositionY(event.getClientY()
-                    - event.getRelativeY() + 40);
-            
-            notificationsWindow.setPositionX(event.getClientX() - event.getRelativeX() + 10);  
-            content.getUI().addWindow(notificationsWindow)
-            notificationsWindow.focus();
-        } else {
-            notificationsWindow.close();
         }
-              
-           }
         }
 
         val group = new CssLayout();
@@ -132,12 +115,11 @@ submenu2.setVisible(false)
         dropdown2 setIcon FontAwesome.SEARCH
        
         
-        dropdown2.addItem("Product number", null);
-        val x = dropdown2.addItem("Name", null);
+        dropdown2.addItem("Order number", null);
+        val x = dropdown2.addItem("Customer name", null);
         x.setCheckable(true);
         x.setChecked(true)
         dropdown2.addItem("Description", null);
-        
         
         
         
@@ -147,15 +129,63 @@ submenu2.setVisible(false)
         
         group.addStyleName("v-component-group");
         hbox2.addComponent(group);
-        hbox2 addComponent advancedFilter
+        //hbox2 addComponent advancedFilter
         
+        filterLayout addComponent advancedFilter
+        hbox2 addComponent filterLayout
         val filter = new TextField
         filter.setInputPrompt("Search");
       //  filter.setIcon(FontAwesome.SEARCH);
         // filter.addStyleName(ValoTheme.TEXTFIELD_INLINE_ICON);
 
+        //val wrapper = new HorizontalLayout
+        
+        val filterBoxComponent = new FilterBox(
+            List(
+                new TextFilter("Product number"),
+                new TextFilter("Product description"),
+                new DateRangeFilter("Date range"))
+            ).render()
+        //filterBoxComponent addStyleName "webui-flyout-content"
+        filterBoxComponent setWidthUndefined()
+        //filterBoxComponent setMargin true
+        //wrapper addComponent filterBoxComponen
+        
+        val flyout = new VerticalLayout
+        val btnClose = new Button()
+        btnClose setIcon FontAwesome.TIMES
+        btnClose addStyleName "tiny"
+        flyout addComponent btnClose
+        flyout setComponentAlignment (btnClose, Alignment.TOP_RIGHT)
+        flyout setSpacing true
         
         
+        
+        flyout addComponent filterBoxComponent
+        val flyoutActionBar = new HorizontalLayout
+        flyoutActionBar setSpacing true
+        //flyoutActionBar setWidth "400px"
+        
+        val btnApplyFilters = new Button("Apply filters")
+        btnApplyFilters addStyleName "small"
+        flyoutActionBar addComponent btnApplyFilters
+        
+        val btnResetAllFilters = new Button("Reset filters")
+        btnResetAllFilters addStyleName "small"
+        flyoutActionBar addComponent btnResetAllFilters
+        
+        
+        
+        flyout addComponent flyoutActionBar
+        flyout setComponentAlignment(flyoutActionBar, Alignment.MIDDLE_CENTER)
+        
+        filterLayout addComponent new Flyout(flyout).render
+        
+        
+        
+        //filterLayout addComponent flyout
+        
+            
         group.addComponent(filter)
      
         val btnGo = new Button

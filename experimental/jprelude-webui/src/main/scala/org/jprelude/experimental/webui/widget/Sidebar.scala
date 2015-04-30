@@ -10,19 +10,7 @@ class Sidebar extends Widget {
     val content = new VerticalLayout
     content setWidth "270px"
     content addStyleName ValoTheme.UI_WITH_MENU
-    
-    content addComponent new FilterBox(
-        sections = List[FilterSection](
-          new FilterSection(
-              title = "Section1"),
-          new FilterSection(
-              title = "Section2"),
-          new FilterSection(
-              title = "Section 3")))
-
-          .render
-    
-    
+        
     content
   }
 }

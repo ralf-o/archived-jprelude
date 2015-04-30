@@ -32,5 +32,46 @@
 @mixin webui {
   @include valo;
 
-  // Insert your own theme rules here
+  .v-csslayout.v-component-group .v-menubar:first-child .v-menubar-menuitem-selected {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  .webui-flyout:after {
+    content: "";
+    z-index: 10002;
+    position: absolute;
+    top: -14px;
+    right: 62px;
+    width: 0;
+    height: 0;
+    border: 7px solid transparent;
+    border-bottom-color: rgba(0, 0, 0, 0.9);
+  }
+
+   .webui-flyout:before {
+    z-index: 10003;
+    content: "";
+    position: absolute;
+    top: -14px;
+    right: 62px;
+    border: 7px solid transparent;
+    width: 0;
+    height: 0;
+    border-bottom-color: white;
+   }
+
+  .webui-center {
+    text-align: center;
+  }
+  
+   .webui-flyout {
+     @extend .v-window;
+     overflow: visible !important;
+     position: absolute;
+     right: 0px;
+     top: 45px;
+     z-index: 10001;
+     padding: 10px;
+   }
 }
