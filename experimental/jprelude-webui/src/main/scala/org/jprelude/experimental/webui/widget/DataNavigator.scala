@@ -4,7 +4,7 @@ import com.vaadin.ui.{Alignment, Component, HorizontalLayout, VerticalLayout}
 import org.jprelude.experimental.webui.data.{PageableDatasource, PagingPosition}
 import rx.lang.scala.Observable
 
-class DataNavigator[T](datasource: PageableDatasource[T]) extends Widget {
+class DataNavigator[T](datasource: PageableDatasource[T], columns: ColumnType[T]) extends Widget {
   override def render(): Component = {
     val ret = new VerticalLayout
 
@@ -24,25 +24,7 @@ class DataNavigator[T](datasource: PageableDatasource[T]) extends Widget {
     masterContent.setExpandRatio(content, 1)
 
     val dataTable = new DataTable[T](
-      columns = ColumnGroups(
-        ColumnGroup(
-          title = "Meta1",
-          columns = List(
-            TableColumn[String](
-              title = "spalte1",
-              render = s => s),
-            TableColumn[String](
-              title = "spalte2",
-              render = s => s))),
-        ColumnGroup(
-          title = "Meta2",
-          columns = List(
-            TableColumn[String](
-              title = "spalte3",
-              render = s => s),
-            TableColumn[String](
-              title = "spalte4",
-              render = s => s)))),
+      columns = columns,
       dataEvents = datasource.dataEvents
     )
 

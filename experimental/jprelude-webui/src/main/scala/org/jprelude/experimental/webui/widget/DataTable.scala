@@ -24,7 +24,9 @@ class DataTable[T] (
     this.grid.getContainerDataSource().removeAllItems();
 
     data.foreach (item => {
-      grid.addRow("A" + item, "B" + item, "C" + item, "D" + item)
+      grid.addRow(
+        columns.columns.map(col => col.render(item)):_*
+      )
     })
 
   }
