@@ -1,9 +1,12 @@
 package org.jprelude.experimental.webui.widget
 
+import com.vaadin.data.Property.{ValueChangeEvent, ValueChangeListener}
 import com.vaadin.server.FontAwesome
+import com.vaadin.ui.Button.ClickEvent
 import com.vaadin.ui._
 import org.jprelude.experimental.webui.data.PagingPosition
 import org.jprelude.experimental.webui.widget.Pagination.ViewType
+import rx.lang.scala.Observable
 
 
 object Pagination {
@@ -13,27 +16,27 @@ object Pagination {
   }
 }
 
-class Pagination extends Widget {
-  private var propViewType = ViewType.Paginator
-  private var propPosition: PagingPosition = PagingPosition.Undefined()
+class Pagination(
+      viewType: ViewType.Value,
+      positionEvents: Observable[PagingPosition],
+      onMoveToPageRequest: Int => Unit = _ => {},
+      onPageSizeChangeRequest: Int => Unit = _ => {}
+    ) extends Widget {
 
-  def viewType = this.propViewType
+  require(viewType != null)
+  require(positionEvents != null)
+  require(onMoveToPageRequest != null)
+  require(onPageSizeChangeRequest != null)
 
-  def viewType_= (viewType: ViewType.Value) = {
-    require(viewType != null)
+  private var currentPosition: PagingPosition = PagingPosition.Undefined()
 
-    this.propViewType = viewType
+  this.positionEvents.subscribe (position => {
+    this.currentPosition = position
+
     this.refresh()
-  }
+  })
 
-  def position = this.propPosition
 
-  def position_= (position: PagingPosition) = {
-    require(position != null)
-
-    this.propPosition = position
-    this.refresh()
-  }
 
   override protected def render(): Component = {
     val ret = new HorizontalLayout
@@ -64,7 +67,7 @@ class Pagination extends Widget {
 
     container.removeAllComponents()
 
-    this.position match {
+    this.currentPosition match {
       case PagingPosition.Undefined() => {}
 
       case position: PagingPosition.Position => {
@@ -91,11 +94,19 @@ class Pagination extends Widget {
         btnFirst setIcon FontAwesome.ANGLE_DOUBLE_LEFT
         btnFirst setEnabled !position.isFirstPage
 
+        btnFirst addClickListener new Button.ClickListener() {
+          override def buttonClick(clickEvent: ClickEvent) = onMoveToPageRequest(0)
+        }
+
         val btnPrevious = new Button
         btnPrevious setIconAlternateText "Previous"
         btnPrevious addStyleName "small"
         btnPrevious setIcon FontAwesome.ANGLE_LEFT
         btnPrevious setEnabled !position.isFirstPage
+
+        btnPrevious addClickListener new Button.ClickListener() {
+          override def buttonClick(clickEvent: ClickEvent) = onMoveToPageRequest(position.pageIdx - 1)
+        }
 
         val labPage = new Label("Page")
         val labPagesTotal = new Label(" of " + position.totalPageCount)
@@ -113,12 +124,19 @@ class Pagination extends Widget {
         btnNext setIcon FontAwesome.ANGLE_RIGHT
         btnNext setEnabled !position.isLastPage
 
+        btnNext addClickListener new Button.ClickListener() {
+          override def buttonClick(clickEvent: ClickEvent) = onMoveToPageRequest(position.pageIdx + 1)
+        }
+
         val btnLast = new Button
         btnFirst setIconAlternateText "Last"
         btnLast addStyleName "small"
         btnLast setIcon FontAwesome.ANGLE_DOUBLE_RIGHT
         btnLast setEnabled !position.isLastPage
 
+        btnLast addClickListener new Button.ClickListener() {
+          override def buttonClick(clickEvent: ClickEvent) = onMoveToPageRequest(position.totalPageCount - 1)
+        }
 
         val group1 = new CssLayout;
 
@@ -157,25 +175,34 @@ class Pagination extends Widget {
   private def renderPageSizeSelector(container: HorizontalLayout) = {
     assert(container != null)
 
-    container.removeAllComponents()
+    container.removeAllComponents ()
 
-    val combo = new ComboBox();
-    combo addStyleName "small"
-    combo.addItem("10")
-    combo.addItem("25")
-    combo.addItem("50")
-    combo.addItem("100")
-    combo.addItem("250")
-    combo.addItem("500")
-    combo.setTextInputAllowed(false)
-    combo.setNullSelectionAllowed(false)
-    combo.select("25")
-    combo.setWidth("5.5em")
-    container  addComponent new Label("Items per page")
-    container addComponent combo
+    this.currentPosition match {
+      case position: PagingPosition.Position => {
+        val combo = new ComboBox()
+        combo addStyleName "small"
+        combo.addItem("10")
+        combo.addItem("25")
+        combo.addItem("50")
+        combo.addItem("100")
+        combo.addItem("250")
+        combo.addItem("500")
+        combo.setTextInputAllowed(false)
+        combo.setNullSelectionAllowed(false)
+        combo.select(String.valueOf(position.pageSize))
+        combo.setWidth("5.5em")
+        combo addValueChangeListener new ValueChangeListener {
+          override def valueChange(event: ValueChangeEvent) = onPageSizeChangeRequest(Integer.parseInt(event.getProperty.toString))
+        }
 
-    container.setComponentAlignment(container getComponent 0 , Alignment.MIDDLE_CENTER)
-    container.setComponentAlignment(container getComponent 0, Alignment.MIDDLE_CENTER)
+        container addComponent new Label("Items per page")
+        container addComponent combo
+
+        container.setComponentAlignment(container getComponent 0, Alignment.MIDDLE_CENTER)
+        container.setComponentAlignment(container getComponent 0, Alignment.MIDDLE_CENTER)
+      }
+      case _ => {}
+    }
   }
 
   private def renderPageInfo(container: HorizontalLayout) = {
@@ -183,10 +210,10 @@ class Pagination extends Widget {
 
     container.removeAllComponents()
 
-    this.position match {
+    this.currentPosition match {
       case position: PagingPosition.Position => {
         val first = position.offset + 1
-        val last = Math.max(position.offset + position.pageSize, position.totalItemCount)
+        val last = Math.min(position.offset + position.pageSize, position.totalItemCount)
         val total = position.totalItemCount
         container.addComponent(new Label(s"Items $first - $last of $total"))
       }

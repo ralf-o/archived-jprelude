@@ -2,20 +2,37 @@ package org.jprelude.experimental.webui.widget
 
 
 import com.vaadin.ui.Grid
-import scala.collection.mutable.ListBuffer
-import com.vaadin.shared.ui.grid.HeightMode
-import com.vaadin.ui.themes.ValoTheme
+import rx.lang.scala.Observable
 
-case class DataTable (
-  columns: ColumnType
-) extends Widget {
+import scala.collection.mutable.ListBuffer
+
+class DataTable[T] (
+      columns: ColumnType[T],
+      dataEvents: Observable[Seq[T]]
+    ) extends Widget {
+
+  require(columns != null)
+  require(dataEvents != null)
+
+  private val grid = new Grid
+
+  dataEvents.subscribe(data => {
+    this.refresh(data)
+  })
+
+  private def refresh(data: Seq[T]): Unit = {
+    this.grid.getContainerDataSource().removeAllItems();
+
+    data.foreach (item => {
+      grid.addRow("A" + item, "B" + item, "C" + item, "D" + item)
+    })
+
+  }
+
   override def render = {
-    val grid = new Grid
-    
-    
     columns match {
       case ColumnGroups(columnGroups @ _*) => {
-         val groupingHeader = grid.prependHeaderRow();
+         val groupingHeader = this.grid.prependHeaderRow();
 
         columnGroups.foreach (columnGroup => {
           var group = ListBuffer[String]()
@@ -40,10 +57,7 @@ case class DataTable (
     }
     grid addStyleName "small compact tiny"
  
-    Range(1, 500).foreach (n => {
-      grid.addRow("A" + n, "B" + n, "C" + n, "D" + n);
-    })
-    
+
     grid.setSizeFull()  
     grid
   }

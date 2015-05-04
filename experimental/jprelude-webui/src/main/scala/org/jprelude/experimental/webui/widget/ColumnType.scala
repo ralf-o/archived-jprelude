@@ -1,13 +1,8 @@
 package org.jprelude.experimental.webui.widget
 
 
-protected abstract class ColumnType
+sealed abstract class ColumnType[-T]
 
-case class Columns(columns: TableColumn*) extends ColumnType
+case class Columns[-T](columns: TableColumn[T]*) extends ColumnType
 
-case class ColumnGroups(columnGroup: ColumnGroup*) extends ColumnType
-
-object ColumnTypeImplicits {
-implicit def ListOfColumnGroupsToColumnGroups(columnGroups: List[ColumnGroup])
-    = ColumnGroups(columnGroups:_*)
-}
+case class ColumnGroups[-T](columnGroup: ColumnGroup[T]*) extends ColumnType

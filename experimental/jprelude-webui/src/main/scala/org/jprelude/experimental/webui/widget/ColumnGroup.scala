@@ -1,6 +1,6 @@
 package org.jprelude.experimental.webui.widget
 
-case class ColumnGroup(
+case class ColumnGroup[-T](
     title: String,
-    columns: List[TableColumn]
+    columns: List[TableColumn[T]]
 )

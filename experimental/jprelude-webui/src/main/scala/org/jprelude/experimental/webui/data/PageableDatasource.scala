@@ -1,10 +1,9 @@
 package org.jprelude.experimental.webui.data
 
-
-import scala.util.Try
+import rx.lang.scala.Observable
 import rx.lang.scala.subjects.BehaviorSubject
 
-final class PageableDatasource[T](pageDataFetcher: Function2[Int, Int, PageFetchResult[T]]) {
+final class PageableDatasource[T](pageDataFetcher: (Int, Int) => PageFetchResult[T]) {
   require(pageDataFetcher != null)
 
   private val loadingSubject: BehaviorSubject[LoadingStatus[T]] =
@@ -13,8 +12,11 @@ final class PageableDatasource[T](pageDataFetcher: Function2[Int, Int, PageFetch
   private val positionSubject: BehaviorSubject[PagingPosition] =
       BehaviorSubject(PagingPosition.Undefined())
 
-  val loadingEvents = this.loadingSubject.asJavaSubject.asObservable
-  val positionEvents = this.positionSubject.asJavaSubject.asObservable
+  private val dataSubject: BehaviorSubject[Seq[T]] = BehaviorSubject(Seq.empty)
+
+  val loadingEvents: Observable[LoadingStatus[T]] = this.loadingSubject
+  val positionEvents: Observable[PagingPosition] = this.positionSubject
+  val dataEvents: Observable[Seq[T]] = this.dataSubject
 
   def loadPage(pageIdx: Int, pageSize: Int) = {
     require(pageIdx >= 0)
@@ -23,8 +25,10 @@ final class PageableDatasource[T](pageDataFetcher: Function2[Int, Int, PageFetch
     this.loadingSubject.onNext(LoadingStatus.Loading())
 
     this.pageDataFetcher(pageIdx, pageSize) match {
-      case PageFetchResult.Success(data, position) => {
-        this.loadingSubject.onNext(LoadingStatus.Success(data, position))
+      case result: PageFetchResult.Success[T] => {
+        this.loadingSubject.onNext(LoadingStatus.Success[T](result.data, result.position))
+        this.positionSubject.onNext(result.position)
+        this.dataSubject.onNext(result.data)
       }
       case PageFetchResult.Failure(error) => {
         this.loadingSubject.onNext(LoadingStatus.Failure(error))
@@ -37,18 +41,19 @@ final class PageableDatasource[T](pageDataFetcher: Function2[Int, Int, PageFetch
       case position: PagingPosition.Position => {
           this.loadPage(position.pageIdx, position.pageSize);
       }
+      case PagingPosition.Undefined() => {}
     }
   }
 
-  def moveToPage(n: Int) = {
-    require(n > 0)
+  def moveToPage(idx: Int) = {
+    require(idx >= 0)
 
     this.positionSubject.asJavaSubject.getValue match {
       case pos: PagingPosition.Position => {
-        if (!pos.isFirstPage) {
-          this.loadPage(pos.pageIdx - 1, pos.pageSize);
-        }
+        println("Datasource moving to page " + idx)
+        this.loadPage(idx, pos.pageSize);
       }
+      case PagingPosition.Undefined() => {}
     }
   }
 
@@ -61,6 +66,7 @@ final class PageableDatasource[T](pageDataFetcher: Function2[Int, Int, PageFetch
           this.moveToPage(pos.pageIdx - 1)
         }
       }
+      case PagingPosition.Undefined() => {}
     }
   }
 
@@ -71,6 +77,7 @@ final class PageableDatasource[T](pageDataFetcher: Function2[Int, Int, PageFetch
           this.moveToPage(position.pageIdx + 1)
         }
       }
+      case PagingPosition.Undefined() => {}
     }
   }
 
@@ -85,6 +92,7 @@ final class PageableDatasource[T](pageDataFetcher: Function2[Int, Int, PageFetch
           this.moveToPage(position.totalPageCount - 1)
         }
       }
+      case PagingPosition.Undefined() => {}
     }
   }
 }

@@ -1,11 +1,13 @@
 package org.jprelude.experimental.webui.widget
 
 import com.vaadin.ui.{Alignment, Component, HorizontalLayout, VerticalLayout}
-import org.jprelude.experimental.webui.data.PagingPosition
+import org.jprelude.experimental.webui.data.{PageableDatasource, PagingPosition}
+import rx.lang.scala.Observable
 
-class DataNavigator extends Widget {
+class DataNavigator[T](datasource: PageableDatasource[T]) extends Widget {
   override def render(): Component = {
     val ret = new VerticalLayout
+
 
     val masterContent = new HorizontalLayout
     ret addComponent masterContent
@@ -21,22 +23,28 @@ class DataNavigator extends Widget {
     content.setMargin(true)
     masterContent.setExpandRatio(content, 1)
 
-    val dataTable = DataTable(
+    val dataTable = new DataTable[T](
       columns = ColumnGroups(
         ColumnGroup(
           title = "Meta1",
           columns = List(
-            TableColumn(
-              title = "spalte1"),
-            TableColumn(
-              title = "spalte2"))),
+            TableColumn[String](
+              title = "spalte1",
+              render = s => s),
+            TableColumn[String](
+              title = "spalte2",
+              render = s => s))),
         ColumnGroup(
           title = "Meta2",
           columns = List(
-            TableColumn(
-              title = "spalte3"),
-            TableColumn(
-              title = "spalte4")))))
+            TableColumn[String](
+              title = "spalte3",
+              render = s => s),
+            TableColumn[String](
+              title = "spalte4",
+              render = s => s)))),
+      dataEvents = datasource.dataEvents
+    )
 
     val dataTableComponent = dataTable.render
     val toolBar = new ToolBar
@@ -53,20 +61,29 @@ class DataNavigator extends Widget {
     val ret = new HorizontalLayout
     ret setWidth "100%"
 
-    val paginator = new Pagination {
-      position = PagingPosition.Position(29, 1500, 50)
-    }
 
+    datasource.loadPage(0, 25)
 
-    val pageSizeSelector = new Pagination {
-      viewType = Pagination.ViewType.PageSizeSelector
-      position = PagingPosition.Position(29, 1500, 50)
-    }
+    val positionEvents: Observable[PagingPosition] = datasource.positionEvents
+positionEvents.subscribe(println(_))
+    val paginator = new Pagination(
+      viewType = Pagination.ViewType.Paginator,
+      positionEvents = positionEvents,
+      onMoveToPageRequest = n => {println ("=> " + n)
+        datasource.moveToPage(n)
+      }
+    )
 
-    val pageInfo = new Pagination {
-      viewType = Pagination.ViewType.PageInfo
-      position = PagingPosition.Position(29, 1500, 50)
-    }
+    val pageSizeSelector = new Pagination(
+      viewType = Pagination.ViewType.PageSizeSelector,
+      positionEvents = positionEvents,
+      onPageSizeChangeRequest = pageSize => datasource.loadPage(0, pageSize)
+    )
+
+    val pageInfo = new Pagination(
+      viewType = Pagination.ViewType.PageInfo,
+      positionEvents = positionEvents
+    )
 
     ret addComponent paginator.getComponent
     ret addComponent pageSizeSelector.getComponent
