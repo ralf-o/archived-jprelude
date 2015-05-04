@@ -8,3 +8,5 @@ object LoadingStatus {
   case class Failure(error: Throwable) extends LoadingStatus[Any]
   case class Success[T](data: Seq[T], position: PagingPosition) extends LoadingStatus[T]
 }
+
+

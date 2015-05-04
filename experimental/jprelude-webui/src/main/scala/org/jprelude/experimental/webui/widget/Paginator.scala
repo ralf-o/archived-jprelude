@@ -1,15 +1,7 @@
 package org.jprelude.experimental.webui.widget
 
 import com.vaadin.server.FontAwesome
-import com.vaadin.ui.Button
-import com.vaadin.ui.CssLayout
-import com.vaadin.ui.HorizontalLayout
-import com.vaadin.ui.Label
-import com.vaadin.ui.TextField
-import com.vaadin.shared.ui.MarginInfo
-import com.vaadin.ui.Alignment
-import com.vaadin.ui.ComboBox
-import com.vaadin.ui.GridLayout
+import com.vaadin.ui.{Alignment, Button, ComboBox, CssLayout, GridLayout, HorizontalLayout, Label, TextField}
 
 class Paginator extends Widget {
   override def render = {
@@ -87,10 +79,10 @@ class Paginator extends Widget {
     
         //content.setMargin(new MarginInfo(true, true, true, true));
         hbox1.setComponentAlignment(labPagesTotal, Alignment.MIDDLE_CENTER)
-hbox1.setComponentAlignment(labPage, Alignment.MIDDLE_CENTER)
-hbox1.setComponentAlignment(txtPage, Alignment.MIDDLE_CENTER)
-hbox1.setComponentAlignment(group1, Alignment.MIDDLE_CENTER)
-hbox1.setComponentAlignment(group2, Alignment.MIDDLE_CENTER)
+        hbox1.setComponentAlignment(labPage, Alignment.MIDDLE_CENTER)
+        hbox1.setComponentAlignment(txtPage, Alignment.MIDDLE_CENTER)
+        hbox1.setComponentAlignment(group1, Alignment.MIDDLE_CENTER)
+        hbox1.setComponentAlignment(group2, Alignment.MIDDLE_CENTER)
   
 val labPageSize = new Label("Datensaetze pro Seite")
 hbox2 addComponent labPageSize

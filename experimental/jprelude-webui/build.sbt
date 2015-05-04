@@ -1,5 +1,7 @@
 name := "jprelude-webui"
+
 version := "0.1" 
+
 scalaVersion := "2.11.6"
 
 libraryDependencies ++= Seq(
@@ -10,3 +12,4 @@ libraryDependencies ++= Seq(
 )
 
 jetty(port = 8081)
+//tomcat(port = 8081)
