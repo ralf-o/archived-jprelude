@@ -1,65 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="BookmarkManager">
-    <bookmark url="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/WebUI.scala" line="43" mnemonic="8" />
+    <bookmark url="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/WebUI.scala" line="43" mnemonic="8" />
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e0a2d88a-b290-4650-9492-4e439c30e755" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/Actions.scala" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/SelectionMode.scala" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/scala_settings.xml" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/ColumnTypeImplicits$.class" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/ColumnTypeImplicits.class" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/DataTable$$anonfun$render$1$$anonfun$apply$1.class" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/DataTable$$anonfun$render$3.class" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/DataTable$.class" afterPath="" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/WebUI.scala" afterPath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/WebUI.scala" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/data/LoadingStatus.scala" afterPath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/data/LoadingStatus.scala" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/data/PageFetchResult.scala" afterPath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/data/PageFetchResult.scala" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/data/PageableDatasource.scala" afterPath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/data/PageableDatasource.scala" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/data/PagingPosition.scala" afterPath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/data/PagingPosition.scala" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/ColumnGroup.scala" afterPath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/ColumnGroup.scala" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/ColumnType.scala" afterPath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/ColumnType.scala" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/DataNavigator.scala" afterPath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/DataNavigator.scala" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/DataTable.scala" afterPath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/DataTable.scala" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/FilterBox.scala" afterPath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/FilterBox.scala" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/Flyout.scala" afterPath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/Flyout.scala" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/Pagination.scala" afterPath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/Pagination.scala" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/Paginator.scala" afterPath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/Paginator.scala" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/Sidebar.scala" afterPath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/Sidebar.scala" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/TableColumn.scala" afterPath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/TableColumn.scala" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/ToolBar.scala" afterPath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/ToolBar.scala" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/Widget.scala" afterPath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/Widget.scala" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/filterbox/FilterBox.scala" afterPath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/filterbox/FilterBox.scala" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/filterbox/FilterField.scala" afterPath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/filterbox/FilterField.scala" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/filterbox/FilterOperator.scala" afterPath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/filterbox/FilterOperator.scala" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/filterbox/FilterSection.scala" afterPath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/filterbox/FilterSection.scala" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/filterbox/TextFilter.scala" afterPath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/filterbox/TextFilter.scala" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/ColumnGroup$.class" afterPath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/ColumnGroup$.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/ColumnGroup.class" afterPath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/ColumnGroup.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/ColumnGroups$.class" afterPath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/ColumnGroups$.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/ColumnGroups.class" afterPath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/ColumnGroups.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/ColumnType.class" afterPath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/ColumnType.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/Columns$.class" afterPath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/Columns$.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/Columns.class" afterPath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/Columns.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/DataTable$$anonfun$render$1.class" afterPath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/DataTable$$anonfun$render$1.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/DataTable$$anonfun$render$2.class" afterPath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/DataTable$$anonfun$render$2.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/DataTable.class" afterPath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/DataTable.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/data/LoadingStatus$.class" afterPath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/data/LoadingStatus$.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/data/PageableDatasource.class" afterPath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/data/PageableDatasource.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/Paginator.class" afterPath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/Paginator.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/data/PagingPosition$Position.class" afterPath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/data/PagingPosition$Position.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/Sidebar.class" afterPath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/Sidebar.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/TableColumn$.class" afterPath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/TableColumn$.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/TableColumn.class" afterPath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/TableColumn.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/ToolBar$$anon$1.class" afterPath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/ToolBar$$anon$1.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/ToolBar.class" afterPath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/ToolBar.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/WebUI.class" afterPath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/WebUI.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/Widget.class" afterPath="$PROJECT_DIR$/bin/org/jprelude/experimental/webui/widget/Widget.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.cache" afterPath="$PROJECT_DIR$/.cache" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/WebUI.scala" afterPath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/WebUI.scala" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/data/LoadingStatus.scala" afterPath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/data/LoadingStatus.scala" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/data/PageFetchResult.scala" afterPath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/data/PageFetchResult.scala" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/data/PageableDatasource.scala" afterPath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/data/PageableDatasource.scala" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/data/PagingPosition.scala" afterPath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/data/PagingPosition.scala" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/Actions.scala" afterPath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/Actions.scala" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/ColumnGroup.scala" afterPath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/ColumnGroup.scala" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/ColumnType.scala" afterPath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/ColumnType.scala" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/DataNavigator.scala" afterPath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/DataNavigator.scala" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/DataTable.scala" afterPath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/DataTable.scala" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/FilterBox.scala" afterPath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/FilterBox.scala" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/Flyout.scala" afterPath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/Flyout.scala" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/Pagination.scala" afterPath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/Pagination.scala" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/Paginator.scala" afterPath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/Paginator.scala" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/SelectionMode.scala" afterPath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/SelectionMode.scala" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/Sidebar.scala" afterPath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/Sidebar.scala" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/TableColumn.scala" afterPath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/TableColumn.scala" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/ToolBar.scala" afterPath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/ToolBar.scala" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/Widget.scala" afterPath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/Widget.scala" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/filterbox/FilterBox.scala" afterPath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/filterbox/FilterBox.scala" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/filterbox/FilterField.scala" afterPath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/filterbox/FilterField.scala" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/filterbox/FilterOperator.scala" afterPath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/filterbox/FilterOperator.scala" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/filterbox/FilterSection.scala" afterPath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/filterbox/FilterSection.scala" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/filterbox/TextFilter.scala" afterPath="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/filterbox/TextFilter.scala" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/modules/jprelude-webui.iml" afterPath="$PROJECT_DIR$/.idea/modules/jprelude-webui.iml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/scala_compiler.xml" afterPath="$PROJECT_DIR$/.idea/scala_compiler.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="jprelude-webui.iws" />
@@ -94,7 +64,7 @@
   <component name="FileEditorManager">
     <leaf>
       <file leaf-file-name="Actions.scala" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/Actions.scala">
+        <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/Actions.scala">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
               <caret line="52" column="22" selection-start-line="52" selection-start-column="22" selection-end-line="52" selection-end-column="22" />
@@ -104,7 +74,7 @@
         </entry>
       </file>
       <file leaf-file-name="WebUI.scala" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/WebUI.scala">
+        <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/WebUI.scala">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="-3.2105262">
               <caret line="53" column="16" selection-start-line="53" selection-start-column="16" selection-end-line="53" selection-end-column="16" />
@@ -116,7 +86,7 @@
         </entry>
       </file>
       <file leaf-file-name="Widget.scala" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/Widget.scala">
+        <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/Widget.scala">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
               <caret line="7" column="26" selection-start-line="7" selection-start-column="26" selection-end-line="7" selection-end-column="26" />
@@ -126,7 +96,7 @@
         </entry>
       </file>
       <file leaf-file-name="DataNavigator.scala" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/DataNavigator.scala">
+        <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/DataNavigator.scala">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
               <caret line="15" column="34" selection-start-line="15" selection-start-column="34" selection-end-line="15" selection-end-column="34" />
@@ -138,10 +108,10 @@
         </entry>
       </file>
       <file leaf-file-name="DataTable.scala" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/DataTable.scala">
+        <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/DataTable.scala">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.61">
-              <caret line="24" column="0" selection-start-line="24" selection-start-column="0" selection-end-line="24" selection-end-column="0" />
+            <state vertical-scroll-proportion="0.52">
+              <caret line="20" column="36" selection-start-line="20" selection-start-column="36" selection-end-line="20" selection-end-column="36" />
               <folding>
                 <element signature="e#49#87#0" expanded="true" />
               </folding>
@@ -150,7 +120,7 @@
         </entry>
       </file>
       <file leaf-file-name="SelectionMode.scala" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/SelectionMode.scala">
+        <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/SelectionMode.scala">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
               <caret line="3" column="2" selection-start-line="3" selection-start-column="2" selection-end-line="3" selection-end-column="2" />
@@ -170,7 +140,7 @@
         </entry>
       </file>
       <file leaf-file-name="ToolBar.scala" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/ToolBar.scala">
+        <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/ToolBar.scala">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
               <caret line="124" column="7" selection-start-line="124" selection-start-column="7" selection-end-line="124" selection-end-column="7" />
@@ -202,7 +172,6 @@
         <option value="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/data/PageableDatasource.scala" />
         <option value="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/data/LoadingStatus.scala" />
         <option value="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/ColumnType.scala" />
-        <option value="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/DataTable.scala" />
         <option value="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/Action.scala" />
         <option value="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/ActionDef.scala" />
         <option value="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/TableAction.scala" />
@@ -216,6 +185,7 @@
         <option value="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/WebUI.scala" />
         <option value="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/Actions.scala" />
         <option value="$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/DataTable.scala" />
+        <option value="$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/DataTable.scala" />
       </list>
     </option>
   </component>
@@ -459,7 +429,7 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
-              <option name="myItemId" value="scala-2.11" />
+              <option name="myItemId" value="scala" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
@@ -485,7 +455,7 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
-              <option name="myItemId" value="scala-2.11" />
+              <option name="myItemId" value="scala" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
@@ -515,7 +485,7 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
-              <option name="myItemId" value="scala-2.11" />
+              <option name="myItemId" value="scala" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
@@ -549,7 +519,7 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
-              <option name="myItemId" value="scala-2.11" />
+              <option name="myItemId" value="scala" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
@@ -891,7 +861,7 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1920" height="1047" extended-state="6" />
-    <editor active="true" />
+    <editor active="false" />
     <layout>
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32939914" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
@@ -901,7 +871,7 @@
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32995737" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32939914" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.32869378" sideWeight="0.49573562" order="10" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.32869378" sideWeight="0.49573562" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.15884861" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -942,7 +912,7 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/DataTable.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/DataTable.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="18" column="43" selection-start-line="18" selection-start-column="43" selection-end-line="18" selection-end-column="43" />
@@ -952,7 +922,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/SelectionMode.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/SelectionMode.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="3" column="2" selection-start-line="3" selection-start-column="2" selection-end-line="3" selection-end-column="2" />
@@ -968,7 +938,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/ToolBar.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/ToolBar.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="124" column="7" selection-start-line="124" selection-start-column="7" selection-end-line="124" selection-end-column="7" />
@@ -976,7 +946,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/Actions.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/Actions.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="16" column="0" selection-start-line="16" selection-start-column="0" selection-end-line="16" selection-end-column="0" />
@@ -984,7 +954,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/WebUI.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/WebUI.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
@@ -994,7 +964,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/Actions.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/Actions.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
@@ -1002,21 +972,21 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/data/LoadingStatus.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/data/LoadingStatus.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="8" column="21" selection-start-line="8" selection-start-column="21" selection-end-line="8" selection-end-column="21" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/DataNavigator.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/DataNavigator.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="9" column="6" selection-start-line="9" selection-start-column="6" selection-end-line="9" selection-end-column="6" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/WebUI.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/WebUI.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="30" column="29" selection-start-line="30" selection-start-column="29" selection-end-line="30" selection-end-column="29" />
@@ -1026,7 +996,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/Actions.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/Actions.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
@@ -1034,49 +1004,49 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/ColumnGroup.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/ColumnGroup.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="4" column="4" selection-start-line="4" selection-start-column="4" selection-end-line="4" selection-end-column="4" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/DataTable.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/DataTable.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="27" column="55" selection-start-line="27" selection-start-column="55" selection-end-line="27" selection-end-column="55" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/ColumnType.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/ColumnType.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="10" column="11" selection-start-line="10" selection-start-column="11" selection-end-line="10" selection-end-column="11" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/TableColumn.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/TableColumn.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="2" column="24" selection-start-line="2" selection-start-column="24" selection-end-line="2" selection-end-column="24" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/data/LoadingStatus.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/data/LoadingStatus.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="8" column="21" selection-start-line="8" selection-start-column="21" selection-end-line="8" selection-end-column="21" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/DataNavigator.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/DataNavigator.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="9" column="41" selection-start-line="9" selection-start-column="41" selection-end-line="9" selection-end-column="41" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/WebUI.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/WebUI.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="38" column="40" selection-start-line="38" selection-start-column="40" selection-end-line="38" selection-end-column="40" />
@@ -1086,7 +1056,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/Actions.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/Actions.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="12" column="58" selection-start-line="12" selection-start-column="58" selection-end-line="12" selection-end-column="58" />
@@ -1094,49 +1064,49 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/ColumnGroup.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/ColumnGroup.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="4" column="4" selection-start-line="4" selection-start-column="4" selection-end-line="4" selection-end-column="4" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/DataTable.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/DataTable.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="27" column="55" selection-start-line="27" selection-start-column="55" selection-end-line="27" selection-end-column="55" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/ColumnType.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/ColumnType.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="10" column="11" selection-start-line="10" selection-start-column="11" selection-end-line="10" selection-end-column="11" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/TableColumn.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/TableColumn.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="2" column="24" selection-start-line="2" selection-start-column="24" selection-end-line="2" selection-end-column="24" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/data/LoadingStatus.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/data/LoadingStatus.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/Paginator.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/Paginator.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="99" column="0" selection-start-line="99" selection-start-column="0" selection-end-line="99" selection-end-column="0" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/data/PageFetchResult.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/data/PageFetchResult.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="2" column="13" selection-start-line="2" selection-start-column="13" selection-end-line="2" selection-end-column="13" />
@@ -1150,7 +1120,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/data/PagingPosition.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/data/PagingPosition.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.13577586">
           <caret line="7" column="13" selection-start-line="7" selection-start-column="13" selection-end-line="7" selection-end-column="13" />
@@ -1171,21 +1141,21 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/Pagination.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/Pagination.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="-5.3333335">
           <caret line="215" column="27" selection-start-line="215" selection-start-column="27" selection-end-line="215" selection-end-column="27" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/data/PageableDatasource.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/data/PageableDatasource.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="27" column="50" selection-start-line="27" selection-start-column="50" selection-end-line="27" selection-end-column="50" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/data/LoadingStatus.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/data/LoadingStatus.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="8" column="21" selection-start-line="8" selection-start-column="21" selection-end-line="8" selection-end-column="21" />
@@ -1199,28 +1169,28 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/TableColumn.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/TableColumn.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.06020067">
           <caret line="2" column="24" selection-start-line="2" selection-start-column="24" selection-end-line="2" selection-end-column="24" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/ColumnType.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/ColumnType.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.30100334">
           <caret line="10" column="11" selection-start-line="10" selection-start-column="11" selection-end-line="10" selection-end-column="11" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/ColumnGroup.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/ColumnGroup.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.12040134">
           <caret line="4" column="4" selection-start-line="4" selection-start-column="4" selection-end-line="4" selection-end-column="4" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/Sidebar.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/Sidebar.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.09030101">
           <caret line="3" column="20" selection-start-line="3" selection-start-column="20" selection-end-line="3" selection-end-column="20" />
@@ -1256,7 +1226,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/ToolBar.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/ToolBar.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="124" column="7" selection-start-line="124" selection-start-column="7" selection-end-line="124" selection-end-column="7" />
@@ -1271,7 +1241,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/SelectionMode.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/SelectionMode.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="3" column="2" selection-start-line="3" selection-start-column="2" selection-end-line="3" selection-end-column="2" />
@@ -1286,7 +1256,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/Widget.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/Widget.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="7" column="26" selection-start-line="7" selection-start-column="26" selection-end-line="7" selection-end-column="26" />
@@ -1294,7 +1264,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/WebUI.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/WebUI.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="-3.2105262">
           <caret line="53" column="16" selection-start-line="53" selection-start-column="16" selection-end-line="53" selection-end-column="16" />
@@ -1304,7 +1274,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/Actions.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/Actions.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="52" column="22" selection-start-line="52" selection-start-column="22" selection-end-line="52" selection-end-column="22" />
@@ -1312,7 +1282,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/DataNavigator.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/DataNavigator.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="15" column="34" selection-start-line="15" selection-start-column="34" selection-end-line="15" selection-end-column="34" />
@@ -1322,10 +1292,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala-2.11/org/jprelude/experimental/webui/widget/DataTable.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/org/jprelude/experimental/webui/widget/DataTable.scala">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.61">
-          <caret line="24" column="0" selection-start-line="24" selection-start-column="0" selection-end-line="24" selection-end-column="0" />
+        <state vertical-scroll-proportion="0.52">
+          <caret line="20" column="36" selection-start-line="20" selection-start-column="36" selection-end-line="20" selection-end-column="36" />
           <folding>
             <element signature="e#49#87#0" expanded="true" />
           </folding>
