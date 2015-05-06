@@ -1,6 +1,8 @@
 package org.jprelude.experimental.webui.widget
 
 
+import com.vaadin.event.SelectionEvent
+import com.vaadin.event.SelectionEvent.SelectionListener
 import com.vaadin.ui.Grid
 import rx.lang.scala.Observable
 
@@ -8,15 +10,34 @@ import scala.collection.mutable.ListBuffer
 
 class DataTable[T] (
       columns: ColumnType[T],
-      dataEvents: Observable[Seq[T]]
+      selectionMode: SelectionMode.Value = SelectionMode.None,
+      dataEvents: Observable[Seq[T]],
+      onSelection: (Seq[T]) => Unit = (_: Seq[T]) => {}
     ) extends Widget {
 
   require(columns != null)
   require(dataEvents != null)
 
+  private var currentData = Seq[T]()
+
   private val grid = new Grid
 
+  selectionMode match {
+    case SelectionMode.Multi => grid.setSelectionMode(com.vaadin.ui.Grid.SelectionMode.MULTI)
+    case SelectionMode.Single => grid.setSelectionMode(com.vaadin.ui.Grid.SelectionMode.SINGLE)
+    case SelectionMode.None => grid.setSelectionMode(com.vaadin.ui.Grid.SelectionMode.NONE)
+  }
+
+  grid.addSelectionListener(new SelectionListener() {
+    override def select(selectionEvent: SelectionEvent): Unit = {
+      val selection = selectionEvent.getSelected.toArray.map(n => currentData(n.asInstanceOf[Int])).toList
+      onSelection(selection)
+    }
+  })
+
+
   dataEvents.subscribe(data => {
+    this.currentData = data
     this.refresh(data)
   })
 
