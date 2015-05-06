@@ -1,6 +1,5 @@
 package org.jprelude.experimental.webui.widget
 
-case class TableColumn[-T](
+case class Column[-T](
   title: String,
-  render: T => String
-)
+  render: T => String)

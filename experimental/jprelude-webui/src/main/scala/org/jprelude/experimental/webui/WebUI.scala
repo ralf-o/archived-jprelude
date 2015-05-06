@@ -4,7 +4,7 @@ package org.jprelude.experimental.webui
 
 import com.vaadin.annotations.Theme
 import com.vaadin.server.{FontAwesome, VaadinRequest}
-import com.vaadin.ui.UI
+import com.vaadin.ui.{Notification, UI}
 import org.jprelude.experimental.webui.data.PageFetchResult.Success
 import org.jprelude.experimental.webui.data.{PageableDatasource, PagingPosition}
 import org.jprelude.experimental.webui.widget._
@@ -47,13 +47,16 @@ class WebUI extends UI {
         Actions(
           GeneralAction(
             caption = "New",
-            icon = Option(FontAwesome.FILE_O)),
+            icon = Option(FontAwesome.FILE_O),
+            command = () => Notification.show("Clicked 'New'")),
           SingleSelectAction(
             caption = "Edit",
-            icon = Option(FontAwesome.EDIT)),
-          SingleSelectAction(
+            icon = Option(FontAwesome.EDIT),
+            command = selection =>Notification.show(selection)),
+          MultiSelectAction(
             caption = "Delete",
-            icon = Option(FontAwesome.TRASH_O))),
+            icon = Option(FontAwesome.TRASH_O),
+            command = selection => Notification.show(selection.toString))),
         Actions(
           ActionMenu(
             caption = "Export",
@@ -79,22 +82,22 @@ class WebUI extends UI {
       columns = ColumnGroups(
         ColumnGroup(
           title = "Meta1",
-          columns = List(
-            TableColumn(
+          columns = Columns(
+            Column(
               title = "spalte1",
-              render = s => "A" + s),
-            TableColumn(
+              render = (s: String) => "A" + s),
+            Column(
               title = "spalte2",
-              render = s => "B" + s))),
+              render = (s: String) => "B" + s))),
         ColumnGroup(
           title = "Meta2",
-          columns = List(
-            TableColumn(
+          columns = Columns(
+            Column(
               title = "spalte3",
-              render = s => "C" + s),
-            TableColumn(
+              render = (s: String) => "C" + s),
+            Column(
               title = "spalte4",
-              render = s => "D" + s))))
+              render = (s: String) => "D" + s))))
     ).render())
   }
 }

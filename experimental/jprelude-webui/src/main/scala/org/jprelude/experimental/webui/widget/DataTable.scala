@@ -60,7 +60,7 @@ class DataTable[T] (
         columnGroups.foreach (columnGroup => {
           var group = ListBuffer[String]()
           
-          columnGroup.columns.foreach (column => {
+          columnGroup.columns.columns.foreach (column => {
             group += column.title
             grid.addColumn(column.title, classOf[String])
           })

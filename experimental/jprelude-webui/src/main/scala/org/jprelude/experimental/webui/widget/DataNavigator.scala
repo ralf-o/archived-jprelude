@@ -3,6 +3,7 @@ package org.jprelude.experimental.webui.widget
 import com.vaadin.ui._
 import org.jprelude.experimental.webui.data.{PageableDatasource, PagingPosition}
 import rx.lang.scala.Observable
+import rx.lang.scala.subjects.BehaviorSubject
 
 class DataNavigator[T](
       dataSource: PageableDatasource[T],
@@ -43,23 +44,26 @@ class DataNavigator[T](
     content.setMargin(true)
     masterContent.setExpandRatio(content, 1)
 
+    val selectionSubject = BehaviorSubject[Seq[T]](Seq.empty)
+
     val dataTable = new DataTable[T](
       columns = columns,
       selectionMode = this.selectionMode,
       dataEvents = dataSource.dataEvents,
-      onSelection = println(_)
+      onSelection = selection => selectionSubject.onNext(selection)
 
     )
 
     val dataTableComponent = dataTable.render
-    //val toolBar = new ToolBar
-    //content addComponent (toolBar.render)
-    content addComponent this.renderToolBar
+
+    content addComponent new ActionBar(
+      actions = this.actions,
+      buttonStyle = ButtonStyle.Link,
+      selectionEvents = selectionSubject).getComponent()
 
     content addComponent dataTableComponent
     content addComponent this.renderNavigationBar
     content.setExpandRatio(dataTableComponent, 1)
-
 
     ret
   }
@@ -99,96 +103,6 @@ class DataNavigator[T](
     ret.setComponentAlignment(ret.getComponent(0), Alignment.MIDDLE_LEFT)
     ret.setComponentAlignment(ret.getComponent(1), Alignment.MIDDLE_CENTER)
     ret.setComponentAlignment(ret.getComponent(2), Alignment.MIDDLE_RIGHT)
-
-    ret
-  }
-
-  private def renderToolBar: Component = {
-    val ret = new HorizontalLayout
-    ret setSpacing true
-
-    val groups: Seq[Actions[T]]  = this.actions match {
-      case groups: GroupedActions[T] => groups.groups
-      case actions: Actions[T] => Seq(actions)
-    }
-
-    for (group <- groups) {
-      val actions = group.visibleActions.toList
-
-      actions.length match {
-        case 0 => {
-        }
-
-        case 1 => {
-          ret addComponent this.renderActionComponent(actions(0))
-        }
-
-        case _ => {
-          val layout = new CssLayout
-          layout addStyleName "v-component-group";
-          ret addComponent layout
-
-          for (action <- group.actions) {
-            layout addComponent this.renderActionComponent(action)
-          }
-        }
-      }
-    }
-
-    ret
-  }
-
-  private def renderActionComponent(action: Action[T]): Component = {
-    assert(action != null)
-
-    val ret = action match {
-      case action: GeneralAction => new Button(action.caption)
-      case action: SingleSelectAction[T] => new Button(action.caption)
-      case action: MultiSelectAction[T] => new Button(action.caption)
-
-      case action: ActionMenu[T] => {
-        val menu = new MenuBar
-        val dropdown = menu.addItem(action.caption, null)
-
-        if (action.icon.isDefined) {
-          dropdown setIcon action.icon.get
-        }
-
-        def addActionItem(item: MenuBar#MenuItem, action: Action[T]): Unit = {
-          action match {
-            case actionMenu: ActionMenu[T] => {
-              val subMenu = item.addItem(actionMenu.caption, null);
-
-              if (action.icon.isDefined) {
-                subMenu setIcon action.icon.get
-              }
-
-              for (subAction <- actionMenu.actions.actions) {
-                addActionItem(subMenu, subAction)
-              }
-            }
-
-            case _ => item.addItem(action.caption, null)
-          }
-        }
-
-        for (subAction <- action.actions.actions) {
-          addActionItem(dropdown, subAction)
-        }
-
-        menu
-      }
-    }
-
-    action match {
-      case action: ActionMenu[T] => {
-      }
-      case _ => {
-        if (action.icon.isDefined) {
-          ret setIcon action.icon.get
-        }
-      }
-    }
 
     ret
   }
