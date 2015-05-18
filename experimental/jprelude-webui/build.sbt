@@ -4,10 +4,12 @@ version := "0.1"
 
 scalaVersion := "2.11.6"
 
+val vaadinVersion = "7.4.5"
+
 libraryDependencies ++= Seq(
-   "com.vaadin" % "vaadin-server" % "7.4.5",
-   "com.vaadin" % "vaadin-client-compiled" % "7.4.5",
-   "com.vaadin" % "vaadin-themes" % "7.4.5",
+   "com.vaadin" % "vaadin-server" % vaadinVersion,
+   "com.vaadin" % "vaadin-client-compiled" % vaadinVersion,
+   "com.vaadin" % "vaadin-themes" % vaadinVersion,
    "io.reactivex" %% "rxscala" % "0.24.1"
 )
 

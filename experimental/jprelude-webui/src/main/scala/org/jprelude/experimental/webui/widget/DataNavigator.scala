@@ -58,8 +58,8 @@ class DataNavigator[T](
 
     content addComponent new ActionBar(
       actions = this.actions,
-      buttonStyle = ButtonStyle.Link,
-      selectionEvents = selectionSubject).getComponent()
+      size = Size.Small,
+      selectionEvents = selectionSubject).component
 
     content addComponent dataTableComponent
     content addComponent this.renderNavigationBar
@@ -96,9 +96,9 @@ class DataNavigator[T](
       positionEvents = positionEvents
     )
 
-    ret addComponent paginator.getComponent
-    ret addComponent pageSizeSelector.getComponent
-    ret addComponent pageInfo.getComponent
+    ret addComponent paginator.component
+    ret addComponent pageSizeSelector.component
+    ret addComponent pageInfo.component
 
     ret.setComponentAlignment(ret.getComponent(0), Alignment.MIDDLE_LEFT)
     ret.setComponentAlignment(ret.getComponent(1), Alignment.MIDDLE_CENTER)

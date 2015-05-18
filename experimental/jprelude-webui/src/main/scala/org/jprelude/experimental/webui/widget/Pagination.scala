@@ -48,7 +48,7 @@ class Pagination(
 
   private def refresh() = {
     if (this.isRendered) {
-      this.render(this.getComponent.asInstanceOf[HorizontalLayout])
+      this.render(this.component.asInstanceOf[HorizontalLayout])
     }
   }
 

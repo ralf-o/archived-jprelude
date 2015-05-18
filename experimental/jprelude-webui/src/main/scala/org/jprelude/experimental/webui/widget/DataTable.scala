@@ -64,8 +64,11 @@ class DataTable[T] (
             group += column.title
             grid.addColumn(column.title, classOf[String])
           })
-          println(group)
-           groupingHeader.join(group:_*).setText(columnGroup.title)
+
+           val headerCell = groupingHeader.join(group:_*)
+
+
+            headerCell.setText(columnGroup.title)
           
         })
         
@@ -74,7 +77,7 @@ class DataTable[T] (
       }
       
       case Columns(columns  @ _*) => {
-        columns.foreach (column => 
+        columns.foreach (column =>
           grid.addColumn(column.title, classOf[String]))
       }
     }

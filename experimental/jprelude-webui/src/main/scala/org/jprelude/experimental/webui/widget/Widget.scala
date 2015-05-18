@@ -5,7 +5,7 @@ import com.vaadin.ui.Component
 abstract class Widget {
   private var maybeComponent: Option[Component] = Option.empty
 
-  final def getComponent(): Component = {
+  final def component: Component = {
     if (maybeComponent.isEmpty) {
       this.maybeComponent = Option(this.render)
     }
@@ -13,7 +13,7 @@ abstract class Widget {
     this.maybeComponent.get
   }
 
-  protected final def isRendered: Boolean = (this.getComponent != null)
+  protected final def isRendered: Boolean = (this.component != null)
 
   protected def render: Component;
 }

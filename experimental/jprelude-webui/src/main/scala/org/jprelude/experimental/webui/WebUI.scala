@@ -8,6 +8,7 @@ import com.vaadin.ui.{Notification, UI}
 import org.jprelude.experimental.webui.data.PageFetchResult.Success
 import org.jprelude.experimental.webui.data.{PageableDatasource, PagingPosition}
 import org.jprelude.experimental.webui.widget._
+import org.jprelude.experimental.webui.widget.form._
 
 
 @Theme("webui")
@@ -41,7 +42,7 @@ class WebUI extends UI {
 
     val controller = new Controller()
 
-    this.setContent(new DataNavigator[String](
+    val dataNav = new DataNavigator[String](
       dataSource = ds,
       actions = GroupedActions(
         Actions(
@@ -97,8 +98,50 @@ class WebUI extends UI {
               render = (s: String) => "C" + s),
             Column(
               title = "spalte4",
-              render = (s: String) => "D" + s))))
-    ).render())
+              render = (s: String) => "D" + s)))))
+
+    val myForm = new DataForm(
+      title = "Products",
+      toolbar = Option(ToolBar(
+        tools = Tools(
+          Tools(
+            ToolButton(
+              caption = "Save"),
+            ToolButton(
+              caption = "Delete"),
+            ToolButton(
+              caption = "Cancel")),
+          ToolButton(
+            caption = "Export",
+            menu = ToolMenuItems(
+              ToolMenuCommand(
+                caption = "Menu item 1"),
+              ToolMenu(
+                caption = "Menu item 2",
+                items = ToolMenuItems(
+                  ToolMenuCommand(
+                    caption = "Menu item 3")))))))),
+      sections = Sections(
+        FieldSet(
+          controls = Controls(
+            TextInput(
+              caption = "Product-No."),
+            TextInput(
+              caption = "Description"))),
+        TabBox(
+          pages = TabPages(
+            TabPage(
+              title = "Base data",
+              sections = Sections(
+                FieldSet(
+                  controls = Controls(
+                    TextInput(
+                      caption = "Product-No."),
+                    TextInput(
+                      caption = "Description"))))),
+            TabPage(
+              title = "Variants")))))
+
+    this.setContent(myForm.component)
   }
 }
- 
